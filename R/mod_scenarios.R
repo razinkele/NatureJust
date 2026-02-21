@@ -122,7 +122,7 @@ mod_scenarios_server <- function(id) {
       showNotification("All scenarios cleared", type = "message")
     })
 
-    # Projection plot
+    # Projection plot (built directly in plotly for clean legend)
     output$projection_plot <- plotly::renderPlotly({
       data <- current_data()
       horizon_year <- as.integer(input$horizon)
@@ -134,29 +134,39 @@ mod_scenarios_server <- function(id) {
           "Livelihoods & Employment" = "#f0ad4e",
           "Equity Score" = "#d9534f"
       )
+      has_bands <- all(c("lower", "upper") %in% names(data))
 
-      p <- ggplot2::ggplot(data, ggplot2::aes(
-        x = year, y = value, color = indicator, fill = indicator
-      ))
+      p <- plotly::plot_ly()
+      for (ind in names(indicator_colors)) {
+        d <- data[data$indicator == ind, ]
+        if (nrow(d) == 0) next
+        col <- indicator_colors[[ind]]
 
-      # Add confidence bands if lower/upper columns exist
-      if (all(c("lower", "upper") %in% names(data))) {
-        p <- p +
-          ggplot2::geom_ribbon(
-            ggplot2::aes(ymin = lower, ymax = upper),
-            alpha = 0.15, color = NA, show.legend = FALSE
+        # Confidence band (no legend entry)
+        if (has_bands) {
+          p <- p |> plotly::add_ribbons(
+            data = d, x = ~year, ymin = ~lower, ymax = ~upper,
+            line = list(color = "transparent"),
+            fillcolor = paste0("rgba(", paste(col2rgb(col), collapse = ","), ",0.15)"),
+            showlegend = FALSE, hoverinfo = "skip"
           )
+        }
+
+        # Line + markers (single legend entry)
+        p <- p |> plotly::add_trace(
+          data = d, x = ~year, y = ~value,
+          type = "scatter", mode = "lines+markers",
+          line = list(color = col, width = 2),
+          marker = list(color = col, size = 4),
+          name = ind
+        )
       }
 
-      p <- p +
-        ggplot2::geom_line(linewidth = 1) +
-        ggplot2::geom_point(size = 1) +
-        ggplot2::theme_minimal() +
-        ggplot2::labs(x = "Year", y = "Index Value", color = "Indicator") +
-        ggplot2::scale_color_manual(values = indicator_colors) +
-        ggplot2::scale_fill_manual(values = indicator_colors, guide = "none")
-
-      plotly::ggplotly(p)
+      p |> plotly::layout(
+        xaxis = list(title = "Year"),
+        yaxis = list(title = "Index Value"),
+        legend = list(title = list(text = "Indicator"))
+      )
     })
 
     # GBF compliance
