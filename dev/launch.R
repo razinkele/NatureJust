@@ -25,6 +25,8 @@ suppressPackageStartupMessages({
   library(rnaturalearthdata)
   library(htmltools)
   library(config)
+  library(eurostat)
+  library(giscoR)
 })
 
 # app_sys helper (needed by golem_add_external_resources)
@@ -35,7 +37,9 @@ app_sys <- function(...) {
 # Source all R files in order
 r_files <- c(
   "R/utils_helpers.R",
+  "R/utils_data_helpers.R",
   "R/fct_mock_data.R",
+  "R/fct_real_data.R",
   "R/mod_home.R",
   "R/mod_spatial.R",
   "R/mod_scenarios.R",
@@ -83,10 +87,10 @@ bundle_resources <- function(path, app_title, ...) {
 source(file.path(app_dir, "R/app_ui.R"), local = FALSE)
 source(file.path(app_dir, "R/app_server.R"), local = FALSE)
 
-cat("Starting NatureJust-EU on http://127.0.0.1:7700\n")
+cat("Starting NatureJust-EU on http://127.0.0.1:7701\n")
 
 shiny::shinyApp(
   ui = app_ui,
   server = app_server,
-  options = list(port = 7700, host = "127.0.0.1", launch.browser = FALSE)
+  options = list(port = 7701, host = "127.0.0.1", launch.browser = FALSE)
 )

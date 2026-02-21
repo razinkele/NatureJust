@@ -1,0 +1,41 @@
+intervention,dimension,score,status,description,source
+MPA Establishment,Distributional,0.45,amber,Costs disproportionately borne by small-scale fishers excluded from fishing grounds,Schreckenberg et al. 2016; Gill et al. 2017
+MPA Establishment,Procedural,0.38,red,Limited inclusion of fishing communities in designation decisions under Nature Directives,Bennett & Dearden 2014; EU Biodiversity Strategy 2030
+MPA Establishment,Recognitional,0.52,amber,Traditional fishing rights often unrecognised in strict protection zones,Martin et al. 2016
+MPA Establishment,Restorative,0.35,red,No systematic mechanisms to remedy historical displacement from protected areas,Mascia & Claus 2009
+Seagrass Restoration,Distributional,0.72,green,Benefits widely shared through improved fisheries nursery habitat and carbon sequestration,Unsworth et al. 2019
+Seagrass Restoration,Procedural,0.65,amber,Moderate stakeholder engagement but dominated by scientific institutions,Cullen-Unsworth et al. 2014
+Seagrass Restoration,Recognitional,0.58,amber,Local ecological knowledge underutilised in restoration site selection,McKenzie et al. 2020
+Seagrass Restoration,Restorative,0.61,amber,Partially addresses historical habitat loss but does not compensate affected communities,Nature Restoration Law 2024/1991
+Offshore Wind Siting,Distributional,0.55,amber,Economic benefits concentrated in energy companies; visual and noise impacts on coastal communities,Haggett 2011; Rudolph 2014
+Offshore Wind Siting,Procedural,0.62,amber,EU Maritime Spatial Planning Directive requires consultation but implementation varies,Directive 2014/89/EU
+Offshore Wind Siting,Recognitional,0.41,amber,Seascape cultural values and traditional navigation routes poorly considered,Gee 2010
+Offshore Wind Siting,Restorative,0.30,red,No remediation of displacement effects on artisanal fishing communities,Berkenhagen et al. 2010
+Fishing Quota Redistribution,Distributional,0.68,amber,Aims to correct concentration of quotas among large industrial fleets,Carpenter & Kleinjans 2017; CFP Reg. 1380/2013
+Fishing Quota Redistribution,Procedural,0.71,green,Regional Advisory Councils provide structured input channels under CFP,Reg. 1380/2013 Art. 18
+Fishing Quota Redistribution,Recognitional,0.75,green,CFP Article 17 explicitly recognises small-scale fishers social criteria,Reg. 1380/2013 Art. 17
+Fishing Quota Redistribution,Restorative,0.48,amber,Limited mechanisms to compensate for decades of quota concentration,Symes & Phillipson 2009
+Coastal Wetland Conservation,Distributional,0.62,amber,Local landowners bear restrictions; ecosystem service benefits accrue broadly,Barbier et al. 2011
+Coastal Wetland Conservation,Procedural,0.58,amber,Habitats Directive designation often top-down with limited local input,Blicharska et al. 2016
+Coastal Wetland Conservation,Recognitional,0.67,amber,Cultural significance of wetlands increasingly recognised but implementation gaps remain,Verhoeven 2014
+Coastal Wetland Conservation,Restorative,0.55,amber,Some Natura 2000 management plans include compensation measures for land use restrictions,Habitats Directive 92/43/EEC Art. 6
+Posidonia Meadow Protection,Distributional,0.40,amber,Anchoring bans affect recreational boaters and artisanal fishers disproportionately,Directive 92/43/EEC Annex I Habitat 1120
+Posidonia Meadow Protection,Procedural,0.50,amber,Expert-driven designation with limited fisher participation in zoning,Boudouresque et al. 2012
+Posidonia Meadow Protection,Recognitional,0.45,amber,Mediterranean traditional fishing knowledge often excluded from management plans,Guidetti et al. 2014
+Posidonia Meadow Protection,Restorative,0.32,red,No compensation for fishers displaced by strict protection of Posidonia habitats,Telesca et al. 2015
+Marine Habitat Restoration,Distributional,0.70,green,Nature Restoration Law targets 20% of EU land and sea with broad benefit distribution,Regulation 2024/1991 Art. 5
+Marine Habitat Restoration,Procedural,0.65,amber,Restoration plans require public consultation but timelines are tight,Regulation 2024/1991 Art. 14
+Marine Habitat Restoration,Recognitional,0.60,amber,Traditional and indigenous knowledge recognised in principle but operationalisation unclear,Regulation 2024/1991 Recital 38
+Marine Habitat Restoration,Restorative,0.72,green,Explicitly aims to reverse historical degradation of marine ecosystems,Regulation 2024/1991 Art. 1
+Marine Litter Reduction,Distributional,0.78,green,Health and environmental benefits shared widely; costs mainly on producers via EPR,Directive 2019/904/EU
+Marine Litter Reduction,Procedural,0.72,green,Broad public consultation during SUP Directive adoption; beach cleanup engagement high,EC Impact Assessment SWD(2018) 254
+Marine Litter Reduction,Recognitional,0.65,amber,Impacts on traditional fishing gear (nets) not fully addressed,MSFD Descriptor 10; GGGI 2019
+Marine Litter Reduction,Restorative,0.58,amber,Addresses ongoing pollution but legacy contamination in sediments requires further action,JRC Technical Report 2021
+Sustainable Aquaculture Zone,Distributional,0.60,amber,Jobs and food security benefits offset by environmental risk to local ecosystems,EMFAF Reg. 2021/1139 Art. 26
+Sustainable Aquaculture Zone,Procedural,0.55,amber,EMFAF requires stakeholder plans but aquaculture licensing remains opaque in some MS,EC Strategic Guidelines COM(2021) 236
+Sustainable Aquaculture Zone,Recognitional,0.50,amber,Wild-capture fishing culture and identity may be marginalised by aquaculture expansion,Osmundsen et al. 2017
+Sustainable Aquaculture Zone,Restorative,0.42,amber,Limited attention to cumulative impacts on communities already affected by pollution,EMFAF Reg. 2021/1139
+Deep-Sea Mining Moratorium,Distributional,0.82,green,Precautionary approach protects deep-sea ecosystems benefiting all; minimal direct economic cost,IUCN Resolution 122 (2016)
+Deep-Sea Mining Moratorium,Procedural,0.70,green,Strong civil society mobilisation and EU Parliament support for moratorium,EP Resolution 2021/2188(INI)
+Deep-Sea Mining Moratorium,Recognitional,0.68,amber,Scientific community well-represented but Global South perspectives underrepresented,Levin et al. 2020
+Deep-Sea Mining Moratorium,Restorative,0.75,green,Prevents irreversible harm; aligns with precautionary principle under UNCLOS,ISA Mining Code review; Cuvelier et al. 2018

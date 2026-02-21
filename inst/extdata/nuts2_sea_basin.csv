@@ -1,0 +1,110 @@
+NUTS_ID,NUTS_NAME,sea_basin
+DE80,Mecklenburg-Vorpommern,Baltic
+DE93,Lüneburg,North Sea
+DEF0,Schleswig-Holstein,Baltic
+DK01,Hovedstaden,Baltic
+DK02,Sjælland,Baltic
+DK03,Syddanmark,Baltic
+DK04,Midtjylland,North Sea
+DK05,Nordjylland,North Sea
+EE00,Eesti,Baltic
+ES11,Galicia,Atlantic
+ES12,Principado de Asturias,Atlantic
+ES13,Cantabria,Atlantic
+ES21,País Vasco,Atlantic
+ES22,Comunidad Foral de Navarra,Atlantic
+ES51,Cataluña,Mediterranean
+ES52,Comunitat Valenciana,Mediterranean
+ES53,Illes Balears,Mediterranean
+ES61,Andalucía,Mediterranean
+ES62,Región de Murcia,Mediterranean
+ES63,Ciudad Autónoma de Ceuta,Mediterranean
+ES64,Ciudad Autónoma de Melilla,Mediterranean
+ES70,Canarias,Atlantic
+FI19,Länsi-Suomi,Baltic
+FI1B,Helsinki-Uusimaa,Baltic
+FI1C,Etelä-Suomi,Baltic
+FI1D,Pohjois- ja Itä-Suomi,Baltic
+FI20,Åland,Baltic
+FR21,Champagne-Ardenne,Atlantic
+FR22,Picardie,North Sea
+FR23,Haute-Normandie,North Sea
+FR25,Basse-Normandie,Atlantic
+FR51,Pays de la Loire,Atlantic
+FR52,Bretagne,Atlantic
+FR53,Poitou-Charentes,Atlantic
+FR61,Aquitaine,Atlantic
+FR81,Languedoc-Roussillon,Mediterranean
+FR82,Provence-Alpes-Côte d'Azur,Mediterranean
+FR83,Corse,Mediterranean
+EL30,Attiki,Mediterranean
+EL41,Voreio Aigaio,Mediterranean
+EL42,Notio Aigaio,Mediterranean
+EL43,Kriti,Mediterranean
+EL51,Anatoliki Makedonia Thraki,Mediterranean
+EL52,Kentriki Makedonia,Mediterranean
+EL53,Dytiki Makedonia,Mediterranean
+EL54,Ipeiros,Mediterranean
+EL61,Thessalia,Mediterranean
+EL62,Ionia Nisia,Mediterranean
+EL63,Dytiki Ellada,Mediterranean
+EL64,Sterea Ellada,Mediterranean
+EL65,Peloponnisos,Mediterranean
+HR03,Jadranska Hrvatska,Mediterranean
+HR04,Kontinentalna Hrvatska,Mediterranean
+IE04,Northern and Western,Atlantic
+IE05,Southern,Atlantic
+IE06,Eastern and Midland,Atlantic
+ITC1,Piemonte,Mediterranean
+ITC3,Liguria,Mediterranean
+ITC4,Lombardia,Mediterranean
+ITF3,Campania,Mediterranean
+ITF4,Puglia,Mediterranean
+ITF5,Basilicata,Mediterranean
+ITF6,Calabria,Mediterranean
+ITG1,Sicilia,Mediterranean
+ITG2,Sardegna,Mediterranean
+ITH3,Veneto,Mediterranean
+ITH4,Friuli-Venezia Giulia,Mediterranean
+ITI4,Lazio,Mediterranean
+LT01,Sostinės regionas,Baltic
+LT02,Vidurio ir vakarų Lietuvos regionas,Baltic
+LV00,Latvija,Baltic
+MT00,Malta,Mediterranean
+NL11,Groningen,North Sea
+NL12,Friesland,North Sea
+NL13,Drenthe,North Sea
+NL21,Overijssel,North Sea
+NL32,Noord-Holland,North Sea
+NL33,Zuid-Holland,North Sea
+NL34,Zeeland,North Sea
+NL41,Noord-Brabant,North Sea
+PL42,Zachodniopomorskie,Baltic
+PL43,Lubuskie,Baltic
+PL62,Warmińsko-mazurskie,Baltic
+PL63,Pomorskie,Baltic
+PT11,Norte,Atlantic
+PT15,Algarve,Atlantic
+PT16,Centro,Atlantic
+PT17,Área Metropolitana de Lisboa,Atlantic
+PT18,Alentejo,Atlantic
+PT20,Região Autónoma dos Açores,Atlantic
+PT30,Região Autónoma da Madeira,Atlantic
+RO22,Sud-Est,Black Sea
+RO31,Sud-Muntenia,Black Sea
+SE11,Stockholm,Baltic
+SE12,Östra Mellansverige,Baltic
+SE21,Småland med öarna,Baltic
+SE22,Sydsverige,Baltic
+SE23,Västsverige,North Sea
+SE31,Norra Mellansverige,Baltic
+SE32,Mellersta Norrland,Baltic
+SE33,Övre Norrland,Baltic
+SI03,Vzhodna Slovenija,Mediterranean
+SI04,Zahodna Slovenija,Mediterranean
+BE21,Prov. Antwerpen,North Sea
+BE23,Prov. Oost-Vlaanderen,North Sea
+BE25,Prov. West-Vlaanderen,North Sea
+BG33,Severoiztochen,Black Sea
+BG34,Yugoiztochen,Black Sea
+CY00,Kypros,Mediterranean
