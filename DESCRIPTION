@@ -1,0 +1,40 @@
+Package: NatureJust
+Title: NatureJust-EU Decision-Support Tool for Equitable Biodiversity Governance
+Version: 0.0.0.9000
+Authors@R:
+    person("Antonello", "", role = c("aut", "cre"),
+           email = "antonello@example.com")
+Description: A Shiny decision-support tool for marine planners, fisheries
+    managers, regional governments, and civil society organisations. Built on
+    the Nature Futures Framework (NFF), Global Biodiversity Framework (GBF),
+    and environmental justice principles.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.1
+Imports:
+    shiny (>= 1.8.0),
+    golem (>= 0.4.0),
+    bslib (>= 0.7.0),
+    bsicons,
+    config (>= 0.3.2),
+    leaflet,
+    sf,
+    plotly,
+    ggplot2,
+    dplyr,
+    tidyr,
+    purrr,
+    DT,
+    shinyWidgets,
+    rnaturalearth,
+    rnaturalearthdata,
+    rmarkdown,
+    knitr,
+    htmltools
+Suggests:
+    testthat (>= 3.0.0),
+    spelling
+Config/testthat/edition: 3
+Language: en-US
