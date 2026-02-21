@@ -36,6 +36,7 @@ desktop.ini
 # Screenshots (test artifacts)
 *.png
 *.jpg
+!NatureJustLogo.png
 
 # Cached Eurostat downloads (large temp files)
 # Note: inst/extdata/*.rds are tracked (small, curated caches)
