@@ -1,7 +1,7 @@
-#' Generate mock European NUTS2 regions with vulnerability scores
+#' Generate mock European NUTS2 regions with vulnerability scores (FALLBACK)
 #' @return sf object with NUTS2-like polygons and mock indicators
 #' @noRd
-mock_nuts2_data <- function() {
+mock_nuts2_data_fallback <- function() {
   europe <- rnaturalearth::ne_countries(
     scale = 50,
     continent = "Europe",
@@ -25,10 +25,10 @@ mock_nuts2_data <- function() {
   europe
 }
 
-#' Generate mock MPA polygons
+#' Generate mock MPA polygons (FALLBACK)
 #' @return sf object with random MPA rectangles across Europe
 #' @noRd
-mock_mpa_data <- function(n = 30) {
+mock_mpa_data_fallback <- function(n = 30) {
   set.seed(123)
   lons <- runif(n, -10, 30)
   lats <- runif(n, 35, 65)
@@ -55,12 +55,12 @@ mock_mpa_data <- function(n = 30) {
   )
 }
 
-#' Generate mock scenario projection data
+#' Generate mock scenario projection data (FALLBACK)
 #' @param nff_weights Named numeric vector c(NfN=, NfS=, NaC=) summing to 100
 #' @param region Character region name
 #' @return Data frame with yearly projections for 4 indicators
 #' @noRd
-mock_scenario_data <- function(nff_weights = c(NfN = 34, NfS = 33, NaC = 33),
+mock_scenario_data_fallback <- function(nff_weights = c(NfN = 34, NfS = 33, NaC = 33),
                                 region = "Mediterranean") {
   set.seed(sum(nff_weights) + nchar(region))
   years <- 2025:2050
@@ -91,11 +91,11 @@ mock_scenario_data <- function(nff_weights = c(NfN = 34, NfS = 33, NaC = 33),
   )
 }
 
-#' Generate mock justice scores for an intervention
+#' Generate mock justice scores for an intervention (FALLBACK)
 #' @param intervention Character name of intervention
 #' @return Data frame with 4 justice dimension scores
 #' @noRd
-mock_justice_scores <- function(intervention = "MPA Establishment") {
+mock_justice_scores_fallback <- function(intervention = "MPA Establishment") {
   set.seed(nchar(intervention))
 
   dimensions <- c("Distributional", "Procedural", "Recognitional", "Restorative")
@@ -118,10 +118,10 @@ mock_justice_scores <- function(intervention = "MPA Establishment") {
   )
 }
 
-#' Mock list of interventions
+#' Mock list of interventions (FALLBACK)
 #' @return Character vector of intervention names
 #' @noRd
-mock_interventions <- function() {
+mock_interventions_fallback <- function() {
   c(
     "MPA Establishment",
     "Seagrass Restoration",
@@ -136,12 +136,12 @@ mock_interventions <- function() {
   )
 }
 
-#' Generate mock funding instrument matrix
+#' Generate mock funding instrument matrix (FALLBACK)
 #' @return Data frame of interventions vs EU funding eligibility
 #' @noRd
-mock_funding_matrix <- function() {
-  interventions <- mock_interventions()
-  funds <- c("EMFAF", "LIFE", "Cohesion Fund", "EARDF", "Just Transition Fund")
+mock_funding_matrix_fallback <- function() {
+  interventions <- mock_interventions_fallback()
+  funds <- c("EMFAF", "LIFE", "Cohesion Fund", "EAFRD", "Just Transition Fund")
 
   set.seed(99)
   mat <- matrix(
@@ -156,11 +156,11 @@ mock_funding_matrix <- function() {
   df[, c("Intervention", funds)]
 }
 
-#' Generate mock indicator time series
+#' Generate mock indicator time series (FALLBACK)
 #' @param region Character region name
 #' @return Data frame with indicator values over time with confidence bands
 #' @noRd
-mock_indicator_timeseries <- function(region = "Mediterranean") {
+mock_indicator_timeseries_fallback <- function(region = "Mediterranean") {
   set.seed(nchar(region))
   years <- 2010:2025
   indicators <- c(

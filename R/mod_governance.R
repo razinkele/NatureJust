@@ -65,7 +65,7 @@ mod_governance_server <- function(id) {
         rownames = FALSE
       ) |>
         DT::formatStyle(
-          columns = c("EMFAF", "LIFE", "Cohesion Fund", "EARDF",
+          columns = c("EMFAF", "LIFE", "Cohesion Fund", "EAFRD",
                        "Just Transition Fund"),
           backgroundColor = DT::styleEqual(
             c("Eligible", "Partial", "Not eligible"),

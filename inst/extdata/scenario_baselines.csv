@@ -1,0 +1,21 @@
+region,indicator,baseline_2025,trend_rate,variance,source
+Baltic,Habitat Condition,0.42,0.008,0.012,HELCOM HOLAS III 2023
+Baltic,Ecosystem Services,0.51,0.006,0.010,IPBES Regional Assessment 2018
+Baltic,Livelihoods & Employment,0.58,0.003,0.008,Eurostat nama_10r_2gdp
+Baltic,Equity Score,0.47,0.004,0.009,JRC Territorial Dashboard 2023
+North Sea,Habitat Condition,0.48,0.010,0.011,OSPAR QSR 2023
+North Sea,Ecosystem Services,0.55,0.007,0.009,IPBES Regional Assessment 2018
+North Sea,Livelihoods & Employment,0.65,0.004,0.007,Eurostat nama_10r_2gdp
+North Sea,Equity Score,0.52,0.005,0.008,JRC Territorial Dashboard 2023
+Atlantic,Habitat Condition,0.45,0.009,0.013,OSPAR QSR 2023
+Atlantic,Ecosystem Services,0.50,0.006,0.011,IPBES Regional Assessment 2018
+Atlantic,Livelihoods & Employment,0.55,0.002,0.009,Eurostat nama_10r_2gdp
+Atlantic,Equity Score,0.49,0.003,0.010,JRC Territorial Dashboard 2023
+Mediterranean,Habitat Condition,0.38,0.007,0.014,UNEP-MAP MED QSR 2023
+Mediterranean,Ecosystem Services,0.46,0.005,0.012,IPBES Regional Assessment 2018
+Mediterranean,Livelihoods & Employment,0.52,0.001,0.010,Eurostat nama_10r_2gdp
+Mediterranean,Equity Score,0.44,0.003,0.011,JRC Territorial Dashboard 2023
+Black Sea,Habitat Condition,0.35,0.006,0.015,BSC State of Environment 2019
+Black Sea,Ecosystem Services,0.40,0.004,0.013,IPBES Regional Assessment 2018
+Black Sea,Livelihoods & Employment,0.48,0.002,0.011,Eurostat nama_10r_2gdp
+Black Sea,Equity Score,0.41,0.002,0.012,JRC Territorial Dashboard 2023
