@@ -128,19 +128,33 @@ mod_scenarios_server <- function(id) {
       horizon_year <- as.integer(input$horizon)
       data <- data[data$year <= horizon_year, ]
 
-      p <- ggplot2::ggplot(data, ggplot2::aes(
-        x = year, y = value, color = indicator
-      )) +
-        ggplot2::geom_line(linewidth = 1) +
-        ggplot2::geom_point(size = 1) +
-        ggplot2::theme_minimal() +
-        ggplot2::labs(x = "Year", y = "Index Value", color = "Indicator") +
-        ggplot2::scale_color_manual(values = c(
+      indicator_colors <- c(
           "Habitat Condition" = "#2c7fb8",
           "Ecosystem Services" = "#41ae76",
           "Livelihoods & Employment" = "#f0ad4e",
           "Equity Score" = "#d9534f"
-        ))
+      )
+
+      p <- ggplot2::ggplot(data, ggplot2::aes(
+        x = year, y = value, color = indicator, fill = indicator
+      ))
+
+      # Add confidence bands if lower/upper columns exist
+      if (all(c("lower", "upper") %in% names(data))) {
+        p <- p +
+          ggplot2::geom_ribbon(
+            ggplot2::aes(ymin = lower, ymax = upper),
+            alpha = 0.15, color = NA, show.legend = FALSE
+          )
+      }
+
+      p <- p +
+        ggplot2::geom_line(linewidth = 1) +
+        ggplot2::geom_point(size = 1) +
+        ggplot2::theme_minimal() +
+        ggplot2::labs(x = "Year", y = "Index Value", color = "Indicator") +
+        ggplot2::scale_color_manual(values = indicator_colors) +
+        ggplot2::scale_fill_manual(values = indicator_colors, guide = "none")
 
       plotly::ggplotly(p)
     })

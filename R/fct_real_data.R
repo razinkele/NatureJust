@@ -223,10 +223,17 @@ mock_scenario_data <- function(nff_weights = c(NfN = 34, NfS = 33, NaC = 33),
       values <- base + cumsum(rnorm(length(years), mean = weight_mod + trend, sd = var))
       values <- pmin(pmax(values, 0.05), 0.99)
 
+      # Confidence bands widen over time (growing uncertainty)
+      band_width <- var * sqrt(seq_along(years))
+      lower <- pmax(values - band_width, 0.01)
+      upper <- pmin(values + band_width, 1.00)
+
       data.frame(
         year = years,
         indicator = row$indicator,
         value = round(values, 3),
+        lower = round(lower, 3),
+        upper = round(upper, 3),
         region = region,
         stringsAsFactors = FALSE
       )
