@@ -49,6 +49,32 @@ mod_spatial_ui <- function(id) {
       shinyWidgets::prettyCheckbox(
         ns("show_income"), "Income Disparity",
         value = FALSE, status = "success"
+      ),
+      hr(),
+      h6("Blue Economy"),
+      shinyWidgets::prettyCheckbox(
+        ns("show_offshore_wind"), "Offshore Wind",
+        value = FALSE, status = "info"
+      ),
+      shinyWidgets::prettyCheckbox(
+        ns("show_coastal_tourism"), "Coastal Tourism",
+        value = FALSE, status = "warning"
+      ),
+      shinyWidgets::prettyCheckbox(
+        ns("show_shipping"), "Shipping",
+        value = FALSE, status = "danger"
+      ),
+      shinyWidgets::prettyCheckbox(
+        ns("show_aquaculture"), "Aquaculture",
+        value = FALSE, status = "primary"
+      ),
+      shinyWidgets::prettyCheckbox(
+        ns("show_bathing"), "Bathing Water",
+        value = FALSE, status = "success"
+      ),
+      shinyWidgets::prettyCheckbox(
+        ns("show_blue_jobs"), "Blue Economy Jobs",
+        value = FALSE, status = "info"
       )
     ),
 
@@ -182,6 +208,96 @@ mod_spatial_server <- function(id) {
           )
       }
 
+      if (isTRUE(input$show_offshore_wind) && nrow(data) > 0 &&
+          "offshore_wind" %in% names(data)) {
+        pal_wind <- leaflet::colorNumeric("Greens", domain = c(0, 1))
+        m <- m |>
+          leaflet::addPolygons(
+            data = data,
+            fillColor = ~pal_wind(offshore_wind),
+            fillOpacity = 0.5,
+            weight = 1,
+            color = "#555",
+            label = ~paste0(sovereignt, ": Offshore Wind ", offshore_wind),
+            group = "Offshore Wind"
+          )
+      }
+
+      if (isTRUE(input$show_coastal_tourism) && nrow(data) > 0 &&
+          "coastal_tourism" %in% names(data)) {
+        pal_tour <- leaflet::colorNumeric("YlOrBr", domain = c(0, 1))
+        m <- m |>
+          leaflet::addPolygons(
+            data = data,
+            fillColor = ~pal_tour(coastal_tourism),
+            fillOpacity = 0.5,
+            weight = 1,
+            color = "#555",
+            label = ~paste0(sovereignt, ": Coastal Tourism ", coastal_tourism),
+            group = "Coastal Tourism"
+          )
+      }
+
+      if (isTRUE(input$show_shipping) && nrow(data) > 0 &&
+          "shipping_intensity" %in% names(data)) {
+        pal_ship <- leaflet::colorNumeric("Reds", domain = c(0, 1))
+        m <- m |>
+          leaflet::addPolygons(
+            data = data,
+            fillColor = ~pal_ship(shipping_intensity),
+            fillOpacity = 0.5,
+            weight = 1,
+            color = "#555",
+            label = ~paste0(sovereignt, ": Shipping ", shipping_intensity),
+            group = "Shipping"
+          )
+      }
+
+      if (isTRUE(input$show_aquaculture) && nrow(data) > 0 &&
+          "aquaculture" %in% names(data)) {
+        pal_aqua <- leaflet::colorNumeric("BuGn", domain = c(0, 1))
+        m <- m |>
+          leaflet::addPolygons(
+            data = data,
+            fillColor = ~pal_aqua(aquaculture),
+            fillOpacity = 0.5,
+            weight = 1,
+            color = "#555",
+            label = ~paste0(sovereignt, ": Aquaculture ", aquaculture),
+            group = "Aquaculture"
+          )
+      }
+
+      if (isTRUE(input$show_bathing) && nrow(data) > 0 &&
+          "bathing_quality" %in% names(data)) {
+        pal_bath <- leaflet::colorNumeric("BuPu", domain = c(0, 1))
+        m <- m |>
+          leaflet::addPolygons(
+            data = data,
+            fillColor = ~pal_bath(bathing_quality),
+            fillOpacity = 0.5,
+            weight = 1,
+            color = "#555",
+            label = ~paste0(sovereignt, ": Bathing Quality ", bathing_quality),
+            group = "Bathing Water"
+          )
+      }
+
+      if (isTRUE(input$show_blue_jobs) && nrow(data) > 0 &&
+          "blue_economy_jobs" %in% names(data)) {
+        pal_blue <- leaflet::colorNumeric("PuBu", domain = c(0, 1))
+        m <- m |>
+          leaflet::addPolygons(
+            data = data,
+            fillColor = ~pal_blue(blue_economy_jobs),
+            fillOpacity = 0.5,
+            weight = 1,
+            color = "#555",
+            label = ~paste0(sovereignt, ": Blue Economy Jobs ", blue_economy_jobs),
+            group = "Blue Economy Jobs"
+          )
+      }
+
       if (isTRUE(input$show_mpa)) {
         mpa_data <- mpas()
         m <- m |>
@@ -199,7 +315,9 @@ mod_spatial_server <- function(id) {
       m |>
         leaflet::addLayersControl(
           overlayGroups = c("Vulnerability", "Fisheries", "Poverty Rate",
-                           "Income Disparity", "MPAs"),
+                           "Income Disparity", "Offshore Wind", "Coastal Tourism",
+                           "Shipping", "Aquaculture", "Bathing Water",
+                           "Blue Economy Jobs", "MPAs"),
           options = leaflet::layersControlOptions(collapsed = FALSE)
         )
     })

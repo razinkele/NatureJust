@@ -17,6 +17,12 @@ mock_nuts2_data_fallback <- function() {
   europe$mpa_coverage <- round(runif(nrow(europe), 0.05, 0.45), 2)
   europe$poverty_rate <- round(runif(nrow(europe), 0.1, 0.6), 2)
   europe$income_disparity <- round(runif(nrow(europe), 0.2, 0.8), 2)
+  europe$offshore_wind <- round(runif(nrow(europe), 0, 0.5), 2)
+  europe$coastal_tourism <- round(runif(nrow(europe), 0.1, 0.9), 2)
+  europe$shipping_intensity <- round(runif(nrow(europe), 0.05, 0.7), 2)
+  europe$aquaculture <- round(runif(nrow(europe), 0, 0.4), 2)
+  europe$bathing_quality <- round(runif(nrow(europe), 0.5, 1.0), 2)
+  europe$blue_economy_jobs <- round(runif(nrow(europe), 0.05, 0.5), 2)
 
   sea_basins <- c("Baltic", "North Sea", "Atlantic", "Mediterranean", "Black Sea")
   europe$sea_basin <- sample(sea_basins, nrow(europe), replace = TRUE)
@@ -170,12 +176,32 @@ mock_indicator_timeseries_fallback <- function(region = "Mediterranean") {
     "Habitat Condition Score",
     "Ecosystem Services Value",
     "Community Wellbeing Index",
-    "Governance Effectiveness"
+    "Governance Effectiveness",
+    "Fish Stock Biomass",
+    "Sustainable Fishing",
+    "Offshore Wind Capacity",
+    "Coastal Tourism Pressure",
+    "Bathing Water Quality"
+  )
+
+  # GBF target values for each indicator
+  gbf_targets <- c(
+    "Marine Biodiversity Index" = 0.75,
+    "Habitat Condition Score" = 0.80,
+    "Ecosystem Services Value" = 0.70,
+    "Community Wellbeing Index" = 0.65,
+    "Governance Effectiveness" = 0.72,
+    "Fish Stock Biomass" = 0.75,
+    "Sustainable Fishing" = 0.70,
+    "Offshore Wind Capacity" = 0.60,
+    "Coastal Tourism Pressure" = 0.55,
+    "Bathing Water Quality" = 0.85
   )
 
   do.call(rbind, lapply(indicators, function(ind) {
     trend <- cumsum(rnorm(length(years), mean = 0.01, sd = 0.03))
     value <- 0.5 + trend
+    gbf_val <- if (ind %in% names(gbf_targets)) gbf_targets[[ind]] else 0.70
     data.frame(
       year = years,
       indicator = ind,
@@ -183,7 +209,7 @@ mock_indicator_timeseries_fallback <- function(region = "Mediterranean") {
       lower = round(value - abs(rnorm(length(years), 0.05, 0.02)), 3),
       upper = round(value + abs(rnorm(length(years), 0.05, 0.02)), 3),
       region = region,
-      gbf_target = round(runif(1, 0.6, 0.9), 2)
+      gbf_target = gbf_val
     )
   }))
 }

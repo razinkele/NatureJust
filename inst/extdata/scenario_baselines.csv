@@ -19,3 +19,13 @@ Black Sea,Habitat Condition,0.35,0.006,0.015,BSC State of Environment 2019
 Black Sea,Ecosystem Services,0.40,0.004,0.013,IPBES Regional Assessment 2018
 Black Sea,Livelihoods & Employment,0.48,0.002,0.011,Eurostat nama_10r_2gdp
 Black Sea,Equity Score,0.41,0.002,0.012,JRC Territorial Dashboard 2023
+Baltic,Offshore Wind Capacity,0.35,0.015,0.010,EU Offshore Renewable Energy Strategy
+North Sea,Offshore Wind Capacity,0.55,0.018,0.009,EU Offshore Renewable Energy Strategy
+Atlantic,Offshore Wind Capacity,0.30,0.012,0.011,EU Offshore Renewable Energy Strategy
+Mediterranean,Offshore Wind Capacity,0.15,0.010,0.013,EU Offshore Renewable Energy Strategy
+Black Sea,Offshore Wind Capacity,0.10,0.008,0.014,EU Offshore Renewable Energy Strategy
+Baltic,Bathing Water Quality,0.72,0.008,0.008,EU Bathing Water Directive Report
+North Sea,Bathing Water Quality,0.78,0.006,0.007,EU Bathing Water Directive Report
+Atlantic,Bathing Water Quality,0.80,0.007,0.009,EU Bathing Water Directive Report
+Mediterranean,Bathing Water Quality,0.85,0.005,0.006,EU Bathing Water Directive Report
+Black Sea,Bathing Water Quality,0.60,0.009,0.012,EU Bathing Water Directive Report

@@ -132,7 +132,9 @@ mod_scenarios_server <- function(id) {
           "Habitat Condition" = "#2c7fb8",
           "Ecosystem Services" = "#41ae76",
           "Livelihoods & Employment" = "#f0ad4e",
-          "Equity Score" = "#d9534f"
+          "Equity Score" = "#d9534f",
+          "Offshore Wind Capacity" = "#17becf",
+          "Bathing Water Quality" = "#9467bd"
       )
       has_bands <- all(c("lower", "upper") %in% names(data))
 
@@ -207,7 +209,8 @@ mod_scenarios_server <- function(id) {
       }
 
       categories <- c("Habitat Condition", "Ecosystem Services",
-                       "Livelihoods & Employment", "Equity Score")
+                       "Livelihoods & Employment", "Equity Score",
+                       "Offshore Wind Capacity", "Bathing Water Quality")
 
       p <- plotly::plot_ly(type = "scatterpolar", fill = "toself")
 

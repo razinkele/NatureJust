@@ -22,7 +22,10 @@ mod_dashboard_ui <- function(id) {
           "Community Wellbeing Index",
           "Governance Effectiveness",
           "Fish Stock Biomass",
-          "Sustainable Fishing"
+          "Sustainable Fishing",
+          "Offshore Wind Capacity",
+          "Coastal Tourism Pressure",
+          "Bathing Water Quality"
         ),
         selected = c("Marine Biodiversity Index", "Habitat Condition Score"),
         multiple = TRUE,

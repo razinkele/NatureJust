@@ -32,7 +32,13 @@ mock_nuts2_data <- function() {
       conservation_pressure = function(n) round(runif(n, 0, 1), 2),
       mpa_coverage         = function(n) round(runif(n, 0.05, 0.45), 2),
       poverty_rate         = function(n) round(runif(n, 0.1, 0.6), 2),
-      income_disparity     = function(n) round(runif(n, 0.2, 0.8), 2)
+      income_disparity     = function(n) round(runif(n, 0.2, 0.8), 2),
+      offshore_wind        = function(n) round(runif(n, 0, 0.5), 2),
+      coastal_tourism      = function(n) round(runif(n, 0.1, 0.9), 2),
+      shipping_intensity   = function(n) round(runif(n, 0.05, 0.7), 2),
+      aquaculture          = function(n) round(runif(n, 0, 0.4), 2),
+      bathing_quality      = function(n) round(runif(n, 0.5, 1.0), 2),
+      blue_economy_jobs    = function(n) round(runif(n, 0.05, 0.5), 2)
     )
     for (col in names(fallbacks)) {
       if (!col %in% names(nuts2)) {
@@ -42,7 +48,9 @@ mock_nuts2_data <- function() {
 
     # Fill any remaining NAs with medians
     for (col in c("vulnerability", "fisheries_dep", "conservation_pressure",
-                   "mpa_coverage", "poverty_rate", "income_disparity")) {
+                   "mpa_coverage", "poverty_rate", "income_disparity",
+                   "offshore_wind", "coastal_tourism", "shipping_intensity",
+                   "aquaculture", "bathing_quality", "blue_economy_jobs")) {
       if (col %in% names(nuts2)) {
         med <- median(nuts2[[col]], na.rm = TRUE)
         if (is.na(med)) med <- 0.5
@@ -228,6 +236,8 @@ mock_scenario_data <- function(nff_weights = c(NfN = 34, NfS = 33, NaC = 33),
         "Ecosystem Services" = 0.015 * nfs,
         "Livelihoods & Employment" = 0.01 * nac - 0.005 * nfn,
         "Equity Score" = 0.01 * (1 - max(abs(nfn - nfs), abs(nfs - nac), abs(nfn - nac))),
+        "Offshore Wind Capacity" = 0.012 * nfs + 0.005 * nac,
+        "Bathing Water Quality" = 0.008 * nfn + 0.005 * nfs,
         trend  # default
       )
 

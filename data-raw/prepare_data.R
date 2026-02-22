@@ -108,6 +108,7 @@ tryCatch({
     ) |>
     select(NUTS_ID, vulnerability, fisheries_dep, conservation_pressure)
 
+
   # --- Real MPA coverage from sdg_14_10 (marine Natura 2000 %) ---
   cat("  Fetching MPA coverage (sdg_14_10)...\n")
   mpa_raw <- tryCatch(
@@ -132,6 +133,7 @@ tryCatch({
   } else {
     indicators$mpa_coverage <- round(pmin(pmax(rnorm(nrow(indicators), mean = 0.123, sd = 0.08), 0.02), 0.50), 2)
   }
+
 
   # --- Poverty rate from ilc_peps11n (at-risk-of-poverty rate, NUTS2) ---
   cat("  Fetching poverty rate (ilc_peps11n)...\n")
@@ -183,6 +185,7 @@ tryCatch({
     indicators$poverty_rate <- round(runif(nrow(indicators), 0.1, 0.6), 2)
   }
 
+
   # --- Household income from nama_10r_2hhinc (disposable income per capita) ---
   cat("  Fetching household income (nama_10r_2hhinc)...\n")
   inc_raw <- tryCatch(
@@ -192,7 +195,7 @@ tryCatch({
   if (!is.null(inc_raw)) {
     inc <- inc_raw |>
       filter(unit == "EUR_HAB", nchar(as.character(geo)) == 4,
-             direct == "BAL") |>
+             direct == "BAL", na_item == "B6N") |>
       group_by(geo) |>
       filter(TIME_PERIOD == max(TIME_PERIOD)) |>
       ungroup() |>
@@ -208,13 +211,182 @@ tryCatch({
     indicators$income_disparity <- round(runif(nrow(indicators), 0.2, 0.8), 2)
   }
 
+
+  # --- Offshore wind capacity from nrg_inf_epcrw (renewable capacity, NUTS0) ---
+  cat("  Fetching offshore wind capacity (nrg_inf_epcrw)...\n")
+  wind_raw <- tryCatch(
+    eurostat::get_eurostat("nrg_inf_epcrw", time_format = "num"),
+    error = function(e) { cat("  Warning: nrg_inf_epcrw unavailable\n"); NULL }
+  )
+  if (!is.null(wind_raw)) {
+    wind <- wind_raw |>
+      filter(siec == "RA310", nchar(as.character(geo)) == 2) |>
+      group_by(geo) |>
+      filter(TIME_PERIOD == max(TIME_PERIOD)) |>
+      ungroup() |>
+      select(CNTR_CODE = geo, wind_mw = values)
+    indicators$CNTR_CODE <- substr(indicators$NUTS_ID, 1, 2)
+    indicators <- dplyr::left_join(indicators, wind, by = "CNTR_CODE")
+    # MW per capita proxy → normalize 0-1
+    wind_vals <- indicators$wind_mw
+    if (all(is.na(wind_vals))) {
+      indicators$offshore_wind <- round(runif(nrow(indicators), 0, 0.5), 2)
+    } else {
+      w_min <- min(wind_vals, na.rm = TRUE)
+      w_max <- max(wind_vals, na.rm = TRUE)
+      indicators$offshore_wind <- round((wind_vals - w_min) / (w_max - w_min + 1), 2)
+      indicators$offshore_wind[is.na(indicators$offshore_wind)] <- 0
+    }
+    indicators$wind_mw <- NULL
+    indicators$CNTR_CODE <- NULL
+  } else {
+    indicators$offshore_wind <- round(runif(nrow(indicators), 0, 0.5), 2)
+  }
+
+
+  # --- Coastal tourism from tour_occ_nin2c (nights at coastal NUTS2) ---
+  cat("  Fetching coastal tourism (tour_occ_nin2c)...\n")
+  tour_raw <- tryCatch(
+    eurostat::get_eurostat("tour_occ_nin2c", time_format = "num"),
+    error = function(e) { cat("  Warning: tour_occ_nin2c unavailable\n"); NULL }
+  )
+  if (!is.null(tour_raw)) {
+    tour <- tour_raw |>
+      filter(c_resid == "TOTAL", unit == "NR",
+             nchar(as.character(geo)) == 4) |>
+      group_by(geo) |>
+      filter(TIME_PERIOD == max(TIME_PERIOD)) |>
+      ungroup() |>
+      select(NUTS_ID = geo, tour_nights = values)
+    indicators <- dplyr::left_join(indicators, tour, by = "NUTS_ID")
+    t_min <- min(indicators$tour_nights, na.rm = TRUE)
+    t_max <- max(indicators$tour_nights, na.rm = TRUE)
+    indicators$coastal_tourism <- round(
+      (indicators$tour_nights - t_min) / (t_max - t_min + 1), 2)
+    indicators$coastal_tourism[is.na(indicators$coastal_tourism)] <- 0
+    indicators$tour_nights <- NULL
+  } else {
+    indicators$coastal_tourism <- round(runif(nrow(indicators), 0.1, 0.9), 2)
+  }
+
+
+  # --- Shipping / port freight from mar_go_aa (NUTS0) ---
+  cat("  Fetching shipping intensity (mar_go_aa)...\n")
+  ship_raw <- tryCatch(
+    eurostat::get_eurostat("mar_go_aa", time_format = "num"),
+    error = function(e) { cat("  Warning: mar_go_aa unavailable\n"); NULL }
+  )
+  if (!is.null(ship_raw)) {
+    ship <- ship_raw |>
+      filter(nchar(as.character(rep_mar)) == 2) |>
+      group_by(rep_mar) |>
+      filter(TIME_PERIOD == max(TIME_PERIOD)) |>
+      summarise(ship_tonnes = sum(values, na.rm = TRUE), .groups = "drop") |>
+      select(CNTR_CODE = rep_mar, ship_tonnes)
+    indicators$CNTR_CODE <- substr(indicators$NUTS_ID, 1, 2)
+    indicators <- dplyr::left_join(indicators, ship, by = "CNTR_CODE")
+    s_min <- min(indicators$ship_tonnes, na.rm = TRUE)
+    s_max <- max(indicators$ship_tonnes, na.rm = TRUE)
+    indicators$shipping_intensity <- round(
+      (indicators$ship_tonnes - s_min) / (s_max - s_min + 1), 2)
+    indicators$shipping_intensity[is.na(indicators$shipping_intensity)] <- 0
+    indicators$ship_tonnes <- NULL
+    indicators$CNTR_CODE <- NULL
+  } else {
+    indicators$shipping_intensity <- round(runif(nrow(indicators), 0.05, 0.7), 2)
+  }
+
+
+  # --- Aquaculture production from fish_aq2a (NUTS0) ---
+  cat("  Fetching aquaculture production (fish_aq2a)...\n")
+  aqua_raw <- tryCatch(
+    eurostat::get_eurostat("fish_aq2a", time_format = "num"),
+    error = function(e) { cat("  Warning: fish_aq2a unavailable\n"); NULL }
+  )
+  if (!is.null(aqua_raw)) {
+    aqua <- aqua_raw |>
+      filter(nchar(as.character(geo)) == 2) |>
+      group_by(geo) |>
+      filter(TIME_PERIOD == max(TIME_PERIOD)) |>
+      summarise(aqua_tonnes = sum(values, na.rm = TRUE), .groups = "drop") |>
+      select(CNTR_CODE = geo, aqua_tonnes)
+    indicators$CNTR_CODE <- substr(indicators$NUTS_ID, 1, 2)
+    indicators <- dplyr::left_join(indicators, aqua, by = "CNTR_CODE")
+    a_min <- min(indicators$aqua_tonnes, na.rm = TRUE)
+    a_max <- max(indicators$aqua_tonnes, na.rm = TRUE)
+    indicators$aquaculture <- round(
+      (indicators$aqua_tonnes - a_min) / (a_max - a_min + 1), 2)
+    indicators$aquaculture[is.na(indicators$aquaculture)] <- 0
+    indicators$aqua_tonnes <- NULL
+    indicators$CNTR_CODE <- NULL
+  } else {
+    indicators$aquaculture <- round(runif(nrow(indicators), 0, 0.4), 2)
+  }
+
+
+  # --- Bathing water quality from sdg_14_40 (% excellent, NUTS0) ---
+  cat("  Fetching bathing water quality (sdg_14_40)...\n")
+  bath_raw <- tryCatch(
+    eurostat::get_eurostat("sdg_14_40", time_format = "num"),
+    error = function(e) { cat("  Warning: sdg_14_40 unavailable\n"); NULL }
+  )
+  if (!is.null(bath_raw)) {
+    bath <- bath_raw |>
+      filter(aquaenv == "CST_EXC_PC", nchar(as.character(geo)) == 2) |>
+      group_by(geo) |>
+      filter(TIME_PERIOD == max(TIME_PERIOD)) |>
+      ungroup() |>
+      mutate(bath_pct = values / 100) |>
+      select(CNTR_CODE = geo, bath_pct)
+    indicators$CNTR_CODE <- substr(indicators$NUTS_ID, 1, 2)
+    indicators <- dplyr::left_join(indicators, bath, by = "CNTR_CODE")
+    indicators$bathing_quality <- round(
+      ifelse(is.na(indicators$bath_pct), 0.7, indicators$bath_pct), 2)
+    indicators$bath_pct <- NULL
+    indicators$CNTR_CODE <- NULL
+  } else {
+    indicators$bathing_quality <- round(runif(nrow(indicators), 0.5, 1.0), 2)
+  }
+
+
+  # --- Blue economy employment (fish_ld_main as proxy for fishing employment) ---
+  cat("  Fetching blue economy employment (fish_ld_main)...\n")
+  blue_raw <- tryCatch(
+    eurostat::get_eurostat("fish_ld_main", time_format = "num"),
+    error = function(e) { cat("  Warning: fish_ld_main unavailable\n"); NULL }
+  )
+  if (!is.null(blue_raw)) {
+    blue <- blue_raw |>
+      filter(nchar(as.character(geo)) == 2) |>
+      group_by(geo) |>
+      filter(TIME_PERIOD == max(TIME_PERIOD)) |>
+      summarise(blue_val = sum(values, na.rm = TRUE), .groups = "drop") |>
+      select(CNTR_CODE = geo, blue_val)
+    indicators$CNTR_CODE <- substr(indicators$NUTS_ID, 1, 2)
+    indicators <- dplyr::left_join(indicators, blue, by = "CNTR_CODE")
+    b_min <- min(indicators$blue_val, na.rm = TRUE)
+    b_max <- max(indicators$blue_val, na.rm = TRUE)
+    indicators$blue_economy_jobs <- round(
+      (indicators$blue_val - b_min) / (b_max - b_min + 1), 2)
+    indicators$blue_economy_jobs[is.na(indicators$blue_economy_jobs)] <- 0
+    indicators$blue_val <- NULL
+    indicators$CNTR_CODE <- NULL
+  } else {
+    indicators$blue_economy_jobs <- round(runif(nrow(indicators), 0.05, 0.5), 2)
+  }
+
+
   indicators <- indicators |>
     select(NUTS_ID, vulnerability, fisheries_dep, conservation_pressure,
-           mpa_coverage, poverty_rate, income_disparity)
+           mpa_coverage, poverty_rate, income_disparity,
+           offshore_wind, coastal_tourism, shipping_intensity,
+           aquaculture, bathing_quality, blue_economy_jobs)
 
   # Replace NAs with median
   for (col in c("vulnerability", "fisheries_dep", "conservation_pressure",
-                 "mpa_coverage", "poverty_rate", "income_disparity")) {
+                 "mpa_coverage", "poverty_rate", "income_disparity",
+                 "offshore_wind", "coastal_tourism", "shipping_intensity",
+                 "aquaculture", "bathing_quality", "blue_economy_jobs")) {
     med <- median(indicators[[col]], na.rm = TRUE)
     indicators[[col]][is.na(indicators[[col]])] <- med
   }
@@ -384,6 +556,137 @@ tryCatch({
   }
 
   all_ts <- rbind(all_ts, fish_ts, fish_ts2)
+
+  # --- Offshore Wind Capacity time series (from nrg_inf_epcrw annual) ---
+  cat("  Building Offshore Wind Capacity time series...\n")
+  wind_ts_raw <- tryCatch(
+    eurostat::get_eurostat("nrg_inf_epcrw", time_format = "num"),
+    error = function(e) { cat("  Warning: nrg_inf_epcrw unavailable for TS\n"); NULL }
+  )
+  wind_ts <- NULL
+  if (!is.null(wind_ts_raw)) {
+    wt <- wind_ts_raw |>
+      filter(siec == "RA310") |>
+      group_by(TIME_PERIOD) |>
+      summarise(value = mean(values, na.rm = TRUE), .groups = "drop") |>
+      mutate(
+        indicator = "Offshore Wind Capacity",
+        value = round(value / max(value, na.rm = TRUE), 3)
+      )
+    wind_ts <- do.call(rbind, lapply(regions, function(reg) {
+      set.seed(nchar(reg) + 20)
+      noise <- rnorm(nrow(wt), 0, 0.02)
+      data.frame(
+        year = wt$TIME_PERIOD,
+        indicator = "Offshore Wind Capacity",
+        value = round(pmin(pmax(wt$value + noise, 0.05), 0.95), 3),
+        lower = round(pmin(pmax(wt$value + noise - 0.04, 0.01), 0.90), 3),
+        upper = round(pmin(pmax(wt$value + noise + 0.04, 0.10), 1.00), 3),
+        region = reg,
+        gbf_target = 0.60,
+        stringsAsFactors = FALSE
+      )
+    }))
+  } else {
+    cat("  Generating synthetic Offshore Wind Capacity time series...\n")
+    set.seed(2027)
+    wind_ts <- do.call(rbind, lapply(regions, function(reg) {
+      bases <- region_bases[[reg]]
+      noise <- cumsum(rnorm(length(years), mean = 0, sd = 0.008))
+      value <- round(pmin(pmax(bases[3] + (seq_along(years) - 1) * 0.015 + noise, 0.05), 0.95), 3)
+      data.frame(year = years, indicator = "Offshore Wind Capacity", value = value,
+                 lower = round(value - 0.04, 3), upper = round(value + 0.04, 3),
+                 region = reg, gbf_target = 0.60, stringsAsFactors = FALSE)
+    }))
+  }
+  all_ts <- rbind(all_ts, wind_ts)
+
+  # --- Coastal Tourism Pressure time series (from tour_occ_nin2c annual) ---
+  cat("  Building Coastal Tourism Pressure time series...\n")
+  tour_ts_raw <- tryCatch(
+    eurostat::get_eurostat("tour_occ_nin2c", time_format = "num"),
+    error = function(e) { cat("  Warning: tour_occ_nin2c unavailable for TS\n"); NULL }
+  )
+  tour_ts <- NULL
+  if (!is.null(tour_ts_raw)) {
+    tt <- tour_ts_raw |>
+      filter(c_resid == "TOTAL", unit == "NR") |>
+      group_by(TIME_PERIOD) |>
+      summarise(value = mean(values, na.rm = TRUE), .groups = "drop") |>
+      mutate(
+        indicator = "Coastal Tourism Pressure",
+        value = round(value / max(value, na.rm = TRUE), 3)
+      )
+    tour_ts <- do.call(rbind, lapply(regions, function(reg) {
+      set.seed(nchar(reg) + 30)
+      noise <- rnorm(nrow(tt), 0, 0.02)
+      data.frame(
+        year = tt$TIME_PERIOD,
+        indicator = "Coastal Tourism Pressure",
+        value = round(pmin(pmax(tt$value + noise, 0.05), 0.95), 3),
+        lower = round(pmin(pmax(tt$value + noise - 0.04, 0.01), 0.90), 3),
+        upper = round(pmin(pmax(tt$value + noise + 0.04, 0.10), 1.00), 3),
+        region = reg,
+        gbf_target = 0.55,
+        stringsAsFactors = FALSE
+      )
+    }))
+  } else {
+    cat("  Generating synthetic Coastal Tourism Pressure time series...\n")
+    set.seed(2028)
+    tour_ts <- do.call(rbind, lapply(regions, function(reg) {
+      bases <- region_bases[[reg]]
+      noise <- cumsum(rnorm(length(years), mean = 0, sd = 0.008))
+      value <- round(pmin(pmax(bases[4] + (seq_along(years) - 1) * 0.008 + noise, 0.05), 0.95), 3)
+      data.frame(year = years, indicator = "Coastal Tourism Pressure", value = value,
+                 lower = round(value - 0.04, 3), upper = round(value + 0.04, 3),
+                 region = reg, gbf_target = 0.55, stringsAsFactors = FALSE)
+    }))
+  }
+  all_ts <- rbind(all_ts, tour_ts)
+
+  # --- Bathing Water Quality time series (from sdg_14_40 annual) ---
+  cat("  Building Bathing Water Quality time series...\n")
+  bath_ts_raw <- tryCatch(
+    eurostat::get_eurostat("sdg_14_40", time_format = "num"),
+    error = function(e) { cat("  Warning: sdg_14_40 unavailable for TS\n"); NULL }
+  )
+  bath_ts <- NULL
+  if (!is.null(bath_ts_raw)) {
+    bt <- bath_ts_raw |>
+      group_by(TIME_PERIOD) |>
+      summarise(value = mean(values, na.rm = TRUE), .groups = "drop") |>
+      mutate(
+        indicator = "Bathing Water Quality",
+        value = round(value / 100, 3)
+      )
+    bath_ts <- do.call(rbind, lapply(regions, function(reg) {
+      set.seed(nchar(reg) + 40)
+      noise <- rnorm(nrow(bt), 0, 0.02)
+      data.frame(
+        year = bt$TIME_PERIOD,
+        indicator = "Bathing Water Quality",
+        value = round(pmin(pmax(bt$value + noise, 0.3), 1.00), 3),
+        lower = round(pmin(pmax(bt$value + noise - 0.04, 0.25), 0.95), 3),
+        upper = round(pmin(pmax(bt$value + noise + 0.04, 0.35), 1.00), 3),
+        region = reg,
+        gbf_target = 0.85,
+        stringsAsFactors = FALSE
+      )
+    }))
+  } else {
+    cat("  Generating synthetic Bathing Water Quality time series...\n")
+    set.seed(2029)
+    bath_ts <- do.call(rbind, lapply(regions, function(reg) {
+      bases <- region_bases[[reg]]
+      noise <- cumsum(rnorm(length(years), mean = 0, sd = 0.006))
+      value <- round(pmin(pmax(0.65 + (seq_along(years) - 1) * 0.010 + noise, 0.3), 1.00), 3)
+      data.frame(year = years, indicator = "Bathing Water Quality", value = value,
+                 lower = round(value - 0.03, 3), upper = round(value + 0.03, 3),
+                 region = reg, gbf_target = 0.85, stringsAsFactors = FALSE)
+    }))
+  }
+  all_ts <- rbind(all_ts, bath_ts)
 
   saveRDS(all_ts, file.path(extdata_dir, "indicator_timeseries_cache.rds"))
   cat("  Saved indicator_timeseries_cache.rds:",
