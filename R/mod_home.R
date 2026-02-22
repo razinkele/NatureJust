@@ -18,7 +18,6 @@ mod_home_ui <- function(id) {
 
     bslib::layout_column_wrap(
       width = 1/2,
-      heights_equal = "row",
 
       # NFF Triangle
       bslib::card(
@@ -99,6 +98,8 @@ mod_home_ui <- function(id) {
         bslib::card_body(
           bslib::accordion(
             id = ns("framework_accordion"),
+            open = TRUE,
+            multiple = TRUE,
             bslib::accordion_panel(
               "Global Biodiversity Framework (GBF)",
               icon = bsicons::bs_icon("globe"),
@@ -124,33 +125,6 @@ mod_home_ui <- function(id) {
             )
           )
         )
-      )
-    ),
-
-    # Module overview cards
-    h4("Explore the Modules", class = "text-center mt-4 mb-3"),
-    bslib::layout_column_wrap(
-      width = 1/3,
-      bslib::value_box(
-        title = "Spatial Equity",
-        value = "Diagnostic",
-        showcase = bsicons::bs_icon("map"),
-        theme = "primary",
-        p("Map conservation needs against socio-economic vulnerability")
-      ),
-      bslib::value_box(
-        title = "Scenario Explorer",
-        value = "NFF Futures",
-        showcase = bsicons::bs_icon("sliders"),
-        theme = "info",
-        p("Compare biodiversity futures under different value perspectives")
-      ),
-      bslib::value_box(
-        title = "Justice Assessment",
-        value = "4 Dimensions",
-        showcase = bsicons::bs_icon("shield-check"),
-        theme = "success",
-        p("Evaluate interventions against environmental justice criteria")
       )
     )
   )

@@ -1,4 +1,17 @@
-// NatureJust-EU — NFF Triangle interactions
+// NatureJust-EU — NFF Triangle interactions & navigation
+var NatureJust = NatureJust || {};
+
+// Shared navigation helper — switches navbar tab by name
+NatureJust.navigateTo = function(target) {
+  Shiny.setInputValue('main_nav', target, {priority: 'event'});
+  var navLinks = document.querySelectorAll('.navbar-nav .nav-link');
+  navLinks.forEach(function(link) {
+    if (link.textContent.trim().indexOf(target) !== -1) {
+      link.click();
+    }
+  });
+};
+
 $(document).ready(function() {
 
   // --- Vertex click navigation with ripple ---
@@ -26,16 +39,7 @@ $(document).ready(function() {
     });
     setTimeout(function() { ripple.remove(); }, 650);
 
-    // Navigate via Shiny
-    Shiny.setInputValue('main_nav', target, {priority: 'event'});
-
-    // Fallback: click nav link directly
-    var navLinks = document.querySelectorAll('.navbar-nav .nav-link');
-    navLinks.forEach(function(link) {
-      if (link.textContent.trim().indexOf(target) !== -1) {
-        link.click();
-      }
-    });
+    NatureJust.navigateTo(target);
   });
 
   // --- Vertex hover tooltips ---

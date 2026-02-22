@@ -87,10 +87,11 @@ bundle_resources <- function(path, app_title, ...) {
 source(file.path(app_dir, "R/app_ui.R"), local = FALSE)
 source(file.path(app_dir, "R/app_server.R"), local = FALSE)
 
-cat("Starting NatureJust-EU on http://127.0.0.1:7701\n")
+app_port <- as.integer(Sys.getenv("NATUREJUST_PORT", "7701"))
+cat("Starting NatureJust-EU on http://127.0.0.1:", app_port, "\n", sep = "")
 
 shiny::shinyApp(
   ui = app_ui,
   server = app_server,
-  options = list(port = 7701, host = "127.0.0.1", launch.browser = FALSE)
+  options = list(port = app_port, host = "127.0.0.1", launch.browser = FALSE)
 )
