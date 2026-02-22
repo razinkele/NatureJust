@@ -15,6 +15,8 @@ mock_nuts2_data_fallback <- function() {
   europe$fisheries_dep <- round(runif(nrow(europe), 0, 1), 2)
   europe$conservation_pressure <- round(runif(nrow(europe), 0, 1), 2)
   europe$mpa_coverage <- round(runif(nrow(europe), 0.05, 0.45), 2)
+  europe$poverty_rate <- round(runif(nrow(europe), 0.1, 0.6), 2)
+  europe$income_disparity <- round(runif(nrow(europe), 0.2, 0.8), 2)
 
   sea_basins <- c("Baltic", "North Sea", "Atlantic", "Mediterranean", "Black Sea")
   europe$sea_basin <- sample(sea_basins, nrow(europe), replace = TRUE)

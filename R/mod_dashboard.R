@@ -20,7 +20,9 @@ mod_dashboard_ui <- function(id) {
           "Habitat Condition Score",
           "Ecosystem Services Value",
           "Community Wellbeing Index",
-          "Governance Effectiveness"
+          "Governance Effectiveness",
+          "Fish Stock Biomass",
+          "Sustainable Fishing"
         ),
         selected = c("Marine Biodiversity Index", "Habitat Condition Score"),
         multiple = TRUE,

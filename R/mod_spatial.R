@@ -41,6 +41,14 @@ mod_spatial_ui <- function(id) {
       shinyWidgets::prettyCheckbox(
         ns("show_fisheries"), "Fisheries Dependency",
         value = FALSE, status = "info"
+      ),
+      shinyWidgets::prettyCheckbox(
+        ns("show_poverty"), "Poverty Rate",
+        value = FALSE, status = "danger"
+      ),
+      shinyWidgets::prettyCheckbox(
+        ns("show_income"), "Income Disparity",
+        value = FALSE, status = "success"
       )
     ),
 
@@ -144,6 +152,36 @@ mod_spatial_server <- function(id) {
           )
       }
 
+      if (isTRUE(input$show_poverty) && nrow(data) > 0 &&
+          "poverty_rate" %in% names(data)) {
+        pal_pov <- leaflet::colorNumeric("Purples", domain = c(0, 1))
+        m <- m |>
+          leaflet::addPolygons(
+            data = data,
+            fillColor = ~pal_pov(poverty_rate),
+            fillOpacity = 0.5,
+            weight = 1,
+            color = "#555",
+            label = ~paste0(sovereignt, ": Poverty Rate ", poverty_rate),
+            group = "Poverty Rate"
+          )
+      }
+
+      if (isTRUE(input$show_income) && nrow(data) > 0 &&
+          "income_disparity" %in% names(data)) {
+        pal_inc <- leaflet::colorNumeric("Oranges", domain = c(0, 1))
+        m <- m |>
+          leaflet::addPolygons(
+            data = data,
+            fillColor = ~pal_inc(income_disparity),
+            fillOpacity = 0.5,
+            weight = 1,
+            color = "#555",
+            label = ~paste0(sovereignt, ": Income Disparity ", income_disparity),
+            group = "Income Disparity"
+          )
+      }
+
       if (isTRUE(input$show_mpa)) {
         mpa_data <- mpas()
         m <- m |>
@@ -160,7 +198,8 @@ mod_spatial_server <- function(id) {
 
       m |>
         leaflet::addLayersControl(
-          overlayGroups = c("Vulnerability", "Fisheries", "MPAs"),
+          overlayGroups = c("Vulnerability", "Fisheries", "Poverty Rate",
+                           "Income Disparity", "MPAs"),
           options = leaflet::layersControlOptions(collapsed = FALSE)
         )
     })

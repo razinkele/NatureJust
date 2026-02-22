@@ -21,17 +21,28 @@ mock_nuts2_data <- function() {
         indicators,
         by = "NUTS_ID"
       )
-    } else {
-      # Fill with NA if no indicator cache
-      set.seed(42)
-      nuts2$vulnerability <- round(runif(nrow(nuts2), 0, 1), 2)
-      nuts2$fisheries_dep <- round(runif(nrow(nuts2), 0, 1), 2)
-      nuts2$conservation_pressure <- round(runif(nrow(nuts2), 0, 1), 2)
-      nuts2$mpa_coverage <- round(runif(nrow(nuts2), 0.05, 0.45), 2)
+    }
+
+    # Fill missing indicator columns with random fallback values
+    # (handles both NULL cache and stale cache missing new columns)
+    set.seed(42)
+    fallbacks <- list(
+      vulnerability        = function(n) round(runif(n, 0, 1), 2),
+      fisheries_dep        = function(n) round(runif(n, 0, 1), 2),
+      conservation_pressure = function(n) round(runif(n, 0, 1), 2),
+      mpa_coverage         = function(n) round(runif(n, 0.05, 0.45), 2),
+      poverty_rate         = function(n) round(runif(n, 0.1, 0.6), 2),
+      income_disparity     = function(n) round(runif(n, 0.2, 0.8), 2)
+    )
+    for (col in names(fallbacks)) {
+      if (!col %in% names(nuts2)) {
+        nuts2[[col]] <- fallbacks[[col]](nrow(nuts2))
+      }
     }
 
     # Fill any remaining NAs with medians
-    for (col in c("vulnerability", "fisheries_dep", "conservation_pressure", "mpa_coverage")) {
+    for (col in c("vulnerability", "fisheries_dep", "conservation_pressure",
+                   "mpa_coverage", "poverty_rate", "income_disparity")) {
       if (col %in% names(nuts2)) {
         med <- median(nuts2[[col]], na.rm = TRUE)
         if (is.na(med)) med <- 0.5
