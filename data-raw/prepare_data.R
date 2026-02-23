@@ -35,6 +35,13 @@ dir.create(extdata_dir, recursive = TRUE, showWarnings = FALSE)
 cat("=== NatureJust Data Preparation ===\n")
 cat("Output directory:", extdata_dir, "\n\n")
 
+# EU27 + Norway — used across all sections for country filtering
+eu_countries <- c(
+  "AT", "BE", "BG", "CY", "CZ", "DE", "DK", "EE", "EL", "ES",
+  "FI", "FR", "HR", "HU", "IE", "IT", "LT", "LV", "LU", "MT",
+  "NL", "PL", "PT", "RO", "SE", "SI", "SK", "NO"
+)
+
 # --------------------------------------------------------------------------
 # 1. NUTS2 Geometries via giscoR
 # --------------------------------------------------------------------------
@@ -46,12 +53,6 @@ tryCatch({
     nuts_level = "2"
   )
 
-  # Filter to EU27 + EEA relevant countries
-  eu_countries <- c(
-    "AT", "BE", "BG", "CY", "CZ", "DE", "DK", "EE", "EL", "ES",
-    "FI", "FR", "HR", "HU", "IE", "IT", "LT", "LV", "LU", "MT",
-    "NL", "PL", "PT", "RO", "SE", "SI", "SK", "NO"
-  )
   nuts2 <- nuts2[nuts2$CNTR_CODE %in% eu_countries, ]
   nuts2 <- sf::st_transform(nuts2, 4326)
 
@@ -74,7 +75,8 @@ tryCatch({
   cat("  Fetching GDP per capita (nama_10r_2gdp)...\n")
   gdp_raw <- eurostat::get_eurostat("nama_10r_2gdp", time_format = "num")
   gdp <- gdp_raw |>
-    filter(unit == "EUR_HAB", nchar(as.character(geo)) == 4) |>
+    filter(unit == "EUR_HAB", nchar(as.character(geo)) == 4,
+           substr(as.character(geo), 1, 2) %in% eu_countries) |>
     group_by(geo) |>
     filter(TIME_PERIOD == max(TIME_PERIOD)) |>
     ungroup() |>
@@ -84,7 +86,8 @@ tryCatch({
   cat("  Fetching population density (demo_r_d2jan)...\n")
   pop_raw <- eurostat::get_eurostat("demo_r_d2jan", time_format = "num")
   pop <- pop_raw |>
-    filter(sex == "T", age == "TOTAL", nchar(as.character(geo)) == 4) |>
+    filter(sex == "T", age == "TOTAL", nchar(as.character(geo)) == 4,
+           substr(as.character(geo), 1, 2) %in% eu_countries) |>
     group_by(geo) |>
     filter(TIME_PERIOD == max(TIME_PERIOD)) |>
     ungroup() |>
@@ -121,7 +124,8 @@ tryCatch({
   if (!is.null(fish_raw)) {
     cat("  Mapping fish_ld_main landings to NUTS2...\n")
     fish_country <- fish_raw |>
-      filter(nchar(as.character(geo)) == 2) |>
+      filter(unit == "TPW", dest_use == "TOTAL",
+             nchar(as.character(geo)) == 2) |>
       group_by(geo) |>
       filter(TIME_PERIOD == max(TIME_PERIOD)) |>
       summarise(fish_val = sum(values, na.rm = TRUE), .groups = "drop") |>
@@ -257,7 +261,7 @@ tryCatch({
   )
   if (!is.null(wind_raw)) {
     wind <- wind_raw |>
-      filter(siec == "RA310", nchar(as.character(geo)) == 2) |>
+      filter(siec == "RA320", nchar(as.character(geo)) == 2) |>
       group_by(geo) |>
       filter(TIME_PERIOD == max(TIME_PERIOD)) |>
       ungroup() |>
@@ -315,7 +319,7 @@ tryCatch({
   )
   if (!is.null(ship_raw)) {
     ship <- ship_raw |>
-      filter(nchar(as.character(rep_mar)) == 2) |>
+      filter(direct == "TOTAL", nchar(as.character(rep_mar)) == 2) |>
       group_by(rep_mar) |>
       filter(TIME_PERIOD == max(TIME_PERIOD)) |>
       summarise(ship_tonnes = sum(values, na.rm = TRUE), .groups = "drop") |>
@@ -342,7 +346,7 @@ tryCatch({
   )
   if (!is.null(aqua_raw)) {
     aqua <- aqua_raw |>
-      filter(nchar(as.character(geo)) == 2) |>
+      filter(unit == "TLW", nchar(as.character(geo)) == 2) |>
       group_by(geo) |>
       filter(TIME_PERIOD == max(TIME_PERIOD)) |>
       summarise(aqua_tonnes = sum(values, na.rm = TRUE), .groups = "drop") |>
@@ -394,7 +398,8 @@ tryCatch({
   )
   if (!is.null(blue_raw)) {
     blue <- blue_raw |>
-      filter(nchar(as.character(geo)) == 2) |>
+      filter(unit == "TPW", dest_use == "TOTAL",
+             nchar(as.character(geo)) == 2) |>
       group_by(geo) |>
       filter(TIME_PERIOD == max(TIME_PERIOD)) |>
       summarise(blue_val = sum(values, na.rm = TRUE), .groups = "drop") |>
@@ -508,43 +513,63 @@ tryCatch({
   # --- 3a: Fish stock indicators from ICES SAG (replaces Eurostat proxy) ---
   cat("  Fetching ICES SAG fish stock assessments...\n")
 
-  # ICES ecoregion -> app sea basin mapping
-  ices_basin_map <- c(
-    "Baltic Sea" = "Baltic",
-    "Greater North Sea" = "North Sea",
-    "Celtic Seas" = "Atlantic",
-    "Bay of Biscay and the Iberian Coast" = "Atlantic",
-    "Oceanic Northeast Atlantic" = "Atlantic",
-    "Azores" = "Atlantic"
-  )
+  # Classify ICES stock descriptions to app sea basins via keyword matching.
+  # getListStocks() does not include an EcoRegion column, so we parse
+  # the StockDescription text instead.
+  classify_basin <- function(desc) {
+    d <- tolower(desc)
+    if (grepl("baltic|subdivision[s]? 2[2-9]|subdivision[s]? 3[0-2]", d)) return("Baltic")
+    if (grepl("north sea|skagerrak|kattegat|division[s]? 4|division[s]? 3\\.?a|division 20", d)) return("North Sea")
+    if (grepl("celtic|scotland|ireland|irish|biscay|iberian|western|division[s]? [5-9]|azores|atlantic", d)) return("Atlantic")
+    NA_character_
+  }
 
   ices_fish_ts <- tryCatch({
-    # Get all published stock list for recent years
-    stock_list <- icesSAG::getListStocks(year = 0)  # year=0 = all years
+    # Get published stock list for most recent assessment year
+    stock_list <- icesSAG::getListStocks(year = 2024)
 
     if (is.null(stock_list) || nrow(stock_list) == 0) {
       stop("No ICES stock data returned")
     }
 
-    # Filter to stocks with ecoregion mapping
-    stock_list$basin <- ices_basin_map[stock_list$EcoRegion]
+    # Classify stocks into sea basins from their description text
+    stock_list$basin <- sapply(stock_list$StockDescription, classify_basin)
     stock_list <- stock_list[!is.na(stock_list$basin), ]
+
+    if (nrow(stock_list) == 0) stop("No stocks matched basin classification")
 
     cat("  Found", nrow(stock_list), "ICES stock records with basin mapping\n")
 
-    # Get summary data (F, Fmsy, SSB, SSBmsy) for each stock
-    all_summaries <- do.call(rbind, lapply(unique(stock_list$AssessmentKey), function(key) {
+    # For each assessment, get summary time series + reference points.
+    # getSAG returns columns: Year, F, SSB, fishstock, ...
+    # Reference points (FMSY, MSYBtrigger) come from getFishStockReferencePoints.
+    unique_keys <- unique(stock_list$AssessmentKey)
+    cat("  Querying", length(unique_keys), "assessment summaries + reference points...\n")
+    all_summaries <- do.call(rbind, lapply(unique_keys, function(key) {
       tryCatch({
-        summary <- icesSAG::getSAG(stock = NULL, year = NULL,
-                                    key = key, combine = TRUE)
-        if (!is.null(summary) && nrow(summary) > 0) {
-          cols_keep <- intersect(
-            c("Year", "StockKeyLabel", "F", "FMSY", "SSB", "MSYBtrigger",
-              "FishStock", "EcoRegion"),
-            names(summary)
-          )
-          summary[, cols_keep, drop = FALSE]
-        }
+        stk_row <- stock_list[stock_list$AssessmentKey == key, ][1, ]
+
+        # Get summary time series for this assessment
+        summary <- icesSAG::getSAG(stock = stk_row$StockKeyLabel,
+                                    year = stk_row$AssessmentYear,
+                                    data = "summary", combine = TRUE)
+        if (is.null(summary) || nrow(summary) == 0) return(NULL)
+
+        # Get reference points (FMSY, MSYBtrigger) for this assessment
+        rp <- icesSAG::getFishStockReferencePoints(key)
+        fmsy_val <- if (!is.null(rp) && nrow(rp) > 0 && !is.na(rp$FMSY[1])) rp$FMSY[1] else NA_real_
+        msybt_val <- if (!is.null(rp) && nrow(rp) > 0 && !is.na(rp$MSYBtrigger[1])) rp$MSYBtrigger[1] else NA_real_
+
+        data.frame(
+          Year = summary$Year,
+          StockKeyLabel = stk_row$StockKeyLabel,
+          F = summary$F,
+          SSB = summary$SSB,
+          FMSY = fmsy_val,
+          MSYBtrigger = msybt_val,
+          basin = stk_row$basin,
+          stringsAsFactors = FALSE
+        )
       }, error = function(e) NULL)
     }))
 
@@ -552,9 +577,8 @@ tryCatch({
       stop("Could not retrieve ICES SAG summaries")
     }
 
-    # Map ecoregion to basin
-    all_summaries$basin <- ices_basin_map[all_summaries$EcoRegion]
-    all_summaries <- all_summaries[!is.na(all_summaries$basin), ]
+    cat("  ICES: Got", nrow(all_summaries), "summary records across",
+        length(unique(all_summaries$basin)), "basins\n")
 
     # Compute basin-level aggregates per year
     fish_agg <- do.call(rbind, lapply(unique(all_summaries$basin), function(b) {
@@ -781,7 +805,7 @@ tryCatch({
           f = "json",
           resultRecordCount = 2000
         ) |>
-        httr2::req_timeout(30) |>
+        httr2::req_timeout(120) |>
         httr2::req_retry(max_tries = 3) |>
         httr2::req_perform()
 
@@ -848,15 +872,15 @@ tryCatch({
   }
 
   # HELCOM MADS MapServer layer IDs — verified against:
-  # https://maps.helcom.fi/arcgis/rest/services/MADS/Biodiversity/MapServer?f=json
+  # https://maps.helcom.fi/arcgis/rest/services/MADS/Indicators_and_assessments/MapServer?f=json
   # If layers change, query the URL above and update the id fields below.
   # Last verified: 2026-02-23
   helcom_layers <- list(
-    list(id = 0, name = "Habitat Condition", gbf = 0.80),
-    list(id = 1, name = "Marine Biodiversity Index", gbf = 0.75),
-    list(id = 2, name = "Contaminant Status", gbf = 0.80),
-    list(id = 3, name = "Eutrophication Status", gbf = 0.75),
-    list(id = 4, name = "Underwater Noise", gbf = 0.70)
+    list(id = 426, name = "Eutrophication Status",     gbf = 0.75),
+    list(id = 434, name = "Marine Biodiversity Index",  gbf = 0.75),
+    list(id = 433, name = "Habitat Condition",          gbf = 0.80),
+    list(id = 453, name = "Contaminant Status",         gbf = 0.80),
+    list(id = 469, name = "Underwater Noise",           gbf = 0.70)
   )
 
   helcom_ts_list <- lapply(helcom_layers, function(layer) {
@@ -900,7 +924,7 @@ tryCatch({
   wind_ts <- NULL
   if (!is.null(wind_ts_raw)) {
     wt <- wind_ts_raw |>
-      filter(siec == "RA310") |>
+      filter(siec == "RA320") |>
       group_by(TIME_PERIOD) |>
       summarise(value = mean(values, na.rm = TRUE), .groups = "drop") |>
       mutate(
@@ -988,6 +1012,7 @@ tryCatch({
   bath_ts <- NULL
   if (!is.null(bath_ts_raw)) {
     bt <- bath_ts_raw |>
+      filter(aquaenv == "CST_EXC_PC") |>
       group_by(TIME_PERIOD) |>
       summarise(value = mean(values, na.rm = TRUE), .groups = "drop") |>
       mutate(
