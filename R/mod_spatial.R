@@ -85,10 +85,7 @@ mod_spatial_ui <- function(id) {
       # Map
       bslib::card(
         full_screen = TRUE,
-        bslib::card_header(
-          "Spatial Equity Map",
-          tags$span(class = "badge bg-warning ms-2", "MPA layer: illustrative")
-        ),
+        bslib::card_header("Spatial Equity Map"),
         bslib::card_body(
           padding = 0,
           leaflet::leafletOutput(ns("map"), height = "500px")
@@ -114,8 +111,8 @@ mod_spatial_server <- function(id) {
     ns <- session$ns
 
     # Load full data once (cached)
-    all_data <- reactive({ mock_nuts2_data() })
-    mpas <- reactive({ mock_mpa_data() })
+    all_data <- reactive({ load_nuts2_data() })
+    mpas <- reactive({ load_mpa_data() })
 
     # Filtered data (responds to filter inputs)
     regions <- reactive({
@@ -229,7 +226,7 @@ mod_spatial_server <- function(id) {
             fillOpacity = 0.3,
             weight = 1,
             color = "#2c7fb8",
-            label = ~paste0("[Illustrative] ", name, " (", designation, ")"),
+            label = ~paste0(name, " (", designation, ")"),
             group = "MPAs"
           )
       }

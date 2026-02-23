@@ -33,7 +33,9 @@ mock_nuts2_data_fallback <- function() {
   europe
 }
 
-#' Generate mock MPA polygons (FALLBACK)
+#' Generate synthetic MPA polygons (FALLBACK)
+#' Synthetic fallback — real data in natura2000_marine.rds (from EEA)
+#' Only executes when the RDS cache is missing.
 #' @return sf object with random MPA rectangles across Europe
 #' @noRd
 mock_mpa_data_fallback <- function(n = 30) {
@@ -232,7 +234,10 @@ mock_indicator_timeseries_fallback <- function(region = "Mediterranean") {
     "Sustainable Fishing",
     "Offshore Wind Capacity",
     "Coastal Tourism Pressure",
-    "Bathing Water Quality"
+    "Bathing Water Quality",
+    "Contaminant Status",
+    "Eutrophication Status",
+    "Underwater Noise"
   )
 
   # GBF target values for each indicator
@@ -246,10 +251,19 @@ mock_indicator_timeseries_fallback <- function(region = "Mediterranean") {
     "Sustainable Fishing" = 0.70,
     "Offshore Wind Capacity" = 0.60,
     "Coastal Tourism Pressure" = 0.55,
-    "Bathing Water Quality" = 0.85
+    "Bathing Water Quality" = 0.85,
+    "Contaminant Status" = 0.80,
+    "Eutrophication Status" = 0.75,
+    "Underwater Noise" = 0.70
   )
 
+  # HELCOM-only indicators — only generate for Baltic, skip for other basins
+  helcom_only <- c("Contaminant Status", "Eutrophication Status", "Underwater Noise")
+
   do.call(rbind, lapply(indicators, function(ind) {
+    # Skip HELCOM-only indicators for non-Baltic basins
+    if (ind %in% helcom_only && region != "Baltic") return(NULL)
+
     trend <- cumsum(rnorm(length(years), mean = 0.01, sd = 0.03))
     value <- 0.5 + trend
     gbf_val <- if (ind %in% names(gbf_targets)) gbf_targets[[ind]] else 0.70

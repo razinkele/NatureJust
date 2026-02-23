@@ -1,8 +1,8 @@
 #' Load real NUTS2 regions with indicators from cached Eurostat/giscoR data
-#' Falls back to mock_nuts2_data_fallback() on error
+#' Falls back to mock_nuts2_data_fallback() on error (synthetic fallback)
 #' @return sf object with NUTS2 polygons and indicator columns
 #' @noRd
-mock_nuts2_data <- function() {
+load_nuts2_data <- function() {
   tryCatch({
     # Load NUTS2 geometries
     nuts2 <- load_extdata("nuts2_eu.rds")
@@ -30,7 +30,6 @@ mock_nuts2_data <- function() {
 
     # Fill missing indicator columns with random fallback values
     # (handles both NULL cache and stale cache missing new columns)
-    set.seed(42)
     fallbacks <- list(
       vulnerability        = function(n) round(runif(n, 0, 1), 2),
       fisheries_dep        = function(n) round(runif(n, 0, 1), 2),
@@ -47,6 +46,8 @@ mock_nuts2_data <- function() {
     )
     for (col in names(fallbacks)) {
       if (!col %in% names(nuts2)) {
+        set.seed(42)
+        message("Column '", col, "' missing from cache, using random fallback")
         nuts2[[col]] <- fallbacks[[col]](nrow(nuts2))
       }
     }
@@ -134,86 +135,68 @@ mock_nuts2_data <- function() {
     nuts2$sovereignt <- country_names[nuts2$CNTR_CODE]
     nuts2$sovereignt[is.na(nuts2$sovereignt)] <- nuts2$CNTR_CODE[is.na(nuts2$sovereignt)]
 
+    attr(nuts2, "provenance") <- "rds"
     nuts2
   }, error = function(e) {
     message("Real NUTS2 data unavailable (", conditionMessage(e),
             "). Using fallback.")
-    mock_nuts2_data_fallback()
+    result <- mock_nuts2_data_fallback()
+    attr(result, "provenance") <- "fallback"
+    result
   })
 }
 
-#' Load MPA data with real Natura 2000 designation names
-#' NOTE: MPA geometries are synthetic (random rectangles in European waters).
-#' Real MPA boundaries from EEA are not yet integrated due to GeoPackage size.
-#' The designation names are real EU MPA categories, but locations are illustrative.
-#' Falls back to mock_mpa_data_fallback() on error
+#' Load MPA data — real Natura 2000 boundaries when available, else synthetic
+#' Loads from natura2000_marine.rds if present (real EEA data).
+#' Falls back to mock_mpa_data_fallback() on error (synthetic rectangles).
 #' @param n Number of MPAs to generate
 #' @return sf object with MPA polygons
 #' @noRd
-mock_mpa_data <- function(n = 30) {
+load_mpa_data <- function(n = 30) {
   tryCatch({
-    # Use rnaturalearth geometry but with real Natura 2000 designation names
-    set.seed(123)
-    lons <- runif(n, -10, 30)
-    lats <- runif(n, 35, 65)
-    size <- runif(n, 0.5, 2)
+    # Load real Natura 2000 marine boundaries from EEA cache
+    mpa_sf <- load_extdata("natura2000_marine.rds")
 
-    polys <- lapply(seq_len(n), function(i) {
-      coords <- matrix(c(
-        lons[i], lats[i],
-        lons[i] + size[i], lats[i],
-        lons[i] + size[i], lats[i] + size[i] * 0.6,
-        lons[i], lats[i] + size[i] * 0.6,
-        lons[i], lats[i]
-      ), ncol = 2, byrow = TRUE)
-      sf::st_polygon(list(coords))
-    })
+    # Ensure required columns exist
+    if (!"name" %in% names(mpa_sf) && "SITENAME" %in% names(mpa_sf)) {
+      mpa_sf$name <- mpa_sf$SITENAME
+    }
+    if (!"designation" %in% names(mpa_sf) && "SITETYPE" %in% names(mpa_sf)) {
+      mpa_sf$designation <- dplyr::case_when(
+        mpa_sf$SITETYPE == "A" ~ "Natura 2000 - SPA",
+        mpa_sf$SITETYPE == "B" ~ "Natura 2000 - SAC/SCI",
+        mpa_sf$SITETYPE == "C" ~ "Natura 2000 - SPA + SAC/SCI",
+        TRUE ~ paste0("Natura 2000 - ", mpa_sf$SITETYPE)
+      )
+    }
 
-    # Real Natura 2000 / EU MPA designation categories
-    designations <- c(
-      "Natura 2000 - SAC",     # Special Area of Conservation (Habitats Directive)
-      "Natura 2000 - SPA",     # Special Protection Area (Birds Directive)
-      "Natura 2000 - SCI",     # Site of Community Importance
-      "OSPAR MPA",             # OSPAR Convention protected area
-      "HELCOM MPA",            # Baltic Marine Environment Protection
-      "Barcelona Convention",  # SPAMI (Mediterranean)
-      "Bucharest Convention",  # Black Sea protected area
-      "National Marine Park",  # National designation
-      "EU Biodiversity 30x30"  # New designations under EU Biodiversity Strategy
-    )
+    # Sample n sites if dataset is larger than requested
+    if (nrow(mpa_sf) > n) {
+      set.seed(123)
+      mpa_sf <- mpa_sf[sample(nrow(mpa_sf), n), ]
+    }
 
-    # Real-sounding MPA names for European seas
-    mpa_names <- c(
-      "Dogger Bank SAC", "Posidonia Meadows SCI", "Wadden Sea SAC",
-      "Cabrera Archipelago MNP", "Iroise Marine Park", "Alonissos MPA",
-      "Bonifacio Strait NR", "Borkum Riffgrund SAC", "Calanques NP",
-      "Curonian Spit SPA", "Doñana SPA", "Egadi Islands MPA",
-      "Fal & Helford SAC", "Gorringe Bank SCI", "Havet Marine Reserve",
-      "Josephine Seamount SCI", "Kosterhavet NP", "Lavezzi Islands NR",
-      "Maddalena Archipelago NP", "Natura 2000 Kattegat", "Outer Hebrides SPA",
-      "Pelagie Islands MPA", "Port-Cros NP", "Raso Islet SPA",
-      "Savage Islands NR", "Tabarca Marine Reserve", "Torre Guaceto MPA",
-      "Ustica Island MPA", "Ventotene Island MPA", "Zembra & Zembretta NP"
-    )
-
-    sf::st_sf(
-      name = mpa_names[seq_len(n)],
-      designation = sample(designations, n, replace = TRUE),
-      geometry = sf::st_sfc(polys, crs = 4326)
-    )
+    attr(mpa_sf, "provenance") <- "rds"
+    mpa_sf
   }, error = function(e) {
-    message("Real MPA data unavailable. Using fallback.")
-    mock_mpa_data_fallback(n)
+    message("Real Natura 2000 MPA data unavailable (", conditionMessage(e),
+            "). Using synthetic fallback.")
+    result <- mock_mpa_data_fallback(n)
+    attr(result, "provenance") <- "fallback"
+    result
   })
 }
 
-#' Generate scenario projections anchored to real baselines
-#' Falls back to mock_scenario_data_fallback() on error
+#' Load scenario projections anchored to real baselines
+#' Falls back to mock_scenario_data_fallback() on error (synthetic fallback)
+#' @details Projections use stochastic modeling (rnorm with cumsum) to simulate
+#'   uncertainty in future trajectories. set.seed() ensures reproducibility for
+#'   the same inputs. This is intentional — not a fallback for missing data.
 #' @param nff_weights Named numeric vector c(NfN=, NfS=, NaC=) summing to 100
 #' @param region Character region name
 #' @return Data frame with yearly projections for 4 indicators
 #' @noRd
-mock_scenario_data <- function(nff_weights = c(NfN = 34, NfS = 33, NaC = 33),
+load_scenario_data <- function(nff_weights = c(NfN = 34, NfS = 33, NaC = 33),
                                 region = "Mediterranean") {
   tryCatch({
     # Load real baseline values
@@ -232,7 +215,7 @@ mock_scenario_data <- function(nff_weights = c(NfN = 34, NfS = 33, NaC = 33),
     nfs <- nff_weights["NfS"] / 100
     nac <- nff_weights["NaC"] / 100
 
-    do.call(rbind, lapply(seq_len(nrow(region_data)), function(i) {
+    result <- do.call(rbind, lapply(seq_len(nrow(region_data)), function(i) {
       row <- region_data[i, ]
       base <- row$baseline_2025
       trend <- row$trend_rate
@@ -246,6 +229,9 @@ mock_scenario_data <- function(nff_weights = c(NfN = 34, NfS = 33, NaC = 33),
         "Equity Score" = 0.01 * (1 - max(abs(nfn - nfs), abs(nfs - nac), abs(nfn - nac))),
         "Offshore Wind Capacity" = 0.012 * nfs + 0.005 * nac,
         "Bathing Water Quality" = 0.008 * nfn + 0.005 * nfs,
+        "Contaminant Status" = 0.010 * nfn + 0.003 * nfs,
+        "Eutrophication Status" = 0.008 * nfn + 0.005 * nfs,
+        "Underwater Noise" = -0.003 * nfs + 0.005 * nfn,
         trend  # default
       )
 
@@ -267,19 +253,23 @@ mock_scenario_data <- function(nff_weights = c(NfN = 34, NfS = 33, NaC = 33),
         stringsAsFactors = FALSE
       )
     }))
+    attr(result, "provenance") <- "csv"
+    result
   }, error = function(e) {
     message("Real scenario baselines unavailable (", conditionMessage(e),
             "). Using fallback.")
-    mock_scenario_data_fallback(nff_weights, region)
+    result <- mock_scenario_data_fallback(nff_weights, region)
+    attr(result, "provenance") <- "fallback"
+    result
   })
 }
 
 #' Load literature-sourced justice scores for an intervention
-#' Falls back to mock_justice_scores_fallback() on error
+#' Falls back to mock_justice_scores_fallback() on error (synthetic fallback)
 #' @param intervention Character name of intervention
 #' @return Data frame with 4 justice dimension scores
 #' @noRd
-mock_justice_scores <- function(intervention = "MPA Establishment") {
+load_justice_scores <- function(intervention = "MPA Establishment") {
   tryCatch({
     all_scores <- load_extdata("justice_scores.csv")
     result <- all_scores[all_scores$intervention == intervention, ]
@@ -288,26 +278,30 @@ mock_justice_scores <- function(intervention = "MPA Establishment") {
       stop("No justice scores for intervention: ", intervention)
     }
 
-    data.frame(
+    df <- data.frame(
       dimension = result$dimension,
       score = round(result$score, 2),
       status = result$status,
       description = result$description,
       stringsAsFactors = FALSE
     )
+    attr(df, "provenance") <- "csv"
+    df
   }, error = function(e) {
     message("Real justice scores unavailable (", conditionMessage(e),
             "). Using fallback.")
-    mock_justice_scores_fallback(intervention)
+    result <- mock_justice_scores_fallback(intervention)
+    attr(result, "provenance") <- "fallback"
+    result
   })
 }
 
 #' Load literature-sourced Elliott's 10 Tenets scores for an intervention
-#' Falls back to mock_elliott_tenets_fallback() on error
+#' Falls back to mock_elliott_tenets_fallback() on error (synthetic fallback)
 #' @param intervention Character name of intervention
 #' @return Data frame with 10 tenet scores
 #' @noRd
-mock_elliott_tenets <- function(intervention = "MPA Establishment") {
+load_elliott_tenets <- function(intervention = "MPA Establishment") {
   tryCatch({
     all_tenets <- load_extdata("elliott_tenets.csv")
     result <- all_tenets[all_tenets$intervention == intervention, ]
@@ -316,53 +310,65 @@ mock_elliott_tenets <- function(intervention = "MPA Establishment") {
       stop("No tenet scores for: ", intervention)
     }
 
-    data.frame(
+    df <- data.frame(
       tenet = result$tenet,
       score = round(result$score, 2),
       status = result$status,
       description = result$description,
       stringsAsFactors = FALSE
     )
+    attr(df, "provenance") <- "csv"
+    df
   }, error = function(e) {
     message("Real Elliott tenets unavailable (", conditionMessage(e),
             "). Using fallback.")
-    mock_elliott_tenets_fallback(intervention)
+    result <- mock_elliott_tenets_fallback(intervention)
+    attr(result, "provenance") <- "fallback"
+    result
   })
 }
 
 #' Load EU-relevant intervention names
-#' Falls back to mock_interventions_fallback() on error
+#' Falls back to mock_interventions_fallback() on error (synthetic fallback)
 #' @return Character vector of intervention names
 #' @noRd
-mock_interventions <- function() {
+load_interventions <- function() {
   tryCatch({
     interventions <- load_extdata("interventions.csv")
-    interventions$name
+    result <- interventions$name
+    attr(result, "provenance") <- "csv"
+    result
   }, error = function(e) {
     message("Real interventions list unavailable. Using fallback.")
-    mock_interventions_fallback()
+    result <- mock_interventions_fallback()
+    attr(result, "provenance") <- "fallback"
+    result
   })
 }
 
 #' Load regulation-sourced funding eligibility matrix
-#' Falls back to mock_funding_matrix_fallback() on error
+#' Falls back to mock_funding_matrix_fallback() on error (synthetic fallback)
 #' @return Data frame of interventions vs EU funding eligibility
 #' @noRd
-mock_funding_matrix <- function() {
+load_funding_matrix <- function() {
   tryCatch({
-    load_extdata("funding_matrix.csv")
+    result <- load_extdata("funding_matrix.csv")
+    attr(result, "provenance") <- "csv"
+    result
   }, error = function(e) {
     message("Real funding matrix unavailable. Using fallback.")
-    mock_funding_matrix_fallback()
+    result <- mock_funding_matrix_fallback()
+    attr(result, "provenance") <- "fallback"
+    result
   })
 }
 
 #' Load CFP alignment data for a conservation measure
-#' Falls back to mock_cfp_alignment_fallback() on error
+#' Falls back to mock_cfp_alignment_fallback() on error (synthetic fallback)
 #' @param intervention Character name of the intervention
 #' @return Data frame with alignment status and detail columns
 #' @noRd
-mock_cfp_alignment <- function(intervention = "MPA Establishment") {
+load_cfp_alignment <- function(intervention = "MPA Establishment") {
   tryCatch({
     all_cfp <- load_extdata("cfp_alignment.csv")
     result <- all_cfp[all_cfp$intervention == intervention, ]
@@ -371,20 +377,23 @@ mock_cfp_alignment <- function(intervention = "MPA Establishment") {
       stop("No CFP alignment data for intervention: ", intervention)
     }
 
+    attr(result, "provenance") <- "csv"
     result
   }, error = function(e) {
     message("Real CFP alignment data unavailable (", conditionMessage(e),
             "). Using fallback.")
-    mock_cfp_alignment_fallback(intervention)
+    result <- mock_cfp_alignment_fallback(intervention)
+    attr(result, "provenance") <- "fallback"
+    result
   })
 }
 
 #' Load pre-computed indicator time series from Eurostat/MSFD data
-#' Falls back to mock_indicator_timeseries_fallback() on error
+#' Falls back to mock_indicator_timeseries_fallback() on error (synthetic fallback)
 #' @param region Character region name
 #' @return Data frame with indicator values over time with confidence bands
 #' @noRd
-mock_indicator_timeseries <- function(region = "Mediterranean") {
+load_indicator_timeseries <- function(region = "Mediterranean") {
   tryCatch({
     all_ts <- load_extdata("indicator_timeseries_cache.rds")
     result <- all_ts[all_ts$region == region, ]
@@ -393,10 +402,13 @@ mock_indicator_timeseries <- function(region = "Mediterranean") {
       stop("No time series data for region: ", region)
     }
 
+    attr(result, "provenance") <- "rds"
     result
   }, error = function(e) {
     message("Real indicator time series unavailable (", conditionMessage(e),
             "). Using fallback.")
-    mock_indicator_timeseries_fallback(region)
+    result <- mock_indicator_timeseries_fallback(region)
+    attr(result, "provenance") <- "fallback"
+    result
   })
 }

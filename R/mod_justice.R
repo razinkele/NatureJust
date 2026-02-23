@@ -10,7 +10,7 @@ mod_justice_ui <- function(id) {
       width = 280,
       selectInput(
         ns("intervention"), "Select Intervention",
-        choices = mock_interventions()
+        choices = load_interventions()
       ),
       selectInput(
         ns("target_area"), "Target Area",
@@ -71,7 +71,7 @@ mod_justice_server <- function(id) {
     )
 
     scores <- reactive({
-      df <- mock_justice_scores(input$intervention)
+      df <- load_justice_scores(input$intervention)
       area <- input$target_area
       mods <- area_modifiers[[area]]
       if (!is.null(mods)) {

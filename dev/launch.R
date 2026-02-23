@@ -25,6 +25,9 @@ suppressPackageStartupMessages({
   library(config)
   library(eurostat)
   library(giscoR)
+  library(icesSAG)
+  library(httr2)
+  library(jsonlite)
 })
 
 # app_sys helper (needed by golem_add_external_resources)
@@ -36,7 +39,7 @@ app_sys <- function(...) {
 r_files <- c(
   "R/utils_helpers.R",
   "R/utils_data_helpers.R",
-  "R/fct_mock_data.R",
+  "R/fct_fallback_data.R",
   "R/fct_real_data.R",
   "R/mod_home.R",
   "R/mod_spatial.R",

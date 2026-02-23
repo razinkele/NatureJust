@@ -23,7 +23,7 @@ mod_governance_ui <- function(id) {
           sidebar = bslib::sidebar(
             title = "Check Alignment",
             selectInput(ns("cfp_measure"), "Conservation Measure",
-                        choices = mock_interventions())
+                        choices = load_interventions())
           ),
           bslib::card(
             bslib::card_header("Common Fisheries Policy Alignment"),
@@ -70,7 +70,7 @@ mod_governance_ui <- function(id) {
           sidebar = bslib::sidebar(
             title = "Assessment",
             selectInput(ns("tenet_intervention"), "Select Intervention",
-                        choices = mock_interventions()),
+                        choices = load_interventions()),
             p(class = "text-muted small mt-2",
               "Based on Elliott (2013): 10 tenets for integrated,",
               "successful and sustainable marine management.")
@@ -100,7 +100,7 @@ mod_governance_server <- function(id) {
 
     # Funding matrix table
     output$funding_table <- DT::renderDataTable({
-      df <- mock_funding_matrix()
+      df <- load_funding_matrix()
       DT::datatable(
         df,
         options = list(
@@ -122,7 +122,7 @@ mod_governance_server <- function(id) {
 
     # CFP alignment check — uses evidence-based data from cfp_alignment.csv
     output$cfp_result <- renderUI({
-      cfp_data <- mock_cfp_alignment(input$cfp_measure)
+      cfp_data <- load_cfp_alignment(input$cfp_measure)
       alignment <- cfp_data$alignment[1]
 
       status_class <- switch(alignment,
@@ -154,7 +154,7 @@ mod_governance_server <- function(id) {
 
     # --- Elliott's 10 Tenets ---
     tenet_scores <- reactive({
-      mock_elliott_tenets(input$tenet_intervention)
+      load_elliott_tenets(input$tenet_intervention)
     })
 
     # Tenet radar chart

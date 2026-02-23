@@ -25,7 +25,10 @@ mod_dashboard_ui <- function(id) {
           "Sustainable Fishing",
           "Offshore Wind Capacity",
           "Coastal Tourism Pressure",
-          "Bathing Water Quality"
+          "Bathing Water Quality",
+          "Contaminant Status (H)",
+          "Eutrophication Status (H)",
+          "Underwater Noise (H)"
         ),
         selected = c("Marine Biodiversity Index (M)", "Habitat Condition (M)"),
         multiple = TRUE,
@@ -44,8 +47,9 @@ mod_dashboard_ui <- function(id) {
         bslib::card_body(
           plotly::plotlyOutput(ns("timeseries_plot"), height = "400px"),
           p(class = "text-muted small mt-2",
-            "Indicators marked (M) are modelled from regional assessment baselines.",
-            "Unmarked indicators are derived from Eurostat time series.")
+            "Legend: (M) = Modelled from regional assessment baselines. ",
+            "(H) = HELCOM HOLAS III assessment (Baltic only). ",
+            "Unmarked = Eurostat / ICES SAG / GFCM time series.")
         )
       ),
 
@@ -67,7 +71,10 @@ mod_dashboard_ui <- function(id) {
             plotly::plotlyOutput(ns("equity_plot"), height = "300px")
           )
         )
-      )
+      ),
+
+      # Data provenance footer
+      uiOutput(ns("provenance_footer"))
     )
   )
 }
@@ -79,14 +86,14 @@ mod_dashboard_server <- function(id) {
   moduleServer(id, function(input, output, session) {
 
     data <- reactive({
-      mock_indicator_timeseries(input$region)
+      load_indicator_timeseries(input$region)
     })
 
     filtered_data <- reactive({
       df <- data()
       if (!is.null(input$indicators) && length(input$indicators) > 0) {
         # Strip "(M)" suffix for matching against data indicator names
-        selected <- gsub(" \\(M\\)$", "", input$indicators)
+        selected <- gsub(" \\([MH]\\)$", "", input$indicators)
         df <- df[df$indicator %in% selected, ]
       }
       df
@@ -169,6 +176,33 @@ mod_dashboard_server <- function(id) {
         )
 
       p
+    })
+
+    # Data provenance footer
+    output$provenance_footer <- renderUI({
+      ts_data <- data()
+      prov <- attr(ts_data, "provenance")
+      region <- input$region
+
+      if (identical(prov, "fallback")) {
+        div(class = "alert alert-warning mt-2 small",
+            bsicons::bs_icon("exclamation-triangle"),
+            " Data source: Synthetic (cache files missing \u2014 run data-raw/prepare_data.R)")
+      } else {
+        sources <- "Eurostat"
+        if (region %in% c("Baltic", "North Sea", "Atlantic")) {
+          sources <- paste(sources, "/ ICES SAG")
+        }
+        if (region == "Baltic") {
+          sources <- paste(sources, "/ HELCOM HOLAS III")
+        }
+        if (region %in% c("Mediterranean", "Black Sea")) {
+          sources <- paste(sources, "/ GFCM")
+        }
+        div(class = "text-muted small mt-2",
+            bsicons::bs_icon("database"),
+            paste(" Data sources:", sources))
+      }
     })
 
     # CSV export

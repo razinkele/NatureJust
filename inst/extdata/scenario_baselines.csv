@@ -29,3 +29,6 @@ North Sea,Bathing Water Quality,0.78,0.006,0.007,EU Bathing Water Directive Repo
 Atlantic,Bathing Water Quality,0.80,0.007,0.009,EU Bathing Water Directive Report
 Mediterranean,Bathing Water Quality,0.85,0.005,0.006,EU Bathing Water Directive Report
 Black Sea,Bathing Water Quality,0.60,0.009,0.012,EU Bathing Water Directive Report
+Baltic,Contaminant Status,0.45,0.007,0.011,HELCOM HOLAS III 2023
+Baltic,Eutrophication Status,0.38,0.006,0.012,HELCOM HOLAS III 2023
+Baltic,Underwater Noise,0.35,0.005,0.013,HELCOM pre-core indicator

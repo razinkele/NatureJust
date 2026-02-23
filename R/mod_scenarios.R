@@ -93,7 +93,7 @@ mod_scenarios_server <- function(id) {
 
     # Current scenario data
     current_data <- reactive({
-      mock_scenario_data(
+      load_scenario_data(
         nff_weights = weights(),
         region = input$region
       )
@@ -137,7 +137,10 @@ mod_scenarios_server <- function(id) {
           "Livelihoods & Employment" = "#f0ad4e",
           "Equity Score" = "#d9534f",
           "Offshore Wind Capacity" = "#17becf",
-          "Bathing Water Quality" = "#9467bd"
+          "Bathing Water Quality" = "#9467bd",
+          "Contaminant Status" = "#e377c2",
+          "Eutrophication Status" = "#8c564b",
+          "Underwater Noise" = "#7f7f7f"
       )
       has_bands <- all(c("lower", "upper") %in% names(data))
 
@@ -233,9 +236,16 @@ mod_scenarios_server <- function(id) {
                  plotly::layout(title = "Save scenarios to compare"))
       }
 
-      categories <- c("Habitat Condition", "Ecosystem Services",
-                       "Livelihoods & Employment", "Equity Score",
-                       "Offshore Wind Capacity", "Bathing Water Quality")
+      # Dynamically include HELCOM indicators when data is available
+      base_categories <- c("Habitat Condition", "Ecosystem Services",
+                           "Livelihoods & Employment", "Equity Score",
+                           "Offshore Wind Capacity", "Bathing Water Quality")
+      helcom_categories <- c("Contaminant Status", "Eutrophication Status",
+                             "Underwater Noise")
+      has_helcom <- any(sapply(scenarios, function(sc) {
+        any(helcom_categories %in% sc$data$indicator)
+      }))
+      categories <- if (has_helcom) c(base_categories, helcom_categories) else base_categories
 
       p <- plotly::plot_ly(type = "scatterpolar", fill = "toself")
 
