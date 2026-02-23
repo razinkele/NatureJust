@@ -333,7 +333,7 @@ body {
 .nff-gradient-bg circle {
   transition: opacity .6s var(--ease-expo);
 }
-.nff-triangle-widget:hover .nff-gradient-bg circle { opacity: 0.18; }
+.nff-triangle-widget:hover .nff-gradient-bg circle { opacity: 0.65; }
 
 /* Triangle outline */
 .nff-tri-outline {
@@ -553,8 +553,8 @@ body {
   stroke: var(--nj-sky);
 }
 [data-bs-theme="dark"] .nff-weight-readout { color: var(--nj-charcoal); }
-[data-bs-theme="dark"] .nff-gradient-bg circle { opacity: 0.18; }
-[data-bs-theme="dark"] .nff-triangle-widget:hover .nff-gradient-bg circle { opacity: 0.25; }
+[data-bs-theme="dark"] .nff-gradient-bg circle { opacity: 0.45; }
+[data-bs-theme="dark"] .nff-triangle-widget:hover .nff-gradient-bg circle { opacity: 0.55; }
 
 /* ---------- Accordion (Home) ---------- */
 .accordion {

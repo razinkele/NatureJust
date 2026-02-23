@@ -32,7 +32,7 @@ mod_home_ui <- function(id) {
             class = "nff-triangle-widget",
             `data-input-id` = ns("nff_position"),
             HTML('
-              <svg class="nff-svg" viewBox="-10 0 420 390"
+              <svg class="nff-svg" viewBox="-50 0 500 400"
                    xmlns="http://www.w3.org/2000/svg" role="img"
                    aria-label="Interactive Nature Futures Framework triangle">
                 <defs>
@@ -40,24 +40,43 @@ mod_home_ui <- function(id) {
                   <clipPath id="nff-tri-clip">
                     <polygon points="200,35 365,335 35,335"/>
                   </clipPath>
-                  <!-- Gaussian blur for gradient blobs -->
-                  <filter id="nff-blur" x="-100%" y="-100%" width="300%" height="300%">
-                    <feGaussianBlur in="SourceGraphic" stdDeviation="70"/>
-                  </filter>
+                  <!-- Radial gradients from each vertex -->
+                  <radialGradient id="nff-grad-nfn" cx="200" cy="35" r="200"
+                                  gradientUnits="userSpaceOnUse">
+                    <stop offset="0%"  stop-color="#0E7C7B" stop-opacity="0.7"/>
+                    <stop offset="45%" stop-color="#0E7C7B" stop-opacity="0.25"/>
+                    <stop offset="100%" stop-color="#0E7C7B" stop-opacity="0"/>
+                  </radialGradient>
+                  <radialGradient id="nff-grad-nfs" cx="365" cy="335" r="200"
+                                  gradientUnits="userSpaceOnUse">
+                    <stop offset="0%"  stop-color="#2A6F97" stop-opacity="0.7"/>
+                    <stop offset="45%" stop-color="#2A6F97" stop-opacity="0.25"/>
+                    <stop offset="100%" stop-color="#2A6F97" stop-opacity="0"/>
+                  </radialGradient>
+                  <radialGradient id="nff-grad-nac" cx="35" cy="335" r="200"
+                                  gradientUnits="userSpaceOnUse">
+                    <stop offset="0%"  stop-color="#E07A5F" stop-opacity="0.7"/>
+                    <stop offset="45%" stop-color="#E07A5F" stop-opacity="0.25"/>
+                    <stop offset="100%" stop-color="#E07A5F" stop-opacity="0"/>
+                  </radialGradient>
                   <!-- Glow for position marker -->
                   <filter id="nff-marker-glow" x="-50%" y="-50%" width="200%" height="200%">
                     <feGaussianBlur in="SourceGraphic" stdDeviation="3"/>
                   </filter>
                 </defs>
 
-                <!-- 3-colour gradient: blurred circles clipped to triangle -->
+                <!-- 3-colour gradient: radial fills clipped to triangle -->
                 <g clip-path="url(#nff-tri-clip)" class="nff-gradient-bg">
-                  <circle cx="200" cy="35"  r="250" fill="#0E7C7B" opacity="0.12"
-                          filter="url(#nff-blur)"/>
-                  <circle cx="365" cy="335" r="250" fill="#2A6F97" opacity="0.12"
-                          filter="url(#nff-blur)"/>
-                  <circle cx="35"  cy="335" r="250" fill="#E07A5F" opacity="0.12"
-                          filter="url(#nff-blur)"/>
+                  <!-- Base light fill -->
+                  <polygon points="200,35 365,335 35,335"
+                           fill="#f0eeeb" opacity="0.5"/>
+                  <!-- Three radial gradients overlaid -->
+                  <polygon points="200,35 365,335 35,335"
+                           fill="url(#nff-grad-nfn)"/>
+                  <polygon points="200,35 365,335 35,335"
+                           fill="url(#nff-grad-nfs)"/>
+                  <polygon points="200,35 365,335 35,335"
+                           fill="url(#nff-grad-nac)"/>
                 </g>
 
                 <!-- Triangle outline -->
@@ -65,13 +84,13 @@ mod_home_ui <- function(id) {
                          fill="none"/>
 
                 <!-- Edge relationship labels -->
-                <text class="edge-label" x="292" y="178"
-                      text-anchor="middle" transform="rotate(29,292,178)">
+                <text class="edge-label" x="270" y="193"
+                      text-anchor="middle" transform="rotate(61,270,193)">
                   Biodiversity &amp; Livelihoods</text>
-                <text class="edge-label" x="108" y="178"
-                      text-anchor="middle" transform="rotate(-29,108,178)">
+                <text class="edge-label" x="130" y="193"
+                      text-anchor="middle" transform="rotate(-61,130,193)">
                   Cultural &amp; Ecological</text>
-                <text class="edge-label" x="200" y="368"
+                <text class="edge-label" x="200" y="320"
                       text-anchor="middle">Social &amp; Cultural Values</text>
 
                 <!-- 6 Narrative markers (Dur\u00e1n et al. 2023) -->
@@ -125,10 +144,10 @@ mod_home_ui <- function(id) {
                 <!-- Vertex labels -->
                 <text class="vertex-label" x="200" y="16"
                       text-anchor="middle">Nature for Nature</text>
-                <text class="vertex-label" x="395" y="350"
-                      text-anchor="end">Nature for Society</text>
-                <text class="vertex-label" x="5" y="350"
-                      text-anchor="start">Nature as Culture</text>
+                <text class="vertex-label" x="365" y="365"
+                      text-anchor="middle">Nature for Society</text>
+                <text class="vertex-label" x="35" y="365"
+                      text-anchor="middle">Nature as Culture</text>
 
                 <!-- Position marker + ring inserted by JS -->
               </svg>
