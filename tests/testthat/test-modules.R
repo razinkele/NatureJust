@@ -183,3 +183,31 @@ test_that("scenario_baselines.csv includes HELCOM indicators for Baltic", {
     expect_false("Contaminant Status" %in% med$indicator)
   }
 })
+
+test_that("mod_dashboard_server loads data reactively", {
+  testServer(mod_dashboard_server, {
+    session$setInputs(region = "Baltic")
+    df <- data()
+    expect_s3_class(df, "data.frame")
+    expect_true("indicator" %in% names(df))
+    expect_true("year" %in% names(df))
+    expect_true("value" %in% names(df))
+
+    session$setInputs(indicators = NULL)
+    expect_equal(nrow(filtered_data()), nrow(df))
+  })
+})
+
+test_that("mod_scenarios_server computes normalised weights", {
+  testServer(mod_scenarios_server, {
+    session$setInputs(nfn = 50, nfs = 25, nac = 25,
+                      region = "Baltic", horizon = "2050")
+    w <- weights()
+    expect_equal(sum(w), 100)
+    expect_equal(w[["NfN"]], 50)
+
+    df <- current_data()
+    expect_s3_class(df, "data.frame")
+    expect_true("indicator" %in% names(df))
+  })
+})

@@ -14,9 +14,13 @@ mod_justice_ui <- function(id) {
       ),
       selectInput(
         ns("target_area"), "Target Area",
-        choices = c("Baltic Sea", "North Sea", "Atlantic Coast",
-                    "Mediterranean", "Black Sea", "Adriatic",
-                    "Aegean", "Celtic Sea")
+        choices = list(
+          "Baltic" = c("Baltic Sea"),
+          "North Sea" = c("North Sea"),
+          "Atlantic" = c("Atlantic Coast", "Celtic Sea"),
+          "Mediterranean" = c("Mediterranean", "Adriatic", "Aegean"),
+          "Black Sea" = c("Black Sea")
+        )
       ),
       hr(),
       downloadButton(ns("download_report"), "Download Report",

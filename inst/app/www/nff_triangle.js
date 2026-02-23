@@ -3,7 +3,9 @@ var NatureJust = NatureJust || {};
 
 // Shared navigation helper — switches navbar tab by name
 NatureJust.navigateTo = function(target) {
-  Shiny.setInputValue('main_nav', target, {priority: 'event'});
+  if (typeof Shiny !== 'undefined') {
+    Shiny.setInputValue('main_nav', target, {priority: 'event'});
+  }
   var navLinks = document.querySelectorAll('.navbar-nav .nav-link');
   navLinks.forEach(function(link) {
     if (link.textContent.trim().indexOf(target) !== -1) {

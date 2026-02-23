@@ -16,10 +16,18 @@ library(icesSAG)
 library(httr2)
 library(jsonlite)
 
-# Resolve project root (works from RStudio or sourced from project dir)
-project_root <- here::here()
+# Resolve project root — find directory containing DESCRIPTION
+project_root <- tryCatch(
+  here::here(),
+  error = function(e) getwd()
+)
 if (!file.exists(file.path(project_root, "DESCRIPTION"))) {
-  project_root <- getwd()
+  candidate <- getwd()
+  while (!file.exists(file.path(candidate, "DESCRIPTION")) &&
+         candidate != dirname(candidate)) {
+    candidate <- dirname(candidate)
+  }
+  project_root <- candidate
 }
 extdata_dir <- file.path(project_root, "inst", "extdata")
 dir.create(extdata_dir, recursive = TRUE, showWarnings = FALSE)
@@ -839,7 +847,10 @@ tryCatch({
     })
   }
 
-  # Query HELCOM layers (layer IDs based on MADS MapServer inspection)
+  # HELCOM MADS MapServer layer IDs — verified against:
+  # https://maps.helcom.fi/arcgis/rest/services/MADS/Biodiversity/MapServer?f=json
+  # If layers change, query the URL above and update the id fields below.
+  # Last verified: 2026-02-23
   helcom_layers <- list(
     list(id = 0, name = "Habitat Condition", gbf = 0.80),
     list(id = 1, name = "Marine Biodiversity Index", gbf = 0.75),

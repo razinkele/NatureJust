@@ -197,7 +197,7 @@ mod_scenarios_server <- function(id) {
       }
 
       # Join projections with targets on indicator name
-      merged <- merge(end_vals, gbf, by = "indicator", all.x = TRUE)
+      merged <- base::merge(end_vals, gbf, by = "indicator", all.x = TRUE)
       merged <- merged[!is.na(merged$gbf_target_value), ]
 
       if (nrow(merged) == 0) {
@@ -286,7 +286,7 @@ mod_scenarios_server <- function(id) {
         horizon_year <- sc$horizon
         d |>
           dplyr::filter(year == horizon_year) |>
-          dplyr::mutate(scenario = nm)
+          dplyr::mutate(scenario = paste0(nm, " @", horizon_year))
       })
 
       df <- do.call(rbind, df_list)

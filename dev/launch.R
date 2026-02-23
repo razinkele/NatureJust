@@ -25,9 +25,10 @@ suppressPackageStartupMessages({
   library(config)
   library(eurostat)
   library(giscoR)
-  library(icesSAG)
-  library(httr2)
-  library(jsonlite)
+  # icesSAG only needed by data-raw/prepare_data.R, not app runtime
+  for (pkg in c("httr2", "jsonlite")) {
+    tryCatch(library(pkg, character.only = TRUE), error = function(e) NULL)
+  }
 })
 
 # app_sys helper (needed by golem_add_external_resources)
