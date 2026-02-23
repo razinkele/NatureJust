@@ -10,7 +10,7 @@ mod_justice_ui <- function(id) {
       width = 280,
       selectInput(
         ns("intervention"), "Select Intervention",
-        choices = load_interventions()
+        choices = tryCatch(load_interventions(), error = function(e) "MPA Establishment")
       ),
       selectInput(
         ns("target_area"), "Target Area",

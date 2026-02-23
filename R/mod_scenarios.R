@@ -135,6 +135,7 @@ mod_scenarios_server <- function(id, nff_weights = NULL) {
 
     # Normalised weights (from sliders)
     weights <- reactive({
+      req(input$nfn, input$nfs, input$nac)
       total <- input$nfn + input$nfs + input$nac
       if (total == 0) total <- 1
       c(NfN = round(input$nfn / total * 100),

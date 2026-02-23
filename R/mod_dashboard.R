@@ -156,11 +156,12 @@ mod_dashboard_server <- function(id) {
         return(plotly::plotly_empty())
       }
 
-      combined <- data.frame(
-        year = eco$year,
-        ecological = eco$value,
-        equity = equity$value
+      combined <- merge(
+        data.frame(year = eco$year, ecological = eco$value),
+        data.frame(year = equity$year, equity = equity$value),
+        by = "year"
       )
+      if (nrow(combined) == 0) return(plotly::plotly_empty())
 
       p <- plotly::plot_ly(combined, x = ~year) |>
         plotly::add_trace(y = ~ecological, name = "Ecological",

@@ -37,46 +37,42 @@ mod_home_ui <- function(id) {
                    aria-label="Interactive Nature Futures Framework triangle">
                 <defs>
                   <!-- Clip to triangle boundary -->
-                  <clipPath id="nff-tri-clip">
+                  <clipPath id="nff-tri-clip-h">
                     <polygon points="200,35 365,335 35,335"/>
                   </clipPath>
                   <!-- Radial gradients from each vertex -->
-                  <radialGradient id="nff-grad-nfn" cx="200" cy="35" r="200"
+                  <radialGradient id="nff-grad-nfn-h" cx="200" cy="35" r="200"
                                   gradientUnits="userSpaceOnUse">
                     <stop offset="0%"  stop-color="#0E7C7B" stop-opacity="0.7"/>
                     <stop offset="45%" stop-color="#0E7C7B" stop-opacity="0.25"/>
                     <stop offset="100%" stop-color="#0E7C7B" stop-opacity="0"/>
                   </radialGradient>
-                  <radialGradient id="nff-grad-nfs" cx="365" cy="335" r="200"
+                  <radialGradient id="nff-grad-nfs-h" cx="365" cy="335" r="200"
                                   gradientUnits="userSpaceOnUse">
                     <stop offset="0%"  stop-color="#2A6F97" stop-opacity="0.7"/>
                     <stop offset="45%" stop-color="#2A6F97" stop-opacity="0.25"/>
                     <stop offset="100%" stop-color="#2A6F97" stop-opacity="0"/>
                   </radialGradient>
-                  <radialGradient id="nff-grad-nac" cx="35" cy="335" r="200"
+                  <radialGradient id="nff-grad-nac-h" cx="35" cy="335" r="200"
                                   gradientUnits="userSpaceOnUse">
                     <stop offset="0%"  stop-color="#E07A5F" stop-opacity="0.7"/>
                     <stop offset="45%" stop-color="#E07A5F" stop-opacity="0.25"/>
                     <stop offset="100%" stop-color="#E07A5F" stop-opacity="0"/>
                   </radialGradient>
-                  <!-- Glow for position marker -->
-                  <filter id="nff-marker-glow" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur in="SourceGraphic" stdDeviation="3"/>
-                  </filter>
                 </defs>
 
                 <!-- 3-colour gradient: radial fills clipped to triangle -->
-                <g clip-path="url(#nff-tri-clip)" class="nff-gradient-bg">
+                <g clip-path="url(#nff-tri-clip-h)" class="nff-gradient-bg">
                   <!-- Base light fill -->
                   <polygon points="200,35 365,335 35,335"
                            fill="#f0eeeb" opacity="0.5"/>
                   <!-- Three radial gradients overlaid -->
                   <polygon points="200,35 365,335 35,335"
-                           fill="url(#nff-grad-nfn)"/>
+                           fill="url(#nff-grad-nfn-h)"/>
                   <polygon points="200,35 365,335 35,335"
-                           fill="url(#nff-grad-nfs)"/>
+                           fill="url(#nff-grad-nfs-h)"/>
                   <polygon points="200,35 365,335 35,335"
-                           fill="url(#nff-grad-nac)"/>
+                           fill="url(#nff-grad-nac-h)"/>
                 </g>
 
                 <!-- Triangle outline -->
@@ -135,11 +131,17 @@ mod_home_ui <- function(id) {
 
                 <!-- Vertices (clickable \u2192 navigate to module) -->
                 <circle class="nff-vertex" data-target="Spatial Equity"
-                        cx="200" cy="35" r="11"/>
+                        cx="200" cy="35" r="11"
+                        tabindex="0" role="button"
+                        aria-label="Nature for Nature - navigate to Spatial Equity"/>
                 <circle class="nff-vertex" data-target="Scenarios"
-                        cx="365" cy="335" r="11"/>
+                        cx="365" cy="335" r="11"
+                        tabindex="0" role="button"
+                        aria-label="Nature for Society - navigate to Scenarios"/>
                 <circle class="nff-vertex" data-target="Justice"
-                        cx="35"  cy="335" r="11"/>
+                        cx="35"  cy="335" r="11"
+                        tabindex="0" role="button"
+                        aria-label="Nature as Culture - navigate to Justice"/>
 
                 <!-- Vertex labels -->
                 <text class="vertex-label" x="200" y="16"

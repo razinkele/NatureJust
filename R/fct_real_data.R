@@ -44,9 +44,9 @@ load_nuts2_data <- function() {
       bathing_quality      = function(n) round(runif(n, 0.5, 1.0), 2),
       blue_economy_jobs    = function(n) round(runif(n, 0.05, 0.5), 2)
     )
+    set.seed(42)
     for (col in names(fallbacks)) {
       if (!col %in% names(nuts2)) {
-        set.seed(42)
         message("Column '", col, "' missing from cache, using random fallback")
         nuts2[[col]] <- fallbacks[[col]](nrow(nuts2))
       }
@@ -232,7 +232,7 @@ load_scenario_data <- function(nff_weights = c(NfN = 34, NfS = 33, NaC = 33),
         "Contaminant Status" = 0.010 * nfn + 0.003 * nfs,
         "Eutrophication Status" = 0.008 * nfn + 0.005 * nfs,
         "Underwater Noise" = -0.003 * nfs + 0.005 * nfn,
-        trend  # default
+        0  # default: no NFF weight modification for unknown indicators
       )
 
       values <- base + cumsum(rnorm(length(years), mean = weight_mod + trend, sd = var))
@@ -400,6 +400,12 @@ load_indicator_timeseries <- function(region = "Mediterranean") {
 
     if (nrow(result) == 0) {
       stop("No time series data for region: ", region)
+    }
+
+    # HELCOM indicators only for Baltic (consistent with fallback logic)
+    helcom_only <- c("Contaminant Status", "Eutrophication Status", "Underwater Noise")
+    if (region != "Baltic") {
+      result <- result[!result$indicator %in% helcom_only, ]
     }
 
     attr(result, "provenance") <- "rds"

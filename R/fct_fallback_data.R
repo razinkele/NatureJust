@@ -80,25 +80,40 @@ mock_scenario_data_fallback <- function(nff_weights = c(NfN = 34, NfS = 33, NaC 
   nfs <- nff_weights["NfS"] / 100
   nac <- nff_weights["NaC"] / 100
 
-  data.frame(
-    year = rep(years, 4),
-    indicator = rep(
-      c("Habitat Condition", "Ecosystem Services",
-        "Livelihoods & Employment", "Equity Score"),
-      each = length(years)
-    ),
-    value = c(
-      # Habitat: improves with NfN weight
-      cumsum(rnorm(length(years), mean = 0.02 * nfn, sd = 0.01)) + 0.5,
-      # Ecosystem services: improves with NfS weight
-      cumsum(rnorm(length(years), mean = 0.015 * nfs, sd = 0.01)) + 0.5,
-      # Livelihoods: improves with NaC weight, slight NfN penalty
-      cumsum(rnorm(length(years), mean = 0.01 * nac - 0.005 * nfn, sd = 0.01)) + 0.6,
-      # Equity: balanced approach is best
-      cumsum(rnorm(length(years), mean = 0.01 * (1 - max(abs(nfn - nfs), abs(nfs - nac), abs(nfn - nac))), sd = 0.008)) + 0.5
-    ),
-    region = region
+  indicators <- c(
+    "Habitat Condition", "Ecosystem Services",
+    "Livelihoods & Employment", "Equity Score",
+    "Offshore Wind Capacity", "Bathing Water Quality",
+    "Contaminant Status", "Eutrophication Status", "Underwater Noise"
   )
+  means <- c(
+    0.02 * nfn,
+    0.015 * nfs,
+    0.01 * nac - 0.005 * nfn,
+    0.01 * (1 - max(abs(nfn - nfs), abs(nfs - nac), abs(nfn - nac))),
+    0.012 * nfs + 0.005 * nac,
+    0.008 * nfn + 0.005 * nfs,
+    0.010 * nfn + 0.003 * nfs,
+    0.008 * nfn + 0.005 * nfs,
+    -0.003 * nfs + 0.005 * nfn
+  )
+  sds <- c(0.01, 0.01, 0.01, 0.008, 0.01, 0.01, 0.01, 0.01, 0.01)
+  bases <- c(0.5, 0.5, 0.6, 0.5, 0.3, 0.7, 0.6, 0.55, 0.5)
+
+  do.call(rbind, lapply(seq_along(indicators), function(i) {
+    values <- bases[i] + cumsum(rnorm(length(years), mean = means[i], sd = sds[i]))
+    values <- pmin(pmax(values, 0.05), 0.99)
+    band_width <- sds[i] * sqrt(seq_along(years))
+    data.frame(
+      year = years,
+      indicator = indicators[i],
+      value = round(values, 3),
+      lower = round(pmax(values - band_width, 0.01), 3),
+      upper = round(pmin(values + band_width, 1.00), 3),
+      region = region,
+      stringsAsFactors = FALSE
+    )
+  }))
 }
 
 #' Generate mock justice scores for an intervention (FALLBACK)
@@ -162,8 +177,8 @@ mock_interventions_fallback <- function() {
     "Offshore Wind Siting",
     "Fishing Quota Redistribution",
     "Coastal Wetland Conservation",
-    "Coral Reef Protection",
-    "Mangrove Replanting",
+    "Posidonia Meadow Protection",
+    "Marine Habitat Restoration",
     "Marine Litter Reduction",
     "Sustainable Aquaculture Zone",
     "Deep-Sea Mining Moratorium"
@@ -186,8 +201,8 @@ mock_funding_matrix_fallback <- function() {
 
   df <- as.data.frame(mat)
   names(df) <- funds
-  df$Intervention <- interventions
-  df[, c("Intervention", funds)]
+  df$intervention <- interventions
+  df[, c("intervention", funds)]
 }
 
 #' Generate mock CFP alignment data (FALLBACK)

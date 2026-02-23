@@ -23,7 +23,7 @@ mod_governance_ui <- function(id) {
           sidebar = bslib::sidebar(
             title = "Check Alignment",
             selectInput(ns("cfp_measure"), "Conservation Measure",
-                        choices = load_interventions())
+                        choices = tryCatch(load_interventions(), error = function(e) "MPA Establishment"))
           ),
           bslib::card(
             bslib::card_header("Common Fisheries Policy Alignment"),
@@ -70,7 +70,7 @@ mod_governance_ui <- function(id) {
           sidebar = bslib::sidebar(
             title = "Assessment",
             selectInput(ns("tenet_intervention"), "Select Intervention",
-                        choices = load_interventions()),
+                        choices = tryCatch(load_interventions(), error = function(e) "MPA Establishment")),
             p(class = "text-muted small mt-2",
               "Based on Elliott (2013): 10 tenets for integrated,",
               "successful and sustainable marine management.")

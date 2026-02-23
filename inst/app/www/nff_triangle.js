@@ -126,6 +126,25 @@ function makeSVG(tag, attrs) {
   return el;
 }
 
+// Round 3 fractions to integers summing to 100
+function roundTo100(bary) {
+  var raw = [bary.NfN * 100, bary.NfS * 100, bary.NaC * 100];
+  var floored = raw.map(Math.floor);
+  var remainder = 100 - floored.reduce(function(acc, val) { return acc + val; }, 0);
+  var fracs = raw.map(function(v, i) { return {i: i, f: v - floored[i]}; });
+  fracs.sort(function(x, y) { return y.f - x.f; });
+  for (var i = 0; i < remainder; i++) floored[fracs[i].i]++;
+  return {NfN: floored[0], NfS: floored[1], NaC: floored[2]};
+}
+
+/* ──────────────── Widget registry ──────────────── */
+
+// All initialized widgets keyed by inputId
+var NFF_WIDGETS = {};
+
+// Shared drag state — only one widget can be dragged at a time
+var dragState = { active: false, widget: null };
+
 /* ──────────────── Per-widget initialisation ──────────────── */
 
 $(document).ready(function() {
@@ -199,24 +218,16 @@ function initTriangle(container) {
     );
   }
 
-  // Round 3 fractions to integers summing to 100
-  function roundTo100(b) {
-    var raw = [b.NfN * 100, b.NfS * 100, b.NaC * 100];
-    var floored = raw.map(Math.floor);
-    var remainder = 100 - floored.reduce(function(a, b) { return a + b; }, 0);
-    var fracs = raw.map(function(v, i) { return {i: i, f: v - floored[i]}; });
-    fracs.sort(function(a, b) { return b.f - a.f; });
-    for (var i = 0; i < remainder; i++) floored[fracs[i].i]++;
-    return {NfN: floored[0], NfS: floored[1], NaC: floored[2]};
-  }
-
   /* ---- Initialise at centroid ---- */
   updatePosition({NfN: 1/3, NfS: 1/3, NaC: 1/3}, false);
 
-  // Send initial value once Shiny is ready
-  $(document).on('shiny:connected', function() {
-    updatePosition({NfN: 1/3, NfS: 1/3, NaC: 1/3}, true);
-  });
+  /* ---- Register widget for cross-module sync ---- */
+  NFF_WIDGETS[inputId] = {
+    svg: svg,
+    posMarker: posMarker,
+    posRing: posRing,
+    updatePosition: updatePosition
+  };
 
   /* ────── Click inside triangle → move position ────── */
 
@@ -228,31 +239,14 @@ function initTriangle(container) {
     updatePosition(bary, true);
   });
 
-  /* ────── Drag position marker ────── */
-
-  var dragging = false;
+  /* ────── Drag position marker (start only — move/end handled globally) ────── */
 
   $(posMarker).add(posRing).on('mousedown touchstart', function(e) {
     e.preventDefault();
     e.stopPropagation();
-    dragging = true;
+    dragState.active = true;
+    dragState.widget = NFF_WIDGETS[inputId];
     svg.classList.add('nff-dragging');
-  });
-
-  $(document).on('mousemove touchmove', function(e) {
-    if (!dragging) return;
-    var evt = e.originalEvent.touches ? e.originalEvent.touches[0] : e;
-    var pt  = svgPoint(svg, evt);
-    if (insideTriangle(pt.x, pt.y)) {
-      updatePosition(baryCoords(pt.x, pt.y), true);
-    }
-  });
-
-  $(document).on('mouseup touchend', function() {
-    if (dragging) {
-      dragging = false;
-      svg.classList.remove('nff-dragging');
-    }
   });
 
   /* ────── Vertex click → ripple + navigate ────── */
@@ -335,28 +329,14 @@ function initTriangle(container) {
     updatePosition({NfN: n.bary[0], NfS: n.bary[1], NaC: n.bary[2]}, true);
   });
 
-  /* ────── Receive weight updates from server (bidirectional sync) ────── */
+  /* ────── Keyboard support for interactive elements ────── */
 
-  if (typeof Shiny !== 'undefined') {
-    Shiny.addCustomMessageHandler('nff-update-position', function(msg) {
-      // Avoid feedback loop: only update if significantly different
-      var cur = baryCoords(
-        parseFloat(posMarker.getAttribute('cx')),
-        parseFloat(posMarker.getAttribute('cy'))
-      );
-      cur = clampBary(cur);
-      var dNfN = Math.abs(cur.NfN - msg.NfN / 100);
-      var dNfS = Math.abs(cur.NfS - msg.NfS / 100);
-      var dNaC = Math.abs(cur.NaC - msg.NaC / 100);
-      if (dNfN + dNfS + dNaC > 0.02) {
-        updatePosition({
-          NfN: msg.NfN / 100,
-          NfS: msg.NfS / 100,
-          NaC: msg.NaC / 100
-        }, false);  // false = don't send back to Shiny (avoid loop)
-      }
-    });
-  }
+  $(svg).on('keydown', '.nff-vertex', function(e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      $(this).trigger('click');
+    }
+  });
 
   /* ────── Narrative marker double-click → navigate to Narratives tab ────── */
 
@@ -369,10 +349,59 @@ function initTriangle(container) {
   });
 }
 
+/* ──────────────── Global drag handlers (single set for all widgets) ──────────────── */
+
+$(document).on('mousemove touchmove', function(e) {
+  if (!dragState.active || !dragState.widget) return;
+  var evt = e.originalEvent.touches ? e.originalEvent.touches[0] : e;
+  var pt  = svgPoint(dragState.widget.svg, evt);
+  if (insideTriangle(pt.x, pt.y)) {
+    dragState.widget.updatePosition(baryCoords(pt.x, pt.y), true);
+  }
+});
+
+$(document).on('mouseup touchend', function() {
+  if (dragState.active && dragState.widget) {
+    dragState.widget.svg.classList.remove('nff-dragging');
+    dragState.active = false;
+    dragState.widget = null;
+  }
+});
+
 /* ──────────────── Global Shiny message handlers ──────────────── */
 
 $(document).ready(function() {
   if (typeof Shiny !== 'undefined') {
+    // Send initial values for all widgets once Shiny is ready
+    $(document).one('shiny:connected', function() {
+      Object.keys(NFF_WIDGETS).forEach(function(id) {
+        NFF_WIDGETS[id].updatePosition({NfN: 1/3, NfS: 1/3, NaC: 1/3}, true);
+      });
+    });
+
+    // Broadcast weight updates to ALL triangle widgets
+    Shiny.addCustomMessageHandler('nff-update-position', function(msg) {
+      Object.keys(NFF_WIDGETS).forEach(function(id) {
+        var w = NFF_WIDGETS[id];
+        // Avoid feedback loop: only update if significantly different
+        var cur = baryCoords(
+          parseFloat(w.posMarker.getAttribute('cx')),
+          parseFloat(w.posMarker.getAttribute('cy'))
+        );
+        cur = clampBary(cur);
+        var dNfN = Math.abs(cur.NfN - msg.NfN / 100);
+        var dNfS = Math.abs(cur.NfS - msg.NfS / 100);
+        var dNaC = Math.abs(cur.NaC - msg.NaC / 100);
+        if (dNfN + dNfS + dNaC > 0.02) {
+          w.updatePosition({
+            NfN: msg.NfN / 100,
+            NfS: msg.NfS / 100,
+            NaC: msg.NaC / 100
+          }, false);  // false = don't send back to Shiny (avoid loop)
+        }
+      });
+    });
+
     // Generic tab navigation handler (used by mod_narratives "Run as Scenario")
     Shiny.addCustomMessageHandler('nj-nav-select', function(msg) {
       NatureJust.navigateTo(msg.tab);

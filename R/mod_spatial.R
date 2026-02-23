@@ -233,6 +233,16 @@ mod_spatial_server <- function(id, nff_weights = NULL) {
         pal <- leaflet::colorNumeric(ldef$pal_name, domain = c(0, 1))
         col_vals <- data[[ldef$col]]
 
+        region_name <- if ("NUTS_NAME" %in% names(data)) {
+          ifelse(is.na(data$NUTS_NAME), data$sovereignt, data$NUTS_NAME)
+        } else {
+          data$sovereignt
+        }
+        label_text <- paste0(
+          region_name, " (", data$sovereignt, "): ",
+          ldef$group, " ", round(col_vals, 2)
+        )
+
         proxy <- proxy |>
           leaflet::addPolygons(
             data = data,
@@ -240,11 +250,7 @@ mod_spatial_server <- function(id, nff_weights = NULL) {
             fillOpacity = 0.6,
             weight = 1,
             color = "#666",
-            label = ~paste0(
-                           ifelse(!is.null(data$NUTS_NAME) & !is.na(data$NUTS_NAME),
-                                  data$NUTS_NAME, sovereignt),
-                           " (", sovereignt, "): ", ldef$group, " ",
-                           round(col_vals, 2)),
+            label = label_text,
             group = ldef$group
           )
 
