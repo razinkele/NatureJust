@@ -38,5 +38,14 @@ desktop.ini
 *.jpg
 !NatureJustLogo.png
 
+# renv (track lockfile and activate script, not the library)
+renv/library/
+renv/staging/
+renv/local/
+renv/cellar/
+renv/lock/
+renv/python/
+renv/sandbox/
+
 # Cached Eurostat downloads (large temp files)
 # Note: inst/extdata/*.rds are tracked (small, curated caches)
