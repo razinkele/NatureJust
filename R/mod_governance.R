@@ -41,6 +41,31 @@ mod_governance_ui <- function(id) {
             "Track stakeholder consultation against GBF Target 22 requirements."),
           uiOutput(ns("stakeholder_checklist"))
         )
+      ),
+
+      bslib::nav_panel(
+        "Elliott's 10 Tenets",
+        bslib::layout_sidebar(
+          sidebar = bslib::sidebar(
+            title = "Assessment",
+            selectInput(ns("tenet_intervention"), "Select Intervention",
+                        choices = mock_interventions()),
+            p(class = "text-muted small mt-2",
+              "Based on Elliott (2013): 10 tenets for integrated,",
+              "successful and sustainable marine management.")
+          ),
+          tagList(
+            h5("Tenet Radar Profile", class = "mb-3"),
+            plotly::plotlyOutput(ns("tenet_radar"), height = "400px"),
+            h5("Tenet Scorecard", class = "mt-4 mb-3"),
+            bslib::layout_column_wrap(width = 1/2, uiOutput(ns("tenet_cards"))),
+            bslib::card(
+              class = "mt-3",
+              bslib::card_header("Gap Analysis & Recommendations"),
+              bslib::card_body(uiOutput(ns("tenet_gaps")))
+            )
+          )
+        )
       )
     )
   )
@@ -121,6 +146,158 @@ mod_governance_server <- function(id) {
         tags$ul(
           lapply(mock_details, function(d) tags$li(d))
         )
+      )
+    })
+
+    # --- Elliott's 10 Tenets ---
+    tenet_scores <- reactive({
+      mock_elliott_tenets(input$tenet_intervention)
+    })
+
+    # Tenet radar chart
+    output$tenet_radar <- plotly::renderPlotly({
+      df <- tenet_scores()
+      plotly::plot_ly(type = "scatterpolar", fill = "toself") |>
+        plotly::add_trace(
+          r = c(df$score, df$score[1]),
+          theta = c(df$tenet, df$tenet[1]),
+          name = input$tenet_intervention,
+          fillcolor = "rgba(27,73,101,0.2)",
+          line = list(color = "#1B4965")
+        ) |>
+        plotly::layout(
+          polar = list(radialaxis = list(visible = TRUE, range = c(0, 1))),
+          showlegend = FALSE
+        )
+    })
+
+    # Tenet scorecard cards
+    output$tenet_cards <- renderUI({
+      df <- tenet_scores()
+      tenet_icons <- c(
+        "Ecologically sustainable" = "tree",
+        "Technologically feasible" = "gear",
+        "Economically viable" = "currency-euro",
+        "Socially desirable" = "people",
+        "Ethically defensible" = "shield-check",
+        "Culturally inclusive" = "globe",
+        "Legally permissible" = "book",
+        "Administratively achievable" = "building",
+        "Effectively communicable" = "megaphone",
+        "Politically expedient" = "flag"
+      )
+
+      tagList(
+        lapply(seq_len(nrow(df)), function(i) {
+          status <- df$status[i]
+          score_pct <- round(df$score[i] * 100)
+          status_label <- switch(status,
+                                 green = "Adequate",
+                                 amber = "Needs Attention",
+                                 red = "Critical Gap")
+          icon_name <- tenet_icons[[df$tenet[i]]]
+
+          bslib::card(
+            class = paste("justice-card", paste0("status-", status)),
+            bslib::card_header(
+              tags$span(class = paste("traffic-light", status)),
+              if (!is.null(icon_name)) bsicons::bs_icon(icon_name),
+              df$tenet[i]
+            ),
+            bslib::card_body(
+              h3(paste0(score_pct, "%"), class = "mb-1"),
+              p(class = "text-muted mb-1", status_label),
+              p(class = "small", df$description[i])
+            )
+          )
+        })
+      )
+    })
+
+    # Tenet gap analysis
+    output$tenet_gaps <- renderUI({
+      df <- tenet_scores()
+      gaps <- df[df$status != "green", ]
+
+      if (nrow(gaps) == 0) {
+        return(div(
+          class = "alert alert-success",
+          bsicons::bs_icon("check-circle"),
+          " All 10 tenets are adequately addressed for this intervention."
+        ))
+      }
+
+      recommendations <- list(
+        "Ecologically sustainable" = list(
+          "Conduct comprehensive Environmental Impact Assessment (EIA)",
+          "Integrate cumulative effects assessment with existing pressures",
+          "Establish long-term ecological monitoring programme"
+        ),
+        "Technologically feasible" = list(
+          "Commission technology readiness assessment for proposed measures",
+          "Pilot technologies at small scale before full deployment",
+          "Ensure monitoring and enforcement technologies are operational"
+        ),
+        "Economically viable" = list(
+          "Conduct full cost-benefit analysis including ecosystem service valuation",
+          "Identify EU funding instruments (EMFAF, LIFE, Cohesion Fund)",
+          "Develop benefit-sharing mechanisms for affected communities"
+        ),
+        "Socially desirable" = list(
+          "Conduct social impact assessment with affected communities",
+          "Establish transparent compensation or transition support schemes",
+          "Build community ownership through co-management arrangements"
+        ),
+        "Ethically defensible" = list(
+          "Apply precautionary principle where scientific uncertainty exists",
+          "Ensure intergenerational equity in decision-making frameworks",
+          "Address disproportionate burden on vulnerable communities"
+        ),
+        "Culturally inclusive" = list(
+          "Integrate traditional ecological knowledge in management plans",
+          "Recognise cultural heritage values of marine and coastal spaces",
+          "Ensure multilingual and culturally appropriate consultation processes"
+        ),
+        "Legally permissible" = list(
+          "Review compatibility with EU environmental acquis and UNCLOS",
+          "Address cross-border legal coordination requirements",
+          "Ensure Aarhus Convention compliance for public participation"
+        ),
+        "Administratively achievable" = list(
+          "Assess institutional capacity and coordination needs across agencies",
+          "Simplify permitting procedures and reduce administrative bottlenecks",
+          "Build enforcement and monitoring capacity in competent authorities"
+        ),
+        "Effectively communicable" = list(
+          "Develop clear public communication strategy with visual materials",
+          "Engage local media and community networks for outreach",
+          "Translate scientific evidence into accessible policy briefs"
+        ),
+        "Politically expedient" = list(
+          "Build cross-party political coalitions around shared objectives",
+          "Align intervention with current EU policy priorities (Green Deal, REPowerEU)",
+          "Engage Regional Advisory Councils and stakeholder platforms early"
+        )
+      )
+
+      tagList(
+        div(class = "alert alert-warning",
+            bsicons::bs_icon("exclamation-triangle"),
+            paste0(" ", nrow(gaps), " of 10 tenets require attention.")),
+        lapply(seq_len(nrow(gaps)), function(i) {
+          tenet_name <- gaps$tenet[i]
+          recs <- recommendations[[tenet_name]]
+          div(
+            class = "mb-3",
+            h6(
+              tags$span(class = paste("traffic-light", gaps$status[i])),
+              tenet_name
+            ),
+            tags$ul(
+              lapply(recs, function(r) tags$li(r))
+            )
+          )
+        })
       )
     })
 

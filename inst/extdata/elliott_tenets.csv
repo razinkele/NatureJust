@@ -1,0 +1,101 @@
+intervention,tenet,score,status,description,source
+MPA Establishment,Ecologically sustainable,0.88,green,Strong evidence that well-enforced MPAs restore fish biomass and habitat integrity,Lester et al. 2009; Edgar et al. 2014
+MPA Establishment,Technologically feasible,0.75,green,Proven spatial planning tools and monitoring technologies available for MPA designation,Lubchenco & Grorud-Colvert 2015
+MPA Establishment,Economically viable,0.42,amber,High short-term costs from fishing displacement offset by long-term spillover benefits,Sala et al. 2021
+MPA Establishment,Socially desirable,0.38,red,Fishing communities often oppose strict protection due to livelihood impacts,Bennett & Dearden 2014
+MPA Establishment,Ethically defensible,0.72,green,Precautionary principle supports protection of marine biodiversity for future generations,CBD COP15 Decision 15/4
+MPA Establishment,Culturally inclusive,0.35,red,Indigenous and artisanal fishing cultures frequently excluded from designation process,Martin et al. 2016
+MPA Establishment,Legally permissible,0.85,green,Strong EU legal basis under Habitats Directive and EU Biodiversity Strategy 2030,Directive 92/43/EEC; COM(2020) 380
+MPA Establishment,Administratively achievable,0.55,amber,Cross-border coordination challenges and enforcement capacity gaps in many Member States,ECA Special Report 26/2020
+MPA Establishment,Effectively communicable,0.48,amber,Scientific rationale often poorly communicated to affected fishing communities,Jefferson et al. 2015
+MPA Establishment,Politically expedient,0.62,amber,High-level EU commitment (30x30) but local political resistance in fishing-dependent areas,EU Biodiversity Strategy 2030
+Seagrass Restoration,Ecologically sustainable,0.82,green,Seagrass meadows provide critical nursery habitat and carbon sequestration services,Unsworth et al. 2019
+Seagrass Restoration,Technologically feasible,0.58,amber,Restoration techniques improving but success rates remain variable across sites,van Katwijk et al. 2016
+Seagrass Restoration,Economically viable,0.65,amber,Cost-effective when accounting for carbon credits and fishery enhancement benefits,Duarte et al. 2020
+Seagrass Restoration,Socially desirable,0.70,green,Widely supported as non-exclusionary conservation with visible ecosystem benefits,Cullen-Unsworth et al. 2014
+Seagrass Restoration,Ethically defensible,0.78,green,Restores degraded ecosystems without displacing existing users from marine space,Nature Restoration Law 2024/1991
+Seagrass Restoration,Culturally inclusive,0.62,amber,Local ecological knowledge underutilised in site selection despite community willingness,McKenzie et al. 2020
+Seagrass Restoration,Legally permissible,0.80,green,Supported by Nature Restoration Law and Habitats Directive Annex I habitat protection,Regulation 2024/1991 Art. 5
+Seagrass Restoration,Administratively achievable,0.60,amber,Requires cross-sectoral coordination between environment and maritime agencies,EEA Report 2023
+Seagrass Restoration,Effectively communicable,0.72,green,Strong visual narrative around blue carbon and underwater meadows engages public support,Fourqurean et al. 2012
+Seagrass Restoration,Politically expedient,0.68,amber,Politically safe as win-win measure but competes for funding with higher-profile actions,LIFE Programme reporting
+Offshore Wind Siting,Ecologically sustainable,0.45,amber,Potential impacts on seabirds and marine mammals require careful spatial planning,Bergstrom et al. 2014
+Offshore Wind Siting,Technologically feasible,0.88,green,Mature technology with proven deployment across North Sea and Baltic regions,WindEurope 2023
+Offshore Wind Siting,Economically viable,0.82,green,Strong investment case driven by REPowerEU targets and declining levelised costs,IEA Offshore Wind Outlook 2024
+Offshore Wind Siting,Socially desirable,0.52,amber,Coastal communities divided between job creation and visual or noise impacts,Haggett 2011; Rudolph 2014
+Offshore Wind Siting,Ethically defensible,0.58,amber,Climate mitigation benefits clear but localised environmental costs create equity concerns,Sovacool et al. 2021
+Offshore Wind Siting,Culturally inclusive,0.40,amber,Seascape cultural values and traditional navigation routes often poorly considered,Gee 2010
+Offshore Wind Siting,Legally permissible,0.78,green,Strong EU legal framework under Maritime Spatial Planning and RED III directives,Directive 2014/89/EU; Directive 2023/2413
+Offshore Wind Siting,Administratively achievable,0.55,amber,Permitting bottlenecks and cross-border EIA requirements slow deployment,EC Recommendation 2024 on permitting
+Offshore Wind Siting,Effectively communicable,0.50,amber,Technical complexity of co-location benefits difficult to convey to non-specialist audiences,Smythe et al. 2020
+Offshore Wind Siting,Politically expedient,0.85,green,Strong political momentum from REPowerEU energy security agenda,REPowerEU Plan COM(2022) 230
+Fishing Quota Redistribution,Ecologically sustainable,0.65,amber,Supports MSY objectives by incentivising sustainable practices among small-scale fleet,Reg. 1380/2013 Art. 2
+Fishing Quota Redistribution,Technologically feasible,0.70,green,Existing VMS and logbook systems enable quota tracking and compliance monitoring,EFCA Annual Report 2023
+Fishing Quota Redistribution,Economically viable,0.55,amber,Transition costs for industrial fleet offset by long-term stock recovery and fairness gains,Carpenter & Kleinjans 2017
+Fishing Quota Redistribution,Socially desirable,0.78,green,Strongly supported by small-scale fishing organisations and coastal communities,LIFE Platform position paper 2022
+Fishing Quota Redistribution,Ethically defensible,0.80,green,Corrects historical concentration of fishing rights among large industrial operators,Symes & Phillipson 2009
+Fishing Quota Redistribution,Culturally inclusive,0.72,green,CFP Article 17 explicitly recognises social criteria including cultural fishing practices,Reg. 1380/2013 Art. 17
+Fishing Quota Redistribution,Legally permissible,0.75,green,Legal basis exists in CFP but Member State implementation remains inconsistent,Reg. 1380/2013; Court of Auditors 2022
+Fishing Quota Redistribution,Administratively achievable,0.45,amber,Complex allocation mechanisms and resistance from incumbent quota holders,Hoefnagel et al. 2015
+Fishing Quota Redistribution,Effectively communicable,0.60,amber,Quota systems technically complex but fairness narrative resonates with public,Pew Charitable Trusts 2022
+Fishing Quota Redistribution,Politically expedient,0.38,red,Strong industry lobbying against redistribution; politically contentious in fishing nations,Carpenter & Kleinjans 2017
+Coastal Wetland Conservation,Ecologically sustainable,0.85,green,Wetlands provide flood defence and biodiversity corridors and are critical carbon sinks,Barbier et al. 2011
+Coastal Wetland Conservation,Technologically feasible,0.72,green,Well-established restoration and monitoring techniques for salt marshes and lagoons,Zedler & Kercher 2005
+Coastal Wetland Conservation,Economically viable,0.60,amber,High ecosystem service values but opportunity costs for agriculture and development,Costanza et al. 2014
+Coastal Wetland Conservation,Socially desirable,0.65,amber,Generally supported but conflicts with landowner development interests in some regions,Blicharska et al. 2016
+Coastal Wetland Conservation,Ethically defensible,0.75,green,Protects vulnerable coastal communities from flooding while preserving biodiversity,Temmerman et al. 2013
+Coastal Wetland Conservation,Culturally inclusive,0.58,amber,Cultural significance of wetlands increasingly recognised but implementation gaps remain,Verhoeven 2014
+Coastal Wetland Conservation,Legally permissible,0.82,green,Protected under Habitats Directive Annex I and Water Framework Directive,Directive 92/43/EEC; Directive 2000/60/EC
+Coastal Wetland Conservation,Administratively achievable,0.50,amber,Fragmented governance across environment and agriculture ministries and water authorities,ECA Special Report 2024
+Coastal Wetland Conservation,Effectively communicable,0.68,amber,Nature-based flood defence narrative effective but competing with hard infrastructure lobby,Seddon et al. 2020
+Coastal Wetland Conservation,Politically expedient,0.58,amber,Moderate political support but deprioritised relative to urban flood defence infrastructure,EU Floods Directive 2007/60/EC
+Posidonia Meadow Protection,Ecologically sustainable,0.90,green,Posidonia oceanica meadows are keystone Mediterranean habitats with exceptional biodiversity,Boudouresque et al. 2012
+Posidonia Meadow Protection,Technologically feasible,0.65,amber,Anchoring restriction enforcement via AIS monitoring feasible but patchy implementation,Telesca et al. 2015
+Posidonia Meadow Protection,Economically viable,0.48,amber,Tourism and boating industry bear costs of anchoring bans with limited compensation,Pergent-Martini et al. 2006
+Posidonia Meadow Protection,Socially desirable,0.42,amber,Anchoring bans unpopular with recreational boaters and artisanal fishers in some areas,Directive 92/43/EEC Annex I Habitat 1120
+Posidonia Meadow Protection,Ethically defensible,0.78,green,Protection of critically endangered habitat justified under precautionary principle,IUCN Red List of Ecosystems 2016
+Posidonia Meadow Protection,Culturally inclusive,0.40,amber,Mediterranean traditional fishing knowledge often excluded from management planning,Guidetti et al. 2014
+Posidonia Meadow Protection,Legally permissible,0.88,green,Priority habitat under Habitats Directive Annex I with strict protection obligation,Directive 92/43/EEC Art. 6
+Posidonia Meadow Protection,Administratively achievable,0.45,amber,Enforcement challenging across extensive Mediterranean coastline with limited patrol capacity,UNEP-MAP Barcelona Convention
+Posidonia Meadow Protection,Effectively communicable,0.55,amber,Underwater habitat less visible to public than terrestrial conservation targets,de los Santos et al. 2019
+Posidonia Meadow Protection,Politically expedient,0.50,amber,Supported by environmental ministries but tourism lobbies resist strict anchoring bans,Campagne et al. 2015
+Marine Habitat Restoration,Ecologically sustainable,0.80,green,Nature Restoration Law targets measurable improvement in habitat condition by 2030 and 2050,Regulation 2024/1991 Art. 5
+Marine Habitat Restoration,Technologically feasible,0.60,amber,Large-scale marine restoration techniques still maturing beyond pilot-scale projects,Bayraktarov et al. 2016
+Marine Habitat Restoration,Economically viable,0.55,amber,High upfront costs but strong benefit-cost ratios when ecosystem services are valued,De Groot et al. 2013
+Marine Habitat Restoration,Socially desirable,0.72,green,Broad public support for reversing environmental degradation and restoring natural heritage,Eurobarometer 2023 on biodiversity
+Marine Habitat Restoration,Ethically defensible,0.85,green,Explicitly aims to reverse historical degradation and restore ecosystem function,Regulation 2024/1991 Art. 1
+Marine Habitat Restoration,Culturally inclusive,0.55,amber,Traditional knowledge recognised in principle but operationalisation remains unclear,Regulation 2024/1991 Recital 38
+Marine Habitat Restoration,Legally permissible,0.82,green,Strong legal basis under Nature Restoration Law with binding national restoration plans,Regulation 2024/1991
+Marine Habitat Restoration,Administratively achievable,0.48,amber,National restoration plans require significant new institutional capacity and coordination,ECA Special Report 2024
+Marine Habitat Restoration,Effectively communicable,0.68,amber,Restoration success stories resonate but timescales of recovery are difficult to convey,McDonald et al. 2016
+Marine Habitat Restoration,Politically expedient,0.42,amber,Nature Restoration Law faced intense political opposition during adoption process,EP vote 2023; Council adoption 2024
+Marine Litter Reduction,Ecologically sustainable,0.75,green,Reducing marine litter directly benefits marine fauna through reduced entanglement and ingestion,Directive 2019/904/EU; MSFD D10
+Marine Litter Reduction,Technologically feasible,0.80,green,Proven waste management and circular economy technologies widely available,EU Circular Economy Action Plan 2020
+Marine Litter Reduction,Economically viable,0.70,green,Extended Producer Responsibility schemes shift costs to producers with net societal benefit,EC Impact Assessment SWD(2018) 254
+Marine Litter Reduction,Socially desirable,0.85,green,Very high public awareness and support for reducing plastic pollution in seas,Eurobarometer 2020 on plastic pollution
+Marine Litter Reduction,Ethically defensible,0.78,green,Protects marine ecosystem health and reduces contamination of seafood supply chain,EFSA 2016 on microplastics
+Marine Litter Reduction,Culturally inclusive,0.55,amber,Impacts on traditional fishing gear and artisanal packaging practices not fully addressed,MSFD Descriptor 10; GGGI 2019
+Marine Litter Reduction,Legally permissible,0.88,green,Comprehensive EU legal framework including SUP Directive and Packaging Regulation,Directive 2019/904/EU; Regulation 2025/40
+Marine Litter Reduction,Administratively achievable,0.65,amber,Implementation varies across MS with enforcement gaps in Southern and Eastern Mediterranean,EEA Briefing 2022
+Marine Litter Reduction,Effectively communicable,0.90,green,Beach cleanup campaigns and plastic-free messaging have exceptional public reach,Ocean Conservancy ICC Report 2023
+Marine Litter Reduction,Politically expedient,0.82,green,Cross-party political support with high media visibility and voter appeal,EC SUP Directive adoption unanimity
+Sustainable Aquaculture Zone,Ecologically sustainable,0.50,amber,Environmental risks from nutrient loading and escapes balanced against reduced wild-catch pressure,EMFAF Reg. 2021/1139 Art. 26
+Sustainable Aquaculture Zone,Technologically feasible,0.72,green,Recirculating and offshore aquaculture technologies increasingly mature and scalable,FAO 2022 State of World Fisheries
+Sustainable Aquaculture Zone,Economically viable,0.68,amber,Growing market demand and EU food security goals support investment case,EC Strategic Guidelines COM(2021) 236
+Sustainable Aquaculture Zone,Socially desirable,0.48,amber,Local opposition to farm installations due to visual impact and environmental concerns,Osmundsen et al. 2017
+Sustainable Aquaculture Zone,Ethically defensible,0.55,amber,Animal welfare and antibiotic use concerns temper ethical justification,EFSA 2023 on fish welfare
+Sustainable Aquaculture Zone,Culturally inclusive,0.42,amber,Wild-capture fishing culture and identity may be marginalised by aquaculture expansion,Osmundsen et al. 2017
+Sustainable Aquaculture Zone,Legally permissible,0.75,green,Supported by EMFAF and Maritime Spatial Planning Directive with environmental safeguards,EMFAF Reg. 2021/1139; Directive 2014/89/EU
+Sustainable Aquaculture Zone,Administratively achievable,0.52,amber,Licensing complexity and multi-agency coordination slow zone designation in many MS,EC Aquaculture Guidelines 2021
+Sustainable Aquaculture Zone,Effectively communicable,0.55,amber,Sustainable aquaculture narrative competes with negative associations of intensive fish farming,FEAP Communication Strategy 2022
+Sustainable Aquaculture Zone,Politically expedient,0.62,amber,Moderate political support driven by food security agenda but environmental lobbies cautious,Farm to Fork Strategy COM(2020) 381
+Deep-Sea Mining Moratorium,Ecologically sustainable,0.92,green,Moratorium prevents irreversible destruction of poorly understood deep-sea ecosystems,Levin et al. 2020; Amon et al. 2022
+Deep-Sea Mining Moratorium,Technologically feasible,0.85,green,Moratorium requires no new technology and is simple to implement via regulatory means,ISA Mining Code review process
+Deep-Sea Mining Moratorium,Economically viable,0.60,amber,Foregone mineral revenues offset by avoided environmental remediation costs,Paulikas et al. 2020
+Deep-Sea Mining Moratorium,Socially desirable,0.75,green,Strong civil society support from environmental NGOs and scientific community,DSCC coalition; Deep Sea Conservation Coalition
+Deep-Sea Mining Moratorium,Ethically defensible,0.88,green,Precautionary principle strongly supports moratorium given scientific uncertainty,UNCLOS Part XI; Rio Declaration Principle 15
+Deep-Sea Mining Moratorium,Culturally inclusive,0.62,amber,Global South perspectives and Pacific Island communities underrepresented in ISA debates,Tilot et al. 2021
+Deep-Sea Mining Moratorium,Legally permissible,0.72,green,EU Parliament has called for moratorium and UNCLOS allows precautionary measures,EP Resolution 2021/2188(INI)
+Deep-Sea Mining Moratorium,Administratively achievable,0.78,green,Straightforward to implement through ISA regulatory framework and EU policy position,Council conclusions on ocean governance 2022
+Deep-Sea Mining Moratorium,Effectively communicable,0.70,green,Deep-sea imagery and biodiversity discovery narrative captures public imagination,BBC Blue Planet; IUCN communications
+Deep-Sea Mining Moratorium,Politically expedient,0.65,amber,Growing political momentum but mineral-dependent industries lobby against moratorium,Critical Raw Materials Act 2024

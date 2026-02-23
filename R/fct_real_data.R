@@ -294,6 +294,34 @@ mock_justice_scores <- function(intervention = "MPA Establishment") {
   })
 }
 
+#' Load literature-sourced Elliott's 10 Tenets scores for an intervention
+#' Falls back to mock_elliott_tenets_fallback() on error
+#' @param intervention Character name of intervention
+#' @return Data frame with 10 tenet scores
+#' @noRd
+mock_elliott_tenets <- function(intervention = "MPA Establishment") {
+  tryCatch({
+    all_tenets <- load_extdata("elliott_tenets.csv")
+    result <- all_tenets[all_tenets$intervention == intervention, ]
+
+    if (nrow(result) == 0) {
+      stop("No tenet scores for: ", intervention)
+    }
+
+    data.frame(
+      tenet = result$tenet,
+      score = round(result$score, 2),
+      status = result$status,
+      description = result$description,
+      stringsAsFactors = FALSE
+    )
+  }, error = function(e) {
+    message("Real Elliott tenets unavailable (", conditionMessage(e),
+            "). Using fallback.")
+    mock_elliott_tenets_fallback(intervention)
+  })
+}
+
 #' Load EU-relevant intervention names
 #' Falls back to mock_interventions_fallback() on error
 #' @return Character vector of intervention names

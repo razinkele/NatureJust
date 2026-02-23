@@ -126,6 +126,30 @@ mock_justice_scores_fallback <- function(intervention = "MPA Establishment") {
   )
 }
 
+#' Generate mock Elliott's 10 Tenets scores for an intervention (FALLBACK)
+#' @param intervention Character name of intervention
+#' @return Data frame with 10 tenet scores
+#' @noRd
+mock_elliott_tenets_fallback <- function(intervention = "MPA Establishment") {
+  set.seed(nchar(intervention) + 10)
+  tenets <- c("Ecologically sustainable", "Technologically feasible",
+              "Economically viable", "Socially desirable",
+              "Ethically defensible", "Culturally inclusive",
+              "Legally permissible", "Administratively achievable",
+              "Effectively communicable", "Politically expedient")
+  scores <- pmin(pmax(rnorm(10, mean = 0.6, sd = 0.2), 0), 1)
+  data.frame(
+    tenet = tenets,
+    score = round(scores, 2),
+    status = dplyr::case_when(
+      scores >= 0.7 ~ "green",
+      scores >= 0.4 ~ "amber",
+      TRUE ~ "red"
+    ),
+    description = paste("Assessment of", tolower(tenets), "for", intervention)
+  )
+}
+
 #' Mock list of interventions (FALLBACK)
 #' @return Character vector of intervention names
 #' @noRd
