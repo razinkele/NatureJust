@@ -26,8 +26,6 @@ Imports:
     ggplot2,
     giscoR,
     htmltools,
-    httr2,
-    icesSAG,
     jsonlite,
     leaflet,
     plotly,
@@ -36,7 +34,9 @@ Imports:
     sf,
     shinyWidgets
 Suggests:
-    testthat (>= 3.0.0),
-    spelling
+    httr2,
+    icesSAG,
+    spelling,
+    testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Language: en-US

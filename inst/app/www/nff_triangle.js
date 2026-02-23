@@ -205,17 +205,15 @@ function initTriangle(container) {
   function renderReadout(bary) {
     if (!$readout.length) return;
     var vals = roundTo100(bary);
-    $readout.html(
-      '<span class="nff-weight nff-w-nfn">' +
-        '<span class="nff-w-dot" style="background:#0E7C7B"></span>' +
-        'NfN\u2002' + vals.NfN + '%</span>' +
-      '<span class="nff-weight nff-w-nfs">' +
-        '<span class="nff-w-dot" style="background:#2A6F97"></span>' +
-        'NfS\u2002' + vals.NfS + '%</span>' +
-      '<span class="nff-weight nff-w-nac">' +
-        '<span class="nff-w-dot" style="background:#E07A5F"></span>' +
-        'NaC\u2002' + vals.NaC + '%</span>'
-    );
+    function mkWeight(cls, color, label, pct) {
+      return $('<span class="nff-weight ' + cls + '">')
+        .append($('<span class="nff-w-dot">').css('background', color))
+        .append(document.createTextNode(label + '\u2002' + pct + '%'));
+    }
+    $readout.empty()
+      .append(mkWeight('nff-w-nfn', '#0E7C7B', 'NfN', vals.NfN))
+      .append(mkWeight('nff-w-nfs', '#2A6F97', 'NfS', vals.NfS))
+      .append(mkWeight('nff-w-nac', '#E07A5F', 'NaC', vals.NaC));
   }
 
   /* ---- Initialise at centroid ---- */
@@ -298,13 +296,13 @@ function initTriangle(container) {
   $(svg).on('mouseenter', '.nff-narrative-hit', function() {
     var n = NARRATIVES[$(this).data('narrative')];
     if (!n) return;
-    $narrativeTip.html(
-      '<div class="nff-nt-name">' + n.name + '</div>' +
-      '<div class="nff-nt-pos">' + n.pos + '</div>' +
-      '<div class="nff-nt-desc">' + n.desc + '</div>' +
-      '<div class="nff-nt-gov"><strong>Governance:</strong> ' + n.gov + '</div>' +
-      '<div class="nff-nt-hint">Double-click for full details</div>'
-    ).addClass('visible');
+    $narrativeTip.empty()
+      .append($('<div class="nff-nt-name">').text(n.name))
+      .append($('<div class="nff-nt-pos">').text(n.pos))
+      .append($('<div class="nff-nt-desc">').text(n.desc))
+      .append($('<div class="nff-nt-gov">').append($('<strong>').text('Governance: ')).append(document.createTextNode(n.gov)))
+      .append($('<div class="nff-nt-hint">').text('Double-click for full details'))
+      .addClass('visible');
     svg.querySelector('.nff-narrative-marker[data-narrative="' +
       $(this).data('narrative') + '"]').classList.add('active');
   });

@@ -100,6 +100,16 @@ mock_scenario_data_fallback <- function(nff_weights = c(NfN = 34, NfS = 33, NaC 
   sds <- c(0.01, 0.01, 0.01, 0.008, 0.01, 0.01, 0.01, 0.01, 0.01)
   bases <- c(0.5, 0.5, 0.6, 0.5, 0.3, 0.7, 0.6, 0.55, 0.5)
 
+  # HELCOM indicators only exist for Baltic region
+  helcom_only <- c("Contaminant Status", "Eutrophication Status", "Underwater Noise")
+  if (region != "Baltic") {
+    keep <- !indicators %in% helcom_only
+    indicators <- indicators[keep]
+    means <- means[keep]
+    sds <- sds[keep]
+    bases <- bases[keep]
+  }
+
   do.call(rbind, lapply(seq_along(indicators), function(i) {
     values <- bases[i] + cumsum(rnorm(length(years), mean = means[i], sd = sds[i]))
     values <- pmin(pmax(values, 0.05), 0.99)

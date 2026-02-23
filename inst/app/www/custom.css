@@ -1175,3 +1175,12 @@ pre, .shiny-text-output {
 [data-bs-theme="dark"] .pathway-label {
   fill: #e0ddd8 !important;
 }
+
+/* ── Reduced motion for accessibility (WCAG 2.1 AA §2.3.3) ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

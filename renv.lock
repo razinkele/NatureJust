@@ -2198,6 +2198,94 @@
       "Maintainer": "Hadley Wickham <hadley@posit.co>",
       "Repository": "CRAN"
     },
+    "icesConnect": {
+      "Package": "icesConnect",
+      "Version": "1.1.4",
+      "Source": "Repository",
+      "Title": "Provides User Tokens for Access to ICES Web Services",
+      "Authors@R": "person(given = \"Colin\", family = \"Millar\", role = c(\"aut\", \"cre\"), email = \"colin.millar@ices.dk\")",
+      "Description": "Provides user tokens for ICES web services that require authentication and authorization.  Web services covered by this package are ICES VMS database, the ICES DATSU web services, and the ICES SharePoint site <https://www.ices.dk/data/tools/Pages/WebServices.aspx>.",
+      "Imports": [
+        "httr",
+        "base64enc",
+        "jsonlite",
+        "askpass"
+      ],
+      "License": "GPL-3",
+      "Encoding": "UTF-8",
+      "RoxygenNote": "7.3.2",
+      "URL": "https://www.ices.dk/data/tools/Pages/WebServices.aspx, https://github.com/ices-tools-prod/icesConnect",
+      "BugReports": "https://github.com/ices-tools-prod/icesConnect/issues",
+      "Language": "en-GB",
+      "NeedsCompilation": "no",
+      "Author": "Colin Millar [aut, cre]",
+      "Maintainer": "Colin Millar <colin.millar@ices.dk>",
+      "Repository": "CRAN"
+    },
+    "icesDatsu": {
+      "Package": "icesDatsu",
+      "Version": "1.2.1",
+      "Source": "Repository",
+      "Title": "Functions to Interact with the ICES Data Submission Utility (DATSU)",
+      "Authors@R": "c(person(\"Colin\", \"Millar\", role=c(\"aut\",\"cre\"), email=\"colin.millar@ices.dk\"), person(\"Carlos\", \"Pinto\", role=\"aut\"), person(\"Laura Andreea\", \"Petre\", role = \"aut\"))",
+      "Description": "Functions to Interact with the ICES Data Submission Utility (DATSU) <https://datsu.ices.dk/web/index.aspx>.",
+      "License": "GPL (>= 2)",
+      "RoxygenNote": "7.3.2",
+      "Suggests": [
+        "knitr",
+        "rmarkdown"
+      ],
+      "Imports": [
+        "icesConnect (>= 1.1.4)",
+        "httr",
+        "jsonlite",
+        "memoise",
+        "cachem",
+        "rlang"
+      ],
+      "Encoding": "UTF-8",
+      "URL": "https://datsu.ices.dk/web/index.aspx, https://github.com/ices-tools-prod/icesDatsu",
+      "BugReports": "https://github.com/ices-tools-prod/icesDatsu/issues",
+      "Language": "en-GB",
+      "NeedsCompilation": "no",
+      "Author": "Colin Millar [aut, cre], Carlos Pinto [aut], Laura Andreea Petre [aut]",
+      "Maintainer": "Colin Millar <colin.millar@ices.dk>",
+      "Repository": "CRAN"
+    },
+    "icesSAG": {
+      "Package": "icesSAG",
+      "Version": "1.6.2",
+      "Source": "Repository",
+      "Title": "Stock Assessment Graphs Database Web Services",
+      "Authors@R": "c(person(\"Colin\", \"Millar\", role=c(\"aut\",\"cre\"), email=\"colin.millar@ices.dk\"), person(\"Scott\", \"Large\", role=\"aut\"), person(\"Arni\", \"Magnusson\", role=\"aut\"), person(\"Carlos\", \"Pinto\", role=\"aut\"), person(\"Laura Andreea\", \"Petre\", role = \"aut\"))",
+      "Depends": [
+        "R (>= 4.3)"
+      ],
+      "Imports": [
+        "httr",
+        "xml2",
+        "icesConnect (>= 1.1.4)",
+        "icesDatsu (>= 1.2.1)",
+        "memoise",
+        "cachem",
+        "rlang"
+      ],
+      "Suggests": [
+        "testthat",
+        "icesVocab"
+      ],
+      "Description": "R interface to access the web services of the ICES Stock Assessment Graphs database <https://sg.ices.dk>.",
+      "License": "GPL (>= 2)",
+      "URL": "https://sg.ices.dk, https://github.com/ices-tools-prod/icesSAG",
+      "BugReports": "https://github.com/ices-tools-prod/icesSAG/issues",
+      "RoxygenNote": "7.3.2",
+      "Encoding": "UTF-8",
+      "Language": "en-GB",
+      "NeedsCompilation": "no",
+      "Author": "Colin Millar [aut, cre], Scott Large [aut], Arni Magnusson [aut], Carlos Pinto [aut], Laura Andreea Petre [aut]",
+      "Maintainer": "Colin Millar <colin.millar@ices.dk>",
+      "Repository": "CRAN"
+    },
     "isoband": {
       "Package": "isoband",
       "Version": "0.3.0",

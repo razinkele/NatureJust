@@ -447,6 +447,14 @@ load_narratives <- function() {
       description = rep("Narrative data unavailable. See Duran et al. (2023).", 6),
       governance_model = rep("", 6),
       source = rep("Duran et al. (2023)", 6),
+      weights = I(list(
+        list(NfN = 100, NfS = 0,   NaC = 0),
+        list(NfN = 50,  NfS = 50,  NaC = 0),
+        list(NfN = 0,   NfS = 100, NaC = 0),
+        list(NfN = 0,   NfS = 50,  NaC = 50),
+        list(NfN = 0,   NfS = 0,   NaC = 100),
+        list(NfN = 50,  NfS = 0,   NaC = 50)
+      )),
       stringsAsFactors = FALSE
     )
   })
