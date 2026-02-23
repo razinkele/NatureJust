@@ -108,11 +108,15 @@ mod_spatial_ui <- function(id) {
 #' @noRd
 mod_spatial_server <- function(id) {
   moduleServer(id, function(input, output, session) {
-    # Load mock data
-    regions <- reactive({
-      data <- mock_nuts2_data()
+    ns <- session$ns
 
-      # Apply filters
+    # Load full data once (cached)
+    all_data <- reactive({ mock_nuts2_data() })
+    mpas <- reactive({ mock_mpa_data() })
+
+    # Filtered data (responds to filter inputs)
+    regions <- reactive({
+      data <- all_data()
       if (!is.null(input$country) && length(input$country) > 0) {
         data <- data[data$sovereignt %in% input$country, ]
       }
@@ -125,11 +129,9 @@ mod_spatial_server <- function(id) {
       data
     })
 
-    mpas <- reactive({ mock_mpa_data() })
-
     # Update country choices from data
     observe({
-      data <- mock_nuts2_data()
+      data <- all_data()
       countries <- sort(unique(data$sovereignt))
       shinyWidgets::updatePickerInput(
         session, "country",
@@ -137,170 +139,84 @@ mod_spatial_server <- function(id) {
       )
     })
 
-    # Leaflet map
+    # Render base map ONCE
     output$map <- leaflet::renderLeaflet({
-      data <- regions()
-
-      pal_vuln <- leaflet::colorNumeric("YlOrRd", domain = c(0, 1))
-      pal_fish <- leaflet::colorNumeric("Blues", domain = c(0, 1))
-
-      m <- leaflet::leaflet() |>
+      leaflet::leaflet() |>
         leaflet::addProviderTiles(leaflet::providers$CartoDB.Positron) |>
         leaflet::setView(lng = 15, lat = 50, zoom = 4)
+    })
 
-      if (isTRUE(input$show_vulnerability) && nrow(data) > 0) {
-        m <- m |>
+    # Layer definitions: checkbox id -> column, palette, group name
+    layer_defs <- list(
+      list(input_id = "show_vulnerability", col = "vulnerability",
+           pal_name = "YlOrRd", group = "Vulnerability"),
+      list(input_id = "show_fisheries", col = "fisheries_dep",
+           pal_name = "Blues", group = "Fisheries"),
+      list(input_id = "show_poverty", col = "poverty_rate",
+           pal_name = "Purples", group = "Poverty Rate"),
+      list(input_id = "show_income", col = "income_disparity",
+           pal_name = "Oranges", group = "Income Disparity"),
+      list(input_id = "show_offshore_wind", col = "offshore_wind",
+           pal_name = "Greens", group = "Offshore Wind"),
+      list(input_id = "show_coastal_tourism", col = "coastal_tourism",
+           pal_name = "YlOrBr", group = "Coastal Tourism"),
+      list(input_id = "show_shipping", col = "shipping_intensity",
+           pal_name = "Reds", group = "Shipping"),
+      list(input_id = "show_aquaculture", col = "aquaculture",
+           pal_name = "BuGn", group = "Aquaculture"),
+      list(input_id = "show_bathing", col = "bathing_quality",
+           pal_name = "BuPu", group = "Bathing Water"),
+      list(input_id = "show_blue_jobs", col = "blue_economy_jobs",
+           pal_name = "PuBu", group = "Blue Economy Jobs")
+    )
+
+    all_groups <- c(vapply(layer_defs, `[[`, "", "group"), "MPAs")
+
+    # Update layers via proxy when filters or checkboxes change
+    observe({
+      data <- regions()
+      proxy <- leaflet::leafletProxy(ns("map"))
+
+      # Clear all overlay groups and legends
+      proxy <- proxy |>
+        leaflet::clearGroup(all_groups) |>
+        leaflet::clearControls()
+
+      if (nrow(data) == 0) return()
+
+      # Add each checked indicator layer
+      for (ldef in layer_defs) {
+        if (!isTRUE(input[[ldef$input_id]])) next
+        if (!ldef$col %in% names(data)) next
+
+        pal <- leaflet::colorNumeric(ldef$pal_name, domain = c(0, 1))
+        col_vals <- data[[ldef$col]]
+
+        proxy <- proxy |>
           leaflet::addPolygons(
             data = data,
-            fillColor = ~pal_vuln(vulnerability),
+            fillColor = pal(col_vals),
             fillOpacity = 0.6,
             weight = 1,
             color = "#666",
-            label = ~paste0(sovereignt, ": Vulnerability ", vulnerability),
-            group = "Vulnerability"
-          ) |>
+            label = ~paste0(sovereignt, ": ", ldef$group, " ",
+                           round(col_vals, 2)),
+            group = ldef$group
+          )
+
+        # Add legend for the first active layer only (avoid clutter)
+        proxy <- proxy |>
           leaflet::addLegend(
-            pal = pal_vuln, values = data$vulnerability,
-            title = "Vulnerability", position = "bottomright"
+            pal = pal, values = col_vals,
+            title = ldef$group, position = "bottomright",
+            layerId = paste0("legend_", ldef$group)
           )
       }
 
-      if (isTRUE(input$show_fisheries) && nrow(data) > 0) {
-        m <- m |>
-          leaflet::addPolygons(
-            data = data,
-            fillColor = ~pal_fish(fisheries_dep),
-            fillOpacity = 0.5,
-            weight = 1,
-            color = "#333",
-            label = ~paste0(sovereignt, ": Fisheries Dep. ", fisheries_dep),
-            group = "Fisheries"
-          )
-      }
-
-      if (isTRUE(input$show_poverty) && nrow(data) > 0 &&
-          "poverty_rate" %in% names(data)) {
-        pal_pov <- leaflet::colorNumeric("Purples", domain = c(0, 1))
-        m <- m |>
-          leaflet::addPolygons(
-            data = data,
-            fillColor = ~pal_pov(poverty_rate),
-            fillOpacity = 0.5,
-            weight = 1,
-            color = "#555",
-            label = ~paste0(sovereignt, ": Poverty Rate ", poverty_rate),
-            group = "Poverty Rate"
-          )
-      }
-
-      if (isTRUE(input$show_income) && nrow(data) > 0 &&
-          "income_disparity" %in% names(data)) {
-        pal_inc <- leaflet::colorNumeric("Oranges", domain = c(0, 1))
-        m <- m |>
-          leaflet::addPolygons(
-            data = data,
-            fillColor = ~pal_inc(income_disparity),
-            fillOpacity = 0.5,
-            weight = 1,
-            color = "#555",
-            label = ~paste0(sovereignt, ": Income Disparity ", income_disparity),
-            group = "Income Disparity"
-          )
-      }
-
-      if (isTRUE(input$show_offshore_wind) && nrow(data) > 0 &&
-          "offshore_wind" %in% names(data)) {
-        pal_wind <- leaflet::colorNumeric("Greens", domain = c(0, 1))
-        m <- m |>
-          leaflet::addPolygons(
-            data = data,
-            fillColor = ~pal_wind(offshore_wind),
-            fillOpacity = 0.5,
-            weight = 1,
-            color = "#555",
-            label = ~paste0(sovereignt, ": Offshore Wind ", offshore_wind),
-            group = "Offshore Wind"
-          )
-      }
-
-      if (isTRUE(input$show_coastal_tourism) && nrow(data) > 0 &&
-          "coastal_tourism" %in% names(data)) {
-        pal_tour <- leaflet::colorNumeric("YlOrBr", domain = c(0, 1))
-        m <- m |>
-          leaflet::addPolygons(
-            data = data,
-            fillColor = ~pal_tour(coastal_tourism),
-            fillOpacity = 0.5,
-            weight = 1,
-            color = "#555",
-            label = ~paste0(sovereignt, ": Coastal Tourism ", coastal_tourism),
-            group = "Coastal Tourism"
-          )
-      }
-
-      if (isTRUE(input$show_shipping) && nrow(data) > 0 &&
-          "shipping_intensity" %in% names(data)) {
-        pal_ship <- leaflet::colorNumeric("Reds", domain = c(0, 1))
-        m <- m |>
-          leaflet::addPolygons(
-            data = data,
-            fillColor = ~pal_ship(shipping_intensity),
-            fillOpacity = 0.5,
-            weight = 1,
-            color = "#555",
-            label = ~paste0(sovereignt, ": Shipping ", shipping_intensity),
-            group = "Shipping"
-          )
-      }
-
-      if (isTRUE(input$show_aquaculture) && nrow(data) > 0 &&
-          "aquaculture" %in% names(data)) {
-        pal_aqua <- leaflet::colorNumeric("BuGn", domain = c(0, 1))
-        m <- m |>
-          leaflet::addPolygons(
-            data = data,
-            fillColor = ~pal_aqua(aquaculture),
-            fillOpacity = 0.5,
-            weight = 1,
-            color = "#555",
-            label = ~paste0(sovereignt, ": Aquaculture ", aquaculture),
-            group = "Aquaculture"
-          )
-      }
-
-      if (isTRUE(input$show_bathing) && nrow(data) > 0 &&
-          "bathing_quality" %in% names(data)) {
-        pal_bath <- leaflet::colorNumeric("BuPu", domain = c(0, 1))
-        m <- m |>
-          leaflet::addPolygons(
-            data = data,
-            fillColor = ~pal_bath(bathing_quality),
-            fillOpacity = 0.5,
-            weight = 1,
-            color = "#555",
-            label = ~paste0(sovereignt, ": Bathing Quality ", bathing_quality),
-            group = "Bathing Water"
-          )
-      }
-
-      if (isTRUE(input$show_blue_jobs) && nrow(data) > 0 &&
-          "blue_economy_jobs" %in% names(data)) {
-        pal_blue <- leaflet::colorNumeric("PuBu", domain = c(0, 1))
-        m <- m |>
-          leaflet::addPolygons(
-            data = data,
-            fillColor = ~pal_blue(blue_economy_jobs),
-            fillOpacity = 0.5,
-            weight = 1,
-            color = "#555",
-            label = ~paste0(sovereignt, ": Blue Economy Jobs ", blue_economy_jobs),
-            group = "Blue Economy Jobs"
-          )
-      }
-
+      # MPA layer
       if (isTRUE(input$show_mpa)) {
         mpa_data <- mpas()
-        m <- m |>
+        proxy <- proxy |>
           leaflet::addPolygons(
             data = mpa_data,
             fillColor = "#41ae76",
@@ -311,15 +227,6 @@ mod_spatial_server <- function(id) {
             group = "MPAs"
           )
       }
-
-      m |>
-        leaflet::addLayersControl(
-          overlayGroups = c("Vulnerability", "Fisheries", "Poverty Rate",
-                           "Income Disparity", "Offshore Wind", "Coastal Tourism",
-                           "Shipping", "Aquaculture", "Bathing Water",
-                           "Blue Economy Jobs", "MPAs"),
-          options = leaflet::layersControlOptions(collapsed = FALSE)
-        )
     })
 
     # Overlap scatter plot

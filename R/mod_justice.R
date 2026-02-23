@@ -49,21 +49,53 @@ mod_justice_ui <- function(id) {
 mod_justice_server <- function(id) {
   moduleServer(id, function(input, output, session) {
 
+    # Geographic context modifiers — regional governance/equity conditions
+    # shift base scores to reflect known disparities across EU sea basins
+    area_modifiers <- list(
+      "Baltic Sea"       = c(Distributional = 0.05,  Procedural = 0.08,
+                             Recognitional = 0.03,   Restorative = 0.00),
+      "North Sea"        = c(Distributional = 0.08,  Procedural = 0.10,
+                             Recognitional = 0.05,   Restorative = 0.04),
+      "Atlantic Coast"   = c(Distributional = 0.03,  Procedural = 0.05,
+                             Recognitional = 0.02,   Restorative = 0.01),
+      "Mediterranean"    = c(Distributional = -0.05, Procedural = -0.08,
+                             Recognitional = -0.03,  Restorative = -0.06),
+      "Black Sea"        = c(Distributional = -0.08, Procedural = -0.10,
+                             Recognitional = -0.05,  Restorative = -0.07),
+      "Adriatic"         = c(Distributional = -0.03, Procedural = -0.04,
+                             Recognitional = 0.00,   Restorative = -0.03),
+      "Aegean"           = c(Distributional = -0.06, Procedural = -0.07,
+                             Recognitional = -0.02,  Restorative = -0.05),
+      "Celtic Sea"       = c(Distributional = 0.04,  Procedural = 0.06,
+                             Recognitional = 0.03,   Restorative = 0.02)
+    )
+
     scores <- reactive({
-      mock_justice_scores(input$intervention)
+      df <- mock_justice_scores(input$intervention)
+      area <- input$target_area
+      mods <- area_modifiers[[area]]
+      if (!is.null(mods)) {
+        for (i in seq_len(nrow(df))) {
+          mod <- mods[df$dimension[i]]
+          if (!is.na(mod)) {
+            df$score[i] <- pmin(pmax(df$score[i] + mod, 0), 1)
+            df$status[i] <- if (df$score[i] >= 0.7) "green"
+                            else if (df$score[i] >= 0.4) "amber"
+                            else "red"
+          }
+        }
+      }
+      df
     })
 
     # Justice scorecard cards
     output$scorecard <- renderUI({
       df <- scores()
-      icons <- c(
-        Distributional = "pie-chart",
-        Procedural = "people",
-        Recognitional = "eye",
-        Restorative = "arrow-counterclockwise"
-      )
+      area <- input$target_area
 
       tagList(
+        p(class = "text-muted small mb-2",
+          paste0("Scores adjusted for ", area, " regional context.")),
         lapply(seq_len(nrow(df)), function(i) {
           status <- df$status[i]
           score_pct <- round(df$score[i] * 100)
@@ -88,37 +120,52 @@ mod_justice_server <- function(id) {
       )
     })
 
+    # Region-specific recommendation context
+    area_context <- list(
+      "Baltic Sea"       = "HELCOM coordination and Baltic RAC",
+      "North Sea"        = "OSPAR framework and North Sea RAC",
+      "Atlantic Coast"   = "South Western Waters and North Western Waters RACs",
+      "Mediterranean"    = "GFCM and MEDAC advisory structures",
+      "Black Sea"        = "Bucharest Convention and BlackSea4Fish",
+      "Adriatic"         = "GFCM and bilateral IT-HR cooperation",
+      "Aegean"           = "GFCM and Aegean-Levantine sub-region",
+      "Celtic Sea"       = "Celtic Seas Partnership and NWW RAC"
+    )
+
     # Gap analysis
     output$gap_analysis <- renderUI({
       df <- scores()
       gaps <- df[df$status != "green", ]
+      area <- input$target_area
+      context <- area_context[[area]]
 
       if (nrow(gaps) == 0) {
         return(div(
           class = "alert alert-success",
           bsicons::bs_icon("check-circle"),
-          " All justice dimensions are adequately addressed."
+          paste0(" All justice dimensions are adequately addressed in the ",
+                 area, " context.")
         ))
       }
 
       recommendations <- list(
         Distributional = list(
           "Consider EMFAF compensation schemes for affected fishing communities",
-          "Explore Just Transition Fund eligibility for coastal regions",
+          paste0("Explore Just Transition Fund eligibility for ", area, " coastal regions"),
           "Implement benefit-sharing mechanisms for ecosystem service gains"
         ),
         Procedural = list(
           "Establish Aarhus Convention-compliant consultation procedures",
-          "Include small-scale fishers in management advisory councils",
+          paste0("Engage ", context, " for structured stakeholder input"),
           "Create participatory mapping exercises with local communities"
         ),
         Recognitional = list(
           "Integrate traditional ecological knowledge in impact assessments",
-          "Recognise indigenous and local community territorial rights",
-          "Document cultural heritage values in conservation planning"
+          paste0("Document cultural heritage values specific to ", area, " communities"),
+          "Recognise indigenous and local community territorial rights"
         ),
         Restorative = list(
-          "Assess historical displacement from existing protected areas",
+          paste0("Assess historical displacement from existing protected areas in ", area),
           "Design targeted support for communities with legacy pollution exposure",
           "Establish monitoring of cumulative impact on marginalised groups"
         )
@@ -127,7 +174,8 @@ mod_justice_server <- function(id) {
       tagList(
         div(class = "alert alert-warning",
             bsicons::bs_icon("exclamation-triangle"),
-            paste0(" ", nrow(gaps), " justice dimension(s) require attention.")),
+            paste0(" ", nrow(gaps), " justice dimension(s) require attention",
+                   " in the ", area, " context.")),
         lapply(seq_len(nrow(gaps)), function(i) {
           dim_name <- gaps$dimension[i]
           recs <- recommendations[[dim_name]]

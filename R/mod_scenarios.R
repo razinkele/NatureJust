@@ -171,30 +171,52 @@ mod_scenarios_server <- function(id) {
       )
     })
 
-    # GBF compliance
+    # GBF compliance — compare projected values against gbf_targets.csv thresholds
     output$gbf_compliance <- renderUI({
-      w <- weights()
-      set.seed(sum(w))
-      targets <- data.frame(
-        target = paste("Target", c(3, 8, 10, 14, 22)),
-        description = c(
-          "30x30 Protected Areas",
-          "Climate Change Adaptation",
-          "Sustainable Agriculture/Fisheries",
-          "Mainstreaming Biodiversity",
-          "Inclusive Decision-Making"
-        ),
-        status = sample(c("green", "amber", "red"), 5, replace = TRUE,
-                        prob = c(w["NfN"]/100, 0.3, 1 - w["NfN"]/100))
+      data <- current_data()
+      horizon_year <- as.integer(input$horizon)
+
+      # Get projected end-values at the chosen horizon
+      end_vals <- data[data$year == horizon_year, c("indicator", "value")]
+
+      # Load GBF target thresholds
+      gbf <- tryCatch(
+        load_extdata("gbf_targets.csv"),
+        error = function(e) NULL
       )
 
+      if (is.null(gbf) || nrow(end_vals) == 0) {
+        return(div(class = "alert alert-secondary",
+                   "GBF targets data unavailable."))
+      }
+
+      # Join projections with targets on indicator name
+      merged <- merge(end_vals, gbf, by = "indicator", all.x = TRUE)
+      merged <- merged[!is.na(merged$gbf_target_value), ]
+
+      if (nrow(merged) == 0) {
+        return(div(class = "alert alert-secondary",
+                   "No matching GBF targets for current indicators."))
+      }
+
+      # Traffic-light status based on gap to target
+      merged$gap <- merged$value - merged$gbf_target_value
+      merged$status <- ifelse(merged$gap >= 0, "green",
+                       ifelse(merged$gap >= -0.10, "amber", "red"))
+
       tagList(
-        lapply(seq_len(nrow(targets)), function(i) {
+        p(class = "text-muted small mb-3",
+          paste0("Projected values at ", horizon_year,
+                 " vs. Kunming-Montreal GBF thresholds.")),
+        lapply(seq_len(nrow(merged)), function(i) {
           div(
             class = "d-flex align-items-center mb-2",
-            tags$span(class = paste("traffic-light", targets$status[i])),
-            tags$strong(targets$target[i]),
-            tags$span(class = "ms-2 text-muted", targets$description[i])
+            tags$span(class = paste("traffic-light", merged$status[i])),
+            tags$strong(class = "me-2", merged$indicator[i]),
+            tags$span(class = "text-muted small",
+              paste0(round(merged$value[i], 2), " / ",
+                     merged$gbf_target_value[i], " — ",
+                     merged$gbf_target_name[i]))
           )
         })
       )
