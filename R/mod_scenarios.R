@@ -266,7 +266,7 @@ mod_scenarios_server <- function(id, nff_weights = NULL) {
           p <- p |> plotly::add_ribbons(
             data = d, x = ~year, ymin = ~lower, ymax = ~upper,
             line = list(color = "transparent"),
-            fillcolor = paste0("rgba(", paste(col2rgb(col), collapse = ","), ",0.15)"),
+            fillcolor = paste0("rgba(", paste(grDevices::col2rgb(col), collapse = ","), ",0.15)"),
             showlegend = FALSE, hoverinfo = "skip"
           )
         }

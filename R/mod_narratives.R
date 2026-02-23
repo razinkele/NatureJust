@@ -128,17 +128,17 @@ mod_narratives_server <- function(id, nff_weights = NULL) {
         class = "d-flex gap-2 flex-wrap",
         tags$span(
           class = "badge rounded-pill",
-          style = "background-color: #0E7C7B; font-size: 0.85rem;",
+          style = paste0("background-color: ", NFF_COLORS$NfN, "; font-size: 0.85rem;"),
           paste0("NfN ", w[["NfN"]], "%")
         ),
         tags$span(
           class = "badge rounded-pill",
-          style = "background-color: #2A6F97; font-size: 0.85rem;",
+          style = paste0("background-color: ", NFF_COLORS$NfS, "; font-size: 0.85rem;"),
           paste0("NfS ", w[["NfS"]], "%")
         ),
         tags$span(
           class = "badge rounded-pill",
-          style = "background-color: #E07A5F; font-size: 0.85rem;",
+          style = paste0("background-color: ", NFF_COLORS$NaC, "; font-size: 0.85rem;"),
           paste0("NaC ", w[["NaC"]], "%")
         )
       )

@@ -19,6 +19,8 @@ app_server <- function(input, output, session) {
   mod_dashboard_server("dashboard")
 
   # ---- Navigate to narrative from triangle double-click ----
+  # Note: "narratives-narrative_id" couples to mod_narratives_ui's selectInput ID.
+  # If that input is renamed, update this reference too.
   observeEvent(input$navigate_to_narrative, {
     updateSelectInput(session, "narratives-narrative_id",
                       selected = input$navigate_to_narrative)

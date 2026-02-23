@@ -178,84 +178,7 @@ mod_pathways_ui <- function(id) {
             id = ns("nff_pathway_widget"),
             class = "nff-triangle-widget nff-pathway-mode",
             `data-input-id` = ns("pathway_position"),
-            HTML('
-              <svg class="nff-svg" viewBox="-50 0 500 400"
-                   xmlns="http://www.w3.org/2000/svg" role="img"
-                   aria-label="Pathway NFF positioning triangle">
-                <defs>
-                  <!-- Clip to triangle boundary -->
-                  <clipPath id="nff-tri-clip-p">
-                    <polygon points="200,35 365,335 35,335"/>
-                  </clipPath>
-                  <!-- Radial gradients (suffix -p for pathway mode) -->
-                  <radialGradient id="nff-grad-nfn-p" cx="200" cy="35" r="200"
-                                  gradientUnits="userSpaceOnUse">
-                    <stop offset="0%"  stop-color="#0E7C7B" stop-opacity="0.7"/>
-                    <stop offset="45%" stop-color="#0E7C7B" stop-opacity="0.25"/>
-                    <stop offset="100%" stop-color="#0E7C7B" stop-opacity="0"/>
-                  </radialGradient>
-                  <radialGradient id="nff-grad-nfs-p" cx="365" cy="335" r="200"
-                                  gradientUnits="userSpaceOnUse">
-                    <stop offset="0%"  stop-color="#2A6F97" stop-opacity="0.7"/>
-                    <stop offset="45%" stop-color="#2A6F97" stop-opacity="0.25"/>
-                    <stop offset="100%" stop-color="#2A6F97" stop-opacity="0"/>
-                  </radialGradient>
-                  <radialGradient id="nff-grad-nac-p" cx="35" cy="335" r="200"
-                                  gradientUnits="userSpaceOnUse">
-                    <stop offset="0%"  stop-color="#E07A5F" stop-opacity="0.7"/>
-                    <stop offset="45%" stop-color="#E07A5F" stop-opacity="0.25"/>
-                    <stop offset="100%" stop-color="#E07A5F" stop-opacity="0"/>
-                  </radialGradient>
-                  <!-- Glow for position marker -->
-                  <filter id="nff-marker-glow-p" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur in="SourceGraphic" stdDeviation="3"/>
-                  </filter>
-                </defs>
-
-                <!-- 3-colour gradient: radial fills clipped to triangle -->
-                <g clip-path="url(#nff-tri-clip-p)" class="nff-gradient-bg">
-                  <!-- Base light fill -->
-                  <polygon points="200,35 365,335 35,335"
-                           fill="#f0eeeb" opacity="0.5"/>
-                  <!-- Three radial gradients overlaid -->
-                  <polygon points="200,35 365,335 35,335"
-                           fill="url(#nff-grad-nfn-p)"/>
-                  <polygon points="200,35 365,335 35,335"
-                           fill="url(#nff-grad-nfs-p)"/>
-                  <polygon points="200,35 365,335 35,335"
-                           fill="url(#nff-grad-nac-p)"/>
-                </g>
-
-                <!-- Triangle outline -->
-                <polygon class="nff-tri-outline" points="200,35 365,335 35,335"
-                         fill="none"/>
-
-                <!-- Vertex glow rings -->
-                <circle class="vertex-glow" cx="200" cy="35" r="20"/>
-                <circle class="vertex-glow" cx="365" cy="335" r="20"
-                        style="animation-delay:1.2s"/>
-                <circle class="vertex-glow" cx="35"  cy="335" r="20"
-                        style="animation-delay:2.4s"/>
-
-                <!-- Vertices (non-navigating, display only) -->
-                <circle class="nff-vertex-static" cx="200" cy="35" r="11"
-                        fill="#1B4965" opacity="0.7"/>
-                <circle class="nff-vertex-static" cx="365" cy="335" r="11"
-                        fill="#1B4965" opacity="0.7"/>
-                <circle class="nff-vertex-static" cx="35"  cy="335" r="11"
-                        fill="#1B4965" opacity="0.7"/>
-
-                <!-- Vertex labels -->
-                <text class="vertex-label" x="200" y="16"
-                      text-anchor="middle">Nature for Nature</text>
-                <text class="vertex-label" x="365" y="365"
-                      text-anchor="middle">Nature for Society</text>
-                <text class="vertex-label" x="35" y="365"
-                      text-anchor="middle">Nature as Culture</text>
-
-                <!-- Pathway elements will be inserted by JS -->
-              </svg>
-            ')
+            HTML(nff_triangle_svg("p", mode = "pathway"))
           ),
           # Weight readout (populated by JS initTriangle)
           div(
@@ -414,21 +337,21 @@ mod_pathways_server <- function(id, nff_weights = NULL) {
             horizon = "H3 Emerging",
             class   = "text-success",
             icon    = "arrow-up-circle",
-            badge_bg = "#0E7C7B"
+            badge_bg = NFF_COLORS$NfN
           )
         } else if (delta < -10) {
           list(
             horizon = "H1 Declining",
             class   = "text-danger",
             icon    = "arrow-down-circle",
-            badge_bg = "#E07A5F"
+            badge_bg = NFF_COLORS$NaC
           )
         } else {
           list(
             horizon = "H2 Transitioning",
             class   = "text-warning",
             icon    = "arrow-left-right",
-            badge_bg = "#2A6F97"
+            badge_bg = NFF_COLORS$NfS
           )
         }
       }

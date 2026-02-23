@@ -42,6 +42,14 @@ eu_countries <- c(
   "NL", "PL", "PT", "RO", "SE", "SI", "SK", "NO"
 )
 
+# Helper: join country-level Eurostat data to NUTS2 indicators via 2-char prefix
+join_country_to_nuts2 <- function(indicators, country_df) {
+  indicators$CNTR_CODE <- substr(indicators$NUTS_ID, 1, 2)
+  indicators <- dplyr::left_join(indicators, country_df, by = "CNTR_CODE")
+  indicators$CNTR_CODE <- NULL
+  indicators
+}
+
 # --------------------------------------------------------------------------
 # 1. NUTS2 Geometries via giscoR
 # --------------------------------------------------------------------------
@@ -130,8 +138,7 @@ tryCatch({
       filter(TIME_PERIOD == max(TIME_PERIOD)) |>
       summarise(fish_val = sum(values, na.rm = TRUE), .groups = "drop") |>
       select(CNTR_CODE = geo, fish_val)
-    indicators$CNTR_CODE <- substr(indicators$NUTS_ID, 1, 2)
-    indicators <- dplyr::left_join(indicators, fish_country, by = "CNTR_CODE")
+    indicators <- join_country_to_nuts2(indicators, fish_country)
     f_min <- min(indicators$fish_val, na.rm = TRUE)
     f_max <- max(indicators$fish_val, na.rm = TRUE)
     if (f_max > f_min) {
@@ -142,7 +149,6 @@ tryCatch({
     }
     indicators$fisheries_dep[is.na(indicators$fisheries_dep)] <- 0.05
     indicators$fish_val <- NULL
-    indicators$CNTR_CODE <- NULL
   } else {
     cat("  fish_ld_main unavailable, using rnorm() fallback for fisheries_dep\n")
     indicators$fisheries_dep <- round(pmin(pmax(
@@ -164,13 +170,10 @@ tryCatch({
       ungroup() |>
       mutate(mpa_pct = values / 100) |>
       select(CNTR_CODE = geo, mpa_pct)
-    # Map country-level MPA % to NUTS2 regions via CNTR_CODE prefix
-    indicators$CNTR_CODE <- substr(indicators$NUTS_ID, 1, 2)
-    indicators <- dplyr::left_join(indicators, mpa, by = "CNTR_CODE")
+    indicators <- join_country_to_nuts2(indicators, mpa)
     indicators$mpa_coverage <- round(pmin(pmax(
       ifelse(is.na(indicators$mpa_pct), 0.123, indicators$mpa_pct), 0.02), 0.50), 2)
     indicators$mpa_pct <- NULL
-    indicators$CNTR_CODE <- NULL
   } else {
     indicators$mpa_coverage <- round(pmin(pmax(rnorm(nrow(indicators), mean = 0.123, sd = 0.08), 0.02), 0.50), 2)
   }
@@ -206,8 +209,7 @@ tryCatch({
       ungroup() |>
       select(CNTR_CODE = geo, poverty_rate_country = values)
     indicators <- dplyr::left_join(indicators, pov_nuts2, by = "NUTS_ID")
-    indicators$CNTR_CODE <- substr(indicators$NUTS_ID, 1, 2)
-    indicators <- dplyr::left_join(indicators, pov_country, by = "CNTR_CODE")
+    indicators <- join_country_to_nuts2(indicators, pov_country)
     # Use NUTS2 value if available, else country value
     indicators$poverty_rate_raw <- ifelse(
       is.na(indicators$poverty_rate_raw),
@@ -221,7 +223,6 @@ tryCatch({
       (pr_max - pr_min + 0.01), 2)
     indicators$poverty_rate_raw <- NULL
     indicators$poverty_rate_country <- NULL
-    indicators$CNTR_CODE <- NULL
   } else {
     indicators$poverty_rate <- round(runif(nrow(indicators), 0.1, 0.6), 2)
   }
@@ -266,8 +267,7 @@ tryCatch({
       filter(TIME_PERIOD == max(TIME_PERIOD)) |>
       ungroup() |>
       select(CNTR_CODE = geo, wind_mw = values)
-    indicators$CNTR_CODE <- substr(indicators$NUTS_ID, 1, 2)
-    indicators <- dplyr::left_join(indicators, wind, by = "CNTR_CODE")
+    indicators <- join_country_to_nuts2(indicators, wind)
     # MW per capita proxy → normalize 0-1
     wind_vals <- indicators$wind_mw
     if (all(is.na(wind_vals))) {
@@ -279,7 +279,6 @@ tryCatch({
       indicators$offshore_wind[is.na(indicators$offshore_wind)] <- 0
     }
     indicators$wind_mw <- NULL
-    indicators$CNTR_CODE <- NULL
   } else {
     indicators$offshore_wind <- round(runif(nrow(indicators), 0, 0.5), 2)
   }
@@ -324,15 +323,13 @@ tryCatch({
       filter(TIME_PERIOD == max(TIME_PERIOD)) |>
       summarise(ship_tonnes = sum(values, na.rm = TRUE), .groups = "drop") |>
       select(CNTR_CODE = rep_mar, ship_tonnes)
-    indicators$CNTR_CODE <- substr(indicators$NUTS_ID, 1, 2)
-    indicators <- dplyr::left_join(indicators, ship, by = "CNTR_CODE")
+    indicators <- join_country_to_nuts2(indicators, ship)
     s_min <- min(indicators$ship_tonnes, na.rm = TRUE)
     s_max <- max(indicators$ship_tonnes, na.rm = TRUE)
     indicators$shipping_intensity <- round(
       (indicators$ship_tonnes - s_min) / (s_max - s_min + 1), 2)
     indicators$shipping_intensity[is.na(indicators$shipping_intensity)] <- 0
     indicators$ship_tonnes <- NULL
-    indicators$CNTR_CODE <- NULL
   } else {
     indicators$shipping_intensity <- round(runif(nrow(indicators), 0.05, 0.7), 2)
   }
@@ -351,15 +348,13 @@ tryCatch({
       filter(TIME_PERIOD == max(TIME_PERIOD)) |>
       summarise(aqua_tonnes = sum(values, na.rm = TRUE), .groups = "drop") |>
       select(CNTR_CODE = geo, aqua_tonnes)
-    indicators$CNTR_CODE <- substr(indicators$NUTS_ID, 1, 2)
-    indicators <- dplyr::left_join(indicators, aqua, by = "CNTR_CODE")
+    indicators <- join_country_to_nuts2(indicators, aqua)
     a_min <- min(indicators$aqua_tonnes, na.rm = TRUE)
     a_max <- max(indicators$aqua_tonnes, na.rm = TRUE)
     indicators$aquaculture <- round(
       (indicators$aqua_tonnes - a_min) / (a_max - a_min + 1), 2)
     indicators$aquaculture[is.na(indicators$aquaculture)] <- 0
     indicators$aqua_tonnes <- NULL
-    indicators$CNTR_CODE <- NULL
   } else {
     indicators$aquaculture <- round(runif(nrow(indicators), 0, 0.4), 2)
   }
@@ -379,12 +374,10 @@ tryCatch({
       ungroup() |>
       mutate(bath_pct = values / 100) |>
       select(CNTR_CODE = geo, bath_pct)
-    indicators$CNTR_CODE <- substr(indicators$NUTS_ID, 1, 2)
-    indicators <- dplyr::left_join(indicators, bath, by = "CNTR_CODE")
+    indicators <- join_country_to_nuts2(indicators, bath)
     indicators$bathing_quality <- round(
       ifelse(is.na(indicators$bath_pct), 0.7, indicators$bath_pct), 2)
     indicators$bath_pct <- NULL
-    indicators$CNTR_CODE <- NULL
   } else {
     indicators$bathing_quality <- round(runif(nrow(indicators), 0.5, 1.0), 2)
   }
@@ -404,15 +397,13 @@ tryCatch({
       filter(TIME_PERIOD == max(TIME_PERIOD)) |>
       summarise(blue_val = sum(values, na.rm = TRUE), .groups = "drop") |>
       select(CNTR_CODE = geo, blue_val)
-    indicators$CNTR_CODE <- substr(indicators$NUTS_ID, 1, 2)
-    indicators <- dplyr::left_join(indicators, blue, by = "CNTR_CODE")
+    indicators <- join_country_to_nuts2(indicators, blue)
     b_min <- min(indicators$blue_val, na.rm = TRUE)
     b_max <- max(indicators$blue_val, na.rm = TRUE)
     indicators$blue_economy_jobs <- round(
       (indicators$blue_val - b_min) / (b_max - b_min + 1), 2)
     indicators$blue_economy_jobs[is.na(indicators$blue_economy_jobs)] <- 0
     indicators$blue_val <- NULL
-    indicators$CNTR_CODE <- NULL
   } else {
     indicators$blue_economy_jobs <- round(runif(nrow(indicators), 0.05, 0.5), 2)
   }
@@ -666,9 +657,9 @@ tryCatch({
                              stringsAsFactors = FALSE)
     gfcm <- gfcm[gfcm$year %in% years, ]
 
-    do.call(rbind, lapply(unique(gfcm$basin), function(b) {
-      do.call(rbind, lapply(unique(gfcm$indicator[gfcm$basin == b]), function(ind) {
-        d <- gfcm[gfcm$basin == b & gfcm$indicator == ind, ]
+    do.call(rbind, lapply(unique(gfcm$region), function(b) {
+      do.call(rbind, lapply(unique(gfcm$indicator[gfcm$region == b]), function(ind) {
+        d <- gfcm[gfcm$region == b & gfcm$indicator == ind, ]
         d <- d[order(d$year), ]
         band <- 0.04
         gbf_val <- if (ind == "Fish Stock Biomass") 0.75 else 0.70
@@ -1057,104 +1048,15 @@ tryCatch({
 # --------------------------------------------------------------------------
 # 4. Natura 2000 Marine Protected Areas (EEA)
 # --------------------------------------------------------------------------
+# Canonical implementation is in data-raw/run_step4.R (standalone for large download).
+# Source it here to avoid duplication.
 cat("\nStep 4: Downloading Natura 2000 marine MPA boundaries...\n")
 tryCatch({
-  # Download Natura 2000 sites from EEA via the official GeoPackage
-  # EEA datashare (Nextcloud): sdi.eea.europa.eu/datashare
-  # Share token mwzs9eNsJ9Sn4Q4 = Natura 2000 end-2024 vector data
-  n2k_url <- "https://sdi.eea.europa.eu/datashare/s/mwzs9eNsJ9Sn4Q4/download?path=/&files=Natura2000_end2024.gpkg"
-
-  gpkg_path <- file.path(tempdir(), "Natura2000_end2024.gpkg")
-
-  if (file.exists(gpkg_path) && file.size(gpkg_path) > 1e9) {
-    cat("  Using previously downloaded file\n")
-  } else {
-    cat("  Downloading Natura2000_end2024.gpkg from EEA (~1.3 GB)...\n")
-    cat("  (This is a large file, please be patient)\n")
-    old_timeout <- getOption("timeout")
-    options(timeout = 1800)  # 30 minutes for large file
-    download.file(n2k_url, gpkg_path, mode = "wb", quiet = FALSE)
-    options(timeout = old_timeout)
-  }
-
-  if (!file.exists(gpkg_path) || file.size(gpkg_path) < 1e6) {
-    stop("Download failed or file too small")
-  }
-  cat("  Downloaded:", round(file.size(gpkg_path) / 1e6), "MB\n")
-
-  # The GeoPackage has a relational structure:
-  #   NaturaSite_polygon  = geometries (SITECODE, SITENAME, MS, SITETYPE, geom)
-  #   NATURA2000SITES     = attributes (SITECODE, MARINE_AREA_PERCENTAGE, ...)
-  # Read tabular data first to identify marine sites before loading heavy geometries.
-
-  cat("  Reading NATURA2000SITES attribute table...\n")
-  n2k_attrs <- sf::st_read(gpkg_path, layer = "NATURA2000SITES", quiet = TRUE)
-
-  marine_codes <- n2k_attrs |>
-    dplyr::filter(!is.na(MARINE_AREA_PERCENTAGE), MARINE_AREA_PERCENTAGE > 0) |>
-    dplyr::pull(SITECODE)
-  cat("  Marine/coastal sites:", length(marine_codes), "of", nrow(n2k_attrs), "total\n")
-
-  # Read only marine site polygons using SQL (much faster than all 27k)
-  cat("  Reading marine site polygons via SQL...\n")
-  code_list <- paste0("'", marine_codes, "'", collapse = ", ")
-  sql <- paste0("SELECT * FROM NaturaSite_polygon WHERE SITECODE IN (", code_list, ")")
-  n2k_marine <- sf::st_read(gpkg_path, query = sql, quiet = TRUE)
-
-  # Join MARINE_AREA_PERCENTAGE from attributes
-  marine_attr_df <- n2k_attrs |>
-    dplyr::filter(SITECODE %in% marine_codes) |>
-    dplyr::select(SITECODE, MARINE_AREA_PERCENTAGE) |>
-    as.data.frame()
-  if ("geometry" %in% names(marine_attr_df)) marine_attr_df$geometry <- NULL
-  n2k_marine <- merge(n2k_marine, marine_attr_df, by = "SITECODE", all.x = TRUE)
-
-  # Transform to WGS84
-  n2k_marine <- sf::st_transform(n2k_marine, 4326)
-
-  # Aggressive GEOS simplification for web map rendering
-  # Disable s2 to use GEOS planar Douglas-Peucker (preserveTopology=FALSE).
-  # dTol = 0.01° (≈1.1 km) reduces ~180 MB → ~0.8 MB while keeping ~93% of sites.
-  cat("  Simplifying with GEOS (dTol=0.01)...\n")
-  sf::sf_use_s2(FALSE)
-  n2k_marine <- sf::st_simplify(n2k_marine, preserveTopology = FALSE, dTolerance = 0.01)
-  n2k_marine <- n2k_marine[!sf::st_is_empty(n2k_marine), ]
-  n2k_marine <- sf::st_make_valid(n2k_marine)
-  sf::sf_use_s2(TRUE)
-
-  # Map SITETYPE codes to display names
-  if ("SITETYPE" %in% names(n2k_marine)) {
-    n2k_marine$designation <- dplyr::case_when(
-      n2k_marine$SITETYPE == "A" ~ "Natura 2000 - SPA",
-      n2k_marine$SITETYPE == "B" ~ "Natura 2000 - SAC/SCI",
-      n2k_marine$SITETYPE == "C" ~ "Natura 2000 - SPA + SAC/SCI",
-      TRUE ~ paste0("Natura 2000 - ", n2k_marine$SITETYPE)
-    )
-  } else {
-    n2k_marine$designation <- "Natura 2000"
-  }
-
-  # Rename for app compatibility
-  if ("SITENAME" %in% names(n2k_marine)) n2k_marine$name <- n2k_marine$SITENAME
-  if ("MS" %in% names(n2k_marine)) n2k_marine$country <- n2k_marine$MS
-
-  # Select final columns
-  keep_cols <- intersect(
-    c("SITECODE", "SITENAME", "SITETYPE", "MS", "MARINE_AREA_PERCENTAGE",
-      "designation", "name", "country"),
-    names(n2k_marine)
-  )
-  n2k_marine <- n2k_marine[, c(keep_cols, attr(n2k_marine, "sf_column"))]
-
-  saveRDS(n2k_marine, file.path(extdata_dir, "natura2000_marine.rds"))
-  cat("  Saved natura2000_marine.rds:", nrow(n2k_marine), "marine sites\n")
-
-  # Cleanup temp files
-  unlink(gpkg_path)
+  source(file.path(project_root, "data-raw", "run_step4.R"), local = TRUE)
 }, error = function(e) {
   cat("  ERROR downloading Natura 2000 data:", conditionMessage(e), "\n")
   cat("  The app will use synthetic MPA geometries as fallback.\n")
-  cat("  You can retry later or download manually from EEA.\n")
+  cat("  You can retry later or run data-raw/run_step4.R directly.\n")
 })
 
 # --------------------------------------------------------------------------

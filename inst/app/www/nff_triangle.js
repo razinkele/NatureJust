@@ -365,6 +365,7 @@ function initTriangle(container) {
 
 $(document).on('mousemove touchmove', function(e) {
   if (!dragState.active || !dragState.widget) return;
+  e.preventDefault();
   var evt = e.originalEvent.touches ? e.originalEvent.touches[0] : e;
   var pt  = svgPoint(dragState.widget.svg, evt);
   if (insideTriangle(pt.x, pt.y)) {

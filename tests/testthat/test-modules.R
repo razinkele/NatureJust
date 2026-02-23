@@ -163,9 +163,9 @@ test_that("gbf_targets.csv has 15 indicators including HELCOM", {
 test_that("gfcm_stocks.csv loads with expected schema", {
   gfcm <- tryCatch(load_extdata("gfcm_stocks.csv"), error = function(e) NULL)
   if (!is.null(gfcm)) {
-    expect_true(all(c("year", "basin", "indicator", "value", "source") %in% names(gfcm)))
-    expect_true("Mediterranean" %in% gfcm$basin)
-    expect_true("Black Sea" %in% gfcm$basin)
+    expect_true(all(c("year", "region", "indicator", "value", "source") %in% names(gfcm)))
+    expect_true("Mediterranean" %in% gfcm$region)
+    expect_true("Black Sea" %in% gfcm$region)
     expect_true("Fish Stock Biomass" %in% gfcm$indicator)
     expect_true("Sustainable Fishing" %in% gfcm$indicator)
   }
@@ -235,6 +235,21 @@ test_that("load_narratives returns 6 narratives with required fields", {
   expect_true("arcology" %in% narr$id)
   expect_true("stewardship" %in% narr$id)
   expect_true("weights" %in% names(narr))
+})
+
+test_that("all 6 narrative weights sum to 100", {
+  narr <- load_narratives()
+  # weights is a nested data.frame (from JSON) or I(list(...)) column (fallback)
+  for (i in seq_len(nrow(narr))) {
+    w <- if (is.data.frame(narr$weights)) {
+      narr$weights[i, ]
+    } else {
+      narr$weights[[i]]
+    }
+    total <- as.numeric(w[["NfN"]]) + as.numeric(w[["NfS"]]) + as.numeric(w[["NaC"]])
+    expect_equal(total, 100,
+      info = paste("Narrative", narr$id[i], "weights sum to", total, "not 100"))
+  }
 })
 
 test_that("mod_narratives_server selects narrative and extracts weights", {

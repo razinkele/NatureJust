@@ -1,13 +1,3 @@
-#' Normalize a numeric vector to 0-1 range (min-max scaling)
-#' @param x Numeric vector
-#' @return Numeric vector scaled to [0, 1]
-#' @noRd
-normalize_01 <- function(x) {
-  rng <- range(x, na.rm = TRUE)
-  if (rng[1] == rng[2]) return(rep(0.5, length(x)))
-  (x - rng[1]) / (rng[2] - rng[1])
-}
-
 #' Load a file from inst/extdata/
 #' @param filename Character filename (e.g. "nuts2_sea_basin.csv")
 #' @return Data frame or object from .rds

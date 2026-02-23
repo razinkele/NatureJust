@@ -59,26 +59,30 @@ mod_justice_server <- function(id) {
       updateSelectInput(session, "intervention", choices = choices)
     }) |> bindEvent(TRUE, once = TRUE)
 
-    # Geographic context modifiers — regional governance/equity conditions
-    # shift base scores to reflect known disparities across EU sea basins
-    area_modifiers <- list(
-      "Baltic Sea"       = c(Distributional = 0.05,  Procedural = 0.08,
+    # Geographic context modifiers — loaded from inst/extdata/justice_area_modifiers.csv
+    # Regional governance/equity conditions shift base scores across EU sea basins
+    area_modifiers <- tryCatch({
+      mod_csv <- load_extdata("justice_area_modifiers.csv")
+      dims <- c("Distributional", "Procedural", "Recognitional", "Restorative")
+      stats::setNames(
+        lapply(seq_len(nrow(mod_csv)), function(i) {
+          stats::setNames(as.numeric(mod_csv[i, dims]), dims)
+        }),
+        mod_csv$area
+      )
+    }, error = function(e) {
+      # Inline fallback if CSV missing
+      list(
+        "Baltic Sea"     = c(Distributional = 0.05,  Procedural = 0.08,
                              Recognitional = 0.03,   Restorative = 0.00),
-      "North Sea"        = c(Distributional = 0.08,  Procedural = 0.10,
+        "North Sea"      = c(Distributional = 0.08,  Procedural = 0.10,
                              Recognitional = 0.05,   Restorative = 0.04),
-      "Atlantic Coast"   = c(Distributional = 0.03,  Procedural = 0.05,
-                             Recognitional = 0.02,   Restorative = 0.01),
-      "Mediterranean"    = c(Distributional = -0.05, Procedural = -0.08,
+        "Mediterranean"  = c(Distributional = -0.05, Procedural = -0.08,
                              Recognitional = -0.03,  Restorative = -0.06),
-      "Black Sea"        = c(Distributional = -0.08, Procedural = -0.10,
-                             Recognitional = -0.05,  Restorative = -0.07),
-      "Adriatic"         = c(Distributional = -0.03, Procedural = -0.04,
-                             Recognitional = 0.00,   Restorative = -0.03),
-      "Aegean"           = c(Distributional = -0.06, Procedural = -0.07,
-                             Recognitional = -0.02,  Restorative = -0.05),
-      "Celtic Sea"       = c(Distributional = 0.04,  Procedural = 0.06,
-                             Recognitional = 0.03,   Restorative = 0.02)
-    )
+        "Black Sea"      = c(Distributional = -0.08, Procedural = -0.10,
+                             Recognitional = -0.05,  Restorative = -0.07)
+      )
+    })
 
     scores <- reactive({
       df <- load_justice_scores(input$intervention)

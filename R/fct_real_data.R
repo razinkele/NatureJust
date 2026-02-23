@@ -135,6 +135,9 @@ load_nuts2_data <- function() {
     nuts2$sovereignt <- country_names[nuts2$CNTR_CODE]
     nuts2$sovereignt[is.na(nuts2$sovereignt)] <- nuts2$CNTR_CODE[is.na(nuts2$sovereignt)]
 
+    # Provenance "rds" means loaded from cached RDS file. Individual columns
+    # may contain Eurostat real data or rnorm() fallback values depending on
+    # which API calls succeeded when prepare_data.R was last run.
     attr(nuts2, "provenance") <- "rds"
     nuts2
   }, error = function(e) {
@@ -409,6 +412,8 @@ load_indicator_timeseries <- function(region = "Mediterranean") {
       result <- result[!result$indicator %in% helcom_only, ]
     }
 
+    result <- ensure_columns(result,
+      c("year", "indicator", "value", "lower", "upper", "region", "gbf_target"))
     attr(result, "provenance") <- "rds"
     result
   }, error = function(e) {
