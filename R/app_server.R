@@ -70,15 +70,11 @@ app_server <- function(input, output, session) {
         tags$div(
           class = "mb-2",
           bsicons::bs_icon("person-circle"), " ",
-          tags$strong("Arturas Baziukas")
+          tags$strong("Arturas Razinkovas-Baziukas")
         ),
         tags$div(
           class = "text-muted small mb-2",
           bsicons::bs_icon("mortarboard"), " Klaipeda University, Marine Research Institute"
-        ),
-        tags$div(
-          class = "text-muted small mb-3",
-          bsicons::bs_icon("flag"), " HORIZON EUROPE Programme"
         ),
         tags$hr(),
         tags$p(
@@ -210,10 +206,9 @@ app_server <- function(input, output, session) {
             style = "border-color: var(--nj-ocean) !important; font-size: .9rem;",
             tags$p(
               class = "mb-1",
-              "Baziukas, A. (2026).",
+              "Razinkovas-Baziukas, A. (2026).",
               tags$em("NatureJust-EU: A Decision-Support Tool for Equitable Biodiversity Governance."),
-              "Klaipeda University, Marine Research Institute.",
-              "HORIZON EUROPE Programme."
+              "Klaipeda University, Marine Research Institute."
             )
           ),
           tags$p(
