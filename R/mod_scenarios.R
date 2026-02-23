@@ -19,6 +19,42 @@ mod_scenarios_ui <- function(id) {
                   min = 0, max = 100, value = 33, step = 1),
       verbatimTextOutput(ns("weight_sum")),
       hr(),
+      h6("Scenario Presets"),
+      p(class = "text-muted small",
+        "Based on SSP\u2013NFF mapping (Alexander et al. 2023)"),
+      div(
+        class = "d-grid gap-1",
+        actionButton(ns("preset_ssp1"), "SSP1 Sustainability",
+                     class = "btn-outline-primary btn-sm"),
+        actionButton(ns("preset_ssp2"), "SSP2 Middle of Road",
+                     class = "btn-outline-secondary btn-sm"),
+        actionButton(ns("preset_ssp3"), "SSP3 Regional Rivalry",
+                     class = "btn-outline-secondary btn-sm"),
+        actionButton(ns("preset_ssp4"), "SSP4 Inequality",
+                     class = "btn-outline-secondary btn-sm"),
+        actionButton(ns("preset_ssp5"), "SSP5 Fossil-Fueled",
+                     class = "btn-outline-secondary btn-sm")
+      ),
+      hr(),
+      h6("NFF Narratives"),
+      p(class = "text-muted small",
+        "Marine governance archetypes (Dur\u00e1n et al. 2023)"),
+      div(
+        class = "d-grid gap-1",
+        actionButton(ns("preset_arcology"), "Arcology",
+                     class = "btn-outline-primary btn-sm"),
+        actionButton(ns("preset_sharing"), "Sharing through Sparing",
+                     class = "btn-outline-primary btn-sm"),
+        actionButton(ns("preset_optimizing"), "Optimizing Nature",
+                     class = "btn-outline-primary btn-sm"),
+        actionButton(ns("preset_commons"), "Innovative Commons",
+                     class = "btn-outline-primary btn-sm"),
+        actionButton(ns("preset_stewardship"), "Reciprocal Stewardship",
+                     class = "btn-outline-primary btn-sm"),
+        actionButton(ns("preset_dynamic"), "Dynamic Natures",
+                     class = "btn-outline-primary btn-sm")
+      ),
+      hr(),
       selectInput(ns("region"), "Region",
                   choices = c("Baltic", "North Sea", "Atlantic",
                               "Mediterranean", "Black Sea")),
@@ -73,16 +109,84 @@ mod_scenarios_ui <- function(id) {
 #' Scenarios module server
 #' @param id Module namespace id
 #' @noRd
-mod_scenarios_server <- function(id) {
+mod_scenarios_server <- function(id, nff_weights = NULL) {
   moduleServer(id, function(input, output, session) {
 
-    # Normalised weights
+    # ---- Bidirectional NFF sync ----
+    # When shared nff_weights changes externally, update sliders
+    # Uses freezeReactiveValue to suppress the downstream reactive
+    # from pushing stale slider values back to the shared reactive.
+    observe({
+      if (is.null(nff_weights)) return()
+      w <- nff_weights()
+      # Only update if sliders are out of sync
+      if (!isTRUE(all.equal(
+        c(input$nfn, input$nfs, input$nac),
+        c(w[["NfN"]], w[["NfS"]], w[["NaC"]])
+      ))) {
+        freezeReactiveValue(input, "nfn")
+        freezeReactiveValue(input, "nfs")
+        freezeReactiveValue(input, "nac")
+        updateSliderInput(session, "nfn", value = w[["NfN"]])
+        updateSliderInput(session, "nfs", value = w[["NfS"]])
+        updateSliderInput(session, "nac", value = w[["NaC"]])
+      }
+    })
+
+    # Normalised weights (from sliders)
     weights <- reactive({
       total <- input$nfn + input$nfs + input$nac
       if (total == 0) total <- 1
       c(NfN = round(input$nfn / total * 100),
         NfS = round(input$nfs / total * 100),
         NaC = round(input$nac / total * 100))
+    })
+
+    # ---- SSP presets (Alexander et al. 2023) ----
+    ssp_presets <- list(
+      preset_ssp1 = c(NfN = 40, NfS = 30, NaC = 30),
+      preset_ssp2 = c(NfN = 34, NfS = 33, NaC = 33),
+      preset_ssp3 = c(NfN = 15, NfS = 20, NaC = 65),
+      preset_ssp4 = c(NfN = 10, NfS = 70, NaC = 20),
+      preset_ssp5 = c(NfN = 5,  NfS = 85, NaC = 10)
+    )
+
+    # ---- NFF narrative presets (Duran et al. 2023) ----
+    narrative_presets <- list(
+      preset_arcology    = c(NfN = 100, NfS = 0,  NaC = 0),
+      preset_sharing     = c(NfN = 50,  NfS = 50, NaC = 0),
+      preset_optimizing  = c(NfN = 0,   NfS = 100, NaC = 0),
+      preset_commons     = c(NfN = 0,   NfS = 50, NaC = 50),
+      preset_stewardship = c(NfN = 0,   NfS = 0,  NaC = 100),
+      preset_dynamic     = c(NfN = 50,  NfS = 0,  NaC = 50)
+    )
+
+    all_presets <- c(ssp_presets, narrative_presets)
+
+    lapply(names(all_presets), function(btn_id) {
+      observeEvent(input[[btn_id]], {
+        w <- all_presets[[btn_id]]
+        if (!is.null(nff_weights)) {
+          nff_weights(w)
+        } else {
+          updateSliderInput(session, "nfn", value = w[["NfN"]])
+          updateSliderInput(session, "nfs", value = w[["NfS"]])
+          updateSliderInput(session, "nac", value = w[["NaC"]])
+        }
+      })
+    })
+
+    # When sliders change (user-driven), push to shared reactive.
+    # isolate(nff_weights()) ensures this observer only reacts to
+    # slider changes, NOT to external nff_weights changes (which
+    # would cause a write-back of stale slider values).
+    observe({
+      if (is.null(nff_weights)) return()
+      w <- weights()
+      current <- isolate(nff_weights())
+      if (!isTRUE(all.equal(unname(w), unname(current)))) {
+        nff_weights(w)
+      }
     })
 
     output$weight_sum <- renderText({

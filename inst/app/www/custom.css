@@ -305,44 +305,47 @@ body {
 /* ---------- NFF Triangle ---------- */
 .nff-triangle-container {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  padding: 1.5rem 1rem;
+  padding: 1.2rem 1rem .6rem;
   position: relative;
 }
 
-.nff-triangle svg {
-  max-width: 420px;
+/* Widget wrapper */
+.nff-triangle-widget {
+  position: relative;
   width: 100%;
-  cursor: pointer;
-  filter: drop-shadow(0 4px 16px rgba(10,22,40,.08));
+  max-width: 440px;
 }
 
-.nff-triangle .triangle-fill {
-  fill: url(#nffGrad);
-  opacity: .06;
+/* Main SVG */
+.nff-svg {
+  width: 100%;
+  height: auto;
+  cursor: crosshair;
+  filter: drop-shadow(0 4px 16px rgba(10,22,40,.08));
+  user-select: none;
+  -webkit-user-select: none;
+}
+.nff-svg.nff-dragging { cursor: grabbing; }
+
+/* 3-colour gradient blobs */
+.nff-gradient-bg circle {
   transition: opacity .6s var(--ease-expo);
 }
-.nff-triangle:hover .triangle-fill { opacity: .12; }
+.nff-triangle-widget:hover .nff-gradient-bg circle { opacity: 0.18; }
 
-.nff-triangle .triangle-stroke {
-  fill: none;
+/* Triangle outline */
+.nff-tri-outline {
   stroke: var(--nj-ocean);
   stroke-width: 1.5;
-  opacity: .25;
+  opacity: .2;
+  transition: opacity .4s;
 }
-
-/* Edge dashes */
-.nff-triangle .edge-dash {
-  fill: none;
-  stroke: var(--nj-mist);
-  stroke-width: 1;
-  stroke-dasharray: 5 4;
-  opacity: .6;
-}
+.nff-triangle-widget:hover .nff-tri-outline { opacity: .3; }
 
 /* Vertex glow rings */
-.nff-triangle .vertex-glow {
+.vertex-glow {
   fill: none;
   stroke: var(--nj-sky);
   stroke-width: 1;
@@ -351,24 +354,23 @@ body {
 }
 @keyframes v-pulse {
   0%, 100% { opacity: .15; stroke-width: 1; }
-  50% { opacity: .45; stroke-width: 1.5; }
+  50%      { opacity: .45; stroke-width: 1.5; }
 }
 
 /* Vertices */
-.nff-triangle .vertex {
+.nff-vertex {
   fill: var(--nj-ocean);
   transition: all .4s var(--ease-spring);
   cursor: pointer;
 }
-
-.nff-triangle .vertex:hover {
+.nff-vertex:hover {
   fill: var(--nj-coral);
   r: 15;
   filter: drop-shadow(0 0 10px rgba(224,122,95,.45));
 }
 
-/* Labels */
-.nff-triangle .vertex-label {
+/* Vertex labels */
+.vertex-label {
   font-family: var(--font-display);
   font-size: 13px;
   font-weight: 600;
@@ -377,7 +379,8 @@ body {
   letter-spacing: .015em;
 }
 
-.nff-triangle .edge-label {
+/* Edge relationship labels */
+.edge-label {
   font-family: var(--font-body);
   font-size: 9.5px;
   font-weight: 600;
@@ -387,7 +390,82 @@ body {
   text-transform: uppercase;
 }
 
-/* Vertex tooltip */
+/* ---- Narrative markers (diamonds) ---- */
+.nff-narrative-marker {
+  fill: var(--nj-navy);
+  opacity: .35;
+  transition: all .3s var(--ease-expo);
+  pointer-events: none;
+}
+.nff-narrative-marker.active,
+.nff-narrative-hit:hover ~ .nff-narrative-marker {
+  fill: var(--nj-coral);
+  opacity: .85;
+  transform-origin: center;
+}
+/* Invisible hit target */
+.nff-narrative-hit {
+  cursor: pointer;
+  opacity: 0;
+}
+.nff-narrative-hit:hover {
+  opacity: 0.05;
+  fill: var(--nj-coral);
+}
+
+/* ---- Position marker ---- */
+.nff-position-marker {
+  fill: #fff;
+  stroke: var(--nj-ocean);
+  stroke-width: 2.5;
+  cursor: grab;
+  filter: drop-shadow(0 2px 6px rgba(10,22,40,.25));
+  transition: r .2s var(--ease-spring);
+}
+.nff-position-marker:hover { r: 10; }
+.nff-dragging .nff-position-marker { cursor: grabbing; r: 10; }
+
+.nff-position-ring {
+  fill: none;
+  stroke: var(--nj-ocean);
+  stroke-width: 1.5;
+  opacity: .2;
+  stroke-dasharray: 3 3;
+  cursor: grab;
+  animation: ring-spin 12s linear infinite;
+}
+@keyframes ring-spin {
+  to { stroke-dashoffset: -36; }
+}
+
+/* ---- Weight readout ---- */
+.nff-weight-readout {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  padding: .5rem 0 .2rem;
+  font-family: var(--font-body);
+  font-size: .78rem;
+  font-weight: 600;
+  color: var(--nj-charcoal);
+  letter-spacing: .01em;
+}
+
+.nff-weight {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+}
+
+.nff-w-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ---- Vertex tooltip (simple) ---- */
 .nff-tooltip {
   position: fixed;
   background: var(--nj-deep);
@@ -402,7 +480,7 @@ body {
   transform: translateY(5px);
   transition: opacity .2s, transform .2s;
   z-index: 9999;
-  max-width: 240px;
+  max-width: 260px;
   line-height: 1.45;
   box-shadow: 0 6px 20px rgba(0,0,0,.25);
   letter-spacing: .01em;
@@ -411,6 +489,72 @@ body {
   opacity: 1;
   transform: translateY(0);
 }
+
+/* ---- Narrative tooltip (rich) ---- */
+.nff-narrative-tooltip {
+  position: fixed;
+  background: var(--nj-deep);
+  color: rgba(255,255,255,.92);
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity .25s, transform .25s var(--ease-expo);
+  z-index: 9999;
+  max-width: 300px;
+  line-height: 1.5;
+  box-shadow: 0 8px 28px rgba(0,0,0,.3);
+}
+.nff-narrative-tooltip.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.nff-nt-name {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: .9rem;
+  margin-bottom: 2px;
+  color: #fff;
+}
+.nff-nt-pos {
+  font-size: .68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--nj-sky);
+  margin-bottom: 6px;
+}
+.nff-nt-desc {
+  font-size: .78rem;
+  font-weight: 400;
+  line-height: 1.55;
+  color: rgba(255,255,255,.8);
+  margin-bottom: 6px;
+}
+.nff-nt-gov {
+  font-size: .72rem;
+  color: var(--nj-sky);
+  border-top: 1px solid rgba(255,255,255,.1);
+  padding-top: 5px;
+}
+.nff-nt-gov strong {
+  color: rgba(255,255,255,.6);
+  font-weight: 500;
+}
+
+/* ---- Dark mode adjustments ---- */
+[data-bs-theme="dark"] .vertex-label { fill: var(--nj-charcoal); }
+[data-bs-theme="dark"] .nff-tri-outline { stroke: var(--nj-sky); }
+[data-bs-theme="dark"] .nff-narrative-marker { fill: var(--nj-sky); }
+[data-bs-theme="dark"] .nff-position-marker {
+  fill: var(--nj-warm-white);
+  stroke: var(--nj-sky);
+}
+[data-bs-theme="dark"] .nff-weight-readout { color: var(--nj-charcoal); }
+[data-bs-theme="dark"] .nff-gradient-bg circle { opacity: 0.18; }
+[data-bs-theme="dark"] .nff-triangle-widget:hover .nff-gradient-bg circle { opacity: 0.25; }
 
 /* ---------- Accordion (Home) ---------- */
 .accordion {
@@ -763,6 +907,133 @@ hr {
   border-radius: var(--radius-sm) !important;
   border: 1px solid var(--nj-mist) !important;
   font-size: .84rem !important;
+}
+
+/* ---------- Info Dropdown ---------- */
+.navbar .dropdown-menu {
+  background: var(--nj-deep);
+  border: 1px solid rgba(95,168,211,.15);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+  padding: .35rem 0;
+  min-width: 200px;
+}
+
+.navbar .dropdown-menu .nav-item a,
+.navbar .dropdown-menu .dropdown-item {
+  color: rgba(255,255,255,.75) !important;
+  font-size: .82rem;
+  font-weight: 500;
+  padding: .5rem 1rem;
+  transition: all .2s var(--ease-expo);
+  text-decoration: none;
+  display: block;
+}
+
+.navbar .dropdown-menu .nav-item a:hover,
+.navbar .dropdown-menu .dropdown-item:hover {
+  color: #fff !important;
+  background: rgba(95,168,211,.15);
+}
+
+.navbar .dropdown-menu .nav-item a svg,
+.navbar .dropdown-menu .dropdown-item svg {
+  opacity: .6;
+  margin-right: .35rem;
+  transition: opacity .2s;
+}
+
+.navbar .dropdown-menu .nav-item a:hover svg,
+.navbar .dropdown-menu .dropdown-item:hover svg {
+  opacity: 1;
+}
+
+/* ---------- Modals ---------- */
+.modal-header {
+  background: linear-gradient(135deg, var(--nj-ocean), var(--nj-blue)) !important;
+  color: #fff !important;
+  border-bottom: none !important;
+  padding: .9rem 1.25rem;
+}
+
+.modal-header .modal-title {
+  font-family: var(--font-display) !important;
+  font-weight: 600;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+}
+
+.modal-header .modal-title svg {
+  opacity: .85;
+}
+
+.modal-header .btn-close {
+  filter: invert(1);
+  opacity: .65;
+}
+
+.modal-header .btn-close:hover {
+  opacity: 1;
+}
+
+.modal-content {
+  border: none !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.modal-body {
+  padding: 1.25rem;
+}
+
+.modal-body .accordion {
+  --bs-accordion-border-color: var(--nj-mist);
+}
+
+.modal-body .accordion-panel {
+  margin-bottom: 0;
+}
+
+.modal-body .accordion-body {
+  font-size: .85rem;
+  line-height: 1.7;
+}
+
+.modal-body .accordion-body h6 {
+  margin-top: .75rem;
+  margin-bottom: .35rem;
+}
+
+.modal-body .accordion-body h6:first-child {
+  margin-top: 0;
+}
+
+.modal-body .table {
+  font-size: .82rem;
+}
+
+.modal-body .table th {
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--nj-navy);
+  border-bottom: 2px solid var(--nj-ocean);
+}
+
+.modal-footer {
+  border-top: 1px solid var(--nj-mist) !important;
+  padding: .65rem 1.25rem;
+}
+
+[data-bs-theme="dark"] .modal-content {
+  background: var(--nj-warm-white);
+}
+
+[data-bs-theme="dark"] .modal-header {
+  background: linear-gradient(135deg, var(--nj-deep), var(--nj-navy)) !important;
 }
 
 /* Dark mode toggle */

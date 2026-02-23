@@ -1,37 +1,273 @@
-// NatureJust-EU — NFF Triangle interactions & navigation
+// NatureJust-EU — NFF Triangle Interactions
+// Canonical NFF visual (Pereira et al. 2020; Durán et al. 2023)
+// 3-colour barycentric gradient, 6 narrative markers, interactive positioning.
+
 var NatureJust = NatureJust || {};
 
-// Shared navigation helper — switches navbar tab by name
+/* ──────────────── Navigation helper ──────────────── */
+
 NatureJust.navigateTo = function(target) {
   if (typeof Shiny !== 'undefined') {
     Shiny.setInputValue('main_nav', target, {priority: 'event'});
   }
-  var navLinks = document.querySelectorAll('.navbar-nav .nav-link');
-  navLinks.forEach(function(link) {
-    if (link.textContent.trim().indexOf(target) !== -1) {
-      link.click();
-    }
+  document.querySelectorAll('.navbar-nav .nav-link').forEach(function(link) {
+    if (link.textContent.trim().indexOf(target) !== -1) link.click();
   });
 };
 
+/* ──────────────── Triangle geometry ──────────────── */
+
+var TRI = {
+  A: {x: 200, y: 35},   // Top — Nature for Nature
+  B: {x: 365, y: 335},  // Bottom-right — Nature for Society
+  C: {x: 35,  y: 335}   // Bottom-left — Nature as Culture
+};
+
+// Barycentric coordinates for point (px, py) in triangle ABC
+function baryCoords(px, py) {
+  var d = (TRI.B.y - TRI.C.y) * (TRI.A.x - TRI.C.x) +
+          (TRI.C.x - TRI.B.x) * (TRI.A.y - TRI.C.y);
+  var a = ((TRI.B.y - TRI.C.y) * (px - TRI.C.x) +
+           (TRI.C.x - TRI.B.x) * (py - TRI.C.y)) / d;
+  var b = ((TRI.C.y - TRI.A.y) * (px - TRI.C.x) +
+           (TRI.A.x - TRI.C.x) * (py - TRI.C.y)) / d;
+  return {NfN: a, NfS: b, NaC: 1 - a - b};
+}
+
+function insideTriangle(px, py) {
+  var b = baryCoords(px, py);
+  return b.NfN >= -0.01 && b.NfS >= -0.01 && b.NaC >= -0.01;
+}
+
+function baryToXY(a, b, c) {
+  return {
+    x: a * TRI.A.x + b * TRI.B.x + c * TRI.C.x,
+    y: a * TRI.A.y + b * TRI.B.y + c * TRI.C.y
+  };
+}
+
+// Clamp barycentric coords to valid range and normalise to sum=1
+function clampBary(bary) {
+  var a = Math.max(0, bary.NfN);
+  var b = Math.max(0, bary.NfS);
+  var c = Math.max(0, bary.NaC);
+  var s = a + b + c;
+  if (s === 0) return {NfN: 1/3, NfS: 1/3, NaC: 1/3};
+  return {NfN: a/s, NfS: b/s, NaC: c/s};
+}
+
+/* ──────────────── 6 Illustrative Narratives (Durán et al. 2023) ──────────────── */
+
+var NARRATIVES = {
+  arcology: {
+    name: 'Arcology',
+    pos:  'Nature for Nature corner',
+    bary: [1, 0, 0],
+    desc: 'High seas as marine protected areas; comprehensive no-take zones; ' +
+          'biodiversity recovery prioritized over all extraction.',
+    gov:  'Strict preservation'
+  },
+  sharing: {
+    name: 'Sharing through Sparing',
+    pos:  'NfN\u2013NfS edge',
+    bary: [0.5, 0.5, 0],
+    desc: 'Limited bycatch quotas; rebuilt fish stocks; marine spatial planning ' +
+          'balances conservation zones with sustainable harvest areas.',
+    gov:  'Conservation-oriented management'
+  },
+  optimizing: {
+    name: 'Optimizing Nature',
+    pos:  'Nature for Society corner',
+    bary: [0, 1, 0],
+    desc: 'All aquatic systems optimized for human benefit; precision extraction ' +
+          'technologies; maximum sustainable yield targets.',
+    gov:  'Techno-optimist management'
+  },
+  commons: {
+    name: 'Innovative Commons',
+    pos:  'NfS\u2013NaC edge',
+    bary: [0, 0.5, 0.5],
+    desc: 'Community-based fisheries management; ecological restoration through ' +
+          'combined traditional and modern techniques.',
+    gov:  'Participatory co-management'
+  },
+  stewardship: {
+    name: 'Reciprocal Stewardship',
+    pos:  'Nature as Culture corner',
+    bary: [0, 0, 1],
+    desc: 'Small-scale artisanal fisheries; traditional aquaculture systems; ' +
+          'cultural seascapes maintained through indigenous governance.',
+    gov:  'Cultural heritage governance'
+  },
+  dynamic: {
+    name: 'Dynamic Natures',
+    pos:  'NaC\u2013NfN edge',
+    bary: [0.5, 0, 0.5],
+    desc: 'Traditional fishing rights respected; ecosystem-based management ' +
+          'informed by indigenous ecological knowledge.',
+    gov:  'Biocultural conservation'
+  }
+};
+
+/* ──────────────── SVG coordinate conversion ──────────────── */
+
+function svgPoint(svg, evt) {
+  var rect = svg.getBoundingClientRect();
+  var vb   = svg.viewBox.baseVal;
+  return {
+    x: (evt.clientX - rect.left) / rect.width  * vb.width  + vb.x,
+    y: (evt.clientY - rect.top)  / rect.height * vb.height + vb.y
+  };
+}
+
+function makeSVG(tag, attrs) {
+  var el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  for (var k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+
+/* ──────────────── Per-widget initialisation ──────────────── */
+
 $(document).ready(function() {
+  $('.nff-triangle-widget').each(function() { initTriangle(this); });
+});
 
-  // --- Vertex click navigation with ripple ---
-  $(document).on('click', '.nff-vertex', function() {
+function initTriangle(container) {
+  var $ctr    = $(container);
+  var inputId = $ctr.data('input-id');
+  var svg     = container.querySelector('.nff-svg');
+  if (!svg) return;
+
+  /* ---- Position marker (appended to SVG) ---- */
+  var centroid = baryToXY(1/3, 1/3, 1/3);
+
+  var posRing = makeSVG('circle', {
+    cx: centroid.x, cy: centroid.y, r: 14,
+    'class': 'nff-position-ring'
+  });
+  var posMarker = makeSVG('circle', {
+    cx: centroid.x, cy: centroid.y, r: 8,
+    'class': 'nff-position-marker'
+  });
+  svg.appendChild(posRing);
+  svg.appendChild(posMarker);
+
+  /* ---- Tooltips ---- */
+  var $narrativeTip = $('<div class="nff-narrative-tooltip"></div>').appendTo('body');
+  var $vertexTip    = $('<div class="nff-tooltip"></div>').appendTo('body');
+
+  /* ---- Readout element ---- */
+  var $readout = $ctr.siblings('.nff-weight-readout').first();
+  if (!$readout.length) $readout = $ctr.find('.nff-weight-readout');
+
+  /* ────── Core state update ────── */
+
+  function updatePosition(bary, notify) {
+    bary = clampBary(bary);
+    var xy = baryToXY(bary.NfN, bary.NfS, bary.NaC);
+
+    posMarker.setAttribute('cx', xy.x);
+    posMarker.setAttribute('cy', xy.y);
+    posRing.setAttribute('cx', xy.x);
+    posRing.setAttribute('cy', xy.y);
+
+    renderReadout(bary);
+
+    if (notify && typeof Shiny !== 'undefined' &&
+        typeof Shiny.setInputValue === 'function' && inputId) {
+      Shiny.setInputValue(inputId, {
+        NfN: Math.round(bary.NfN * 100),
+        NfS: Math.round(bary.NfS * 100),
+        NaC: Math.round(bary.NaC * 100)
+      });
+    }
+  }
+
+  function renderReadout(bary) {
+    if (!$readout.length) return;
+    var vals = roundTo100(bary);
+    $readout.html(
+      '<span class="nff-weight nff-w-nfn">' +
+        '<span class="nff-w-dot" style="background:#0E7C7B"></span>' +
+        'NfN\u2002' + vals.NfN + '%</span>' +
+      '<span class="nff-weight nff-w-nfs">' +
+        '<span class="nff-w-dot" style="background:#2A6F97"></span>' +
+        'NfS\u2002' + vals.NfS + '%</span>' +
+      '<span class="nff-weight nff-w-nac">' +
+        '<span class="nff-w-dot" style="background:#E07A5F"></span>' +
+        'NaC\u2002' + vals.NaC + '%</span>'
+    );
+  }
+
+  // Round 3 fractions to integers summing to 100
+  function roundTo100(b) {
+    var raw = [b.NfN * 100, b.NfS * 100, b.NaC * 100];
+    var floored = raw.map(Math.floor);
+    var remainder = 100 - floored.reduce(function(a, b) { return a + b; }, 0);
+    var fracs = raw.map(function(v, i) { return {i: i, f: v - floored[i]}; });
+    fracs.sort(function(a, b) { return b.f - a.f; });
+    for (var i = 0; i < remainder; i++) floored[fracs[i].i]++;
+    return {NfN: floored[0], NfS: floored[1], NaC: floored[2]};
+  }
+
+  /* ---- Initialise at centroid ---- */
+  updatePosition({NfN: 1/3, NfS: 1/3, NaC: 1/3}, false);
+
+  // Send initial value once Shiny is ready
+  $(document).on('shiny:connected', function() {
+    updatePosition({NfN: 1/3, NfS: 1/3, NaC: 1/3}, true);
+  });
+
+  /* ────── Click inside triangle → move position ────── */
+
+  $(svg).on('click', function(e) {
+    if ($(e.target).closest('.nff-vertex, .nff-narrative-hit').length) return;
+    var pt = svgPoint(svg, e);
+    if (!insideTriangle(pt.x, pt.y)) return;
+    var bary = baryCoords(pt.x, pt.y);
+    updatePosition(bary, true);
+  });
+
+  /* ────── Drag position marker ────── */
+
+  var dragging = false;
+
+  $(posMarker).add(posRing).on('mousedown touchstart', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    dragging = true;
+    svg.classList.add('nff-dragging');
+  });
+
+  $(document).on('mousemove touchmove', function(e) {
+    if (!dragging) return;
+    var evt = e.originalEvent.touches ? e.originalEvent.touches[0] : e;
+    var pt  = svgPoint(svg, evt);
+    if (insideTriangle(pt.x, pt.y)) {
+      updatePosition(baryCoords(pt.x, pt.y), true);
+    }
+  });
+
+  $(document).on('mouseup touchend', function() {
+    if (dragging) {
+      dragging = false;
+      svg.classList.remove('nff-dragging');
+    }
+  });
+
+  /* ────── Vertex click → ripple + navigate ────── */
+
+  $(svg).on('click', '.nff-vertex', function(e) {
+    e.stopPropagation();
     var target = $(this).data('target');
-    var svg = $(this).closest('svg')[0];
-    var cx = parseFloat($(this).attr('cx'));
-    var cy = parseFloat($(this).attr('cy'));
+    var cx = parseFloat(this.getAttribute('cx'));
+    var cy = parseFloat(this.getAttribute('cy'));
 
-    // Create SVG ripple
-    var ripple = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    ripple.setAttribute('cx', cx);
-    ripple.setAttribute('cy', cy);
-    ripple.setAttribute('r', '12');
-    ripple.setAttribute('fill', 'none');
-    ripple.setAttribute('stroke', '#E07A5F');
-    ripple.setAttribute('stroke-width', '2');
-    ripple.setAttribute('opacity', '0.8');
+    var ripple = makeSVG('circle', {
+      cx: cx, cy: cy, r: 12,
+      fill: 'none', stroke: '#E07A5F',
+      'stroke-width': 2, opacity: 0.8
+    });
     ripple.style.transition = 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
     svg.appendChild(ripple);
 
@@ -44,26 +280,80 @@ $(document).ready(function() {
     NatureJust.navigateTo(target);
   });
 
-  // --- Vertex hover tooltips ---
-  var tooltipEl = $('<div class="nff-tooltip"></div>').appendTo('body');
+  /* ────── Vertex hover tooltip ────── */
 
-  var descriptions = {
-    'Spatial Equity': 'Nature for Nature \u2014 Intrinsic value of biodiversity, conservation for its own sake',
-    'Scenarios': 'Nature for Society \u2014 Instrumental value, nature\u2019s contributions to human wellbeing',
-    'Justice': 'Nature as Culture \u2014 Relational value, cultural and spiritual connections to nature'
+  var vertexDesc = {
+    'Spatial Equity':
+      'Nature for Nature \u2014 Intrinsic value of biodiversity; conservation for its own sake; the right of all species to thrive.',
+    'Scenarios':
+      'Nature for Society \u2014 Instrumental value; nature\u2019s contributions to human wellbeing, livelihoods, and economies.',
+    'Justice':
+      'Nature as Culture \u2014 Relational value; cultural and spiritual connections between people and the living world.'
   };
 
-  $(document).on('mouseenter', '.nff-vertex', function() {
-    var key = $(this).data('target');
-    tooltipEl.text(descriptions[key] || key).addClass('visible');
+  $(svg).on('mouseenter', '.nff-vertex', function() {
+    $vertexTip.text(vertexDesc[$(this).data('target')] || '').addClass('visible');
+  }).on('mousemove', '.nff-vertex', function(e) {
+    $vertexTip.css({left: e.pageX + 14, top: e.pageY - 34});
+  }).on('mouseleave', '.nff-vertex', function() {
+    $vertexTip.removeClass('visible');
   });
 
-  $(document).on('mousemove', '.nff-vertex', function(e) {
-    tooltipEl.css({ left: e.pageX + 14, top: e.pageY - 34 });
+  /* ────── Narrative marker hover / click ────── */
+
+  $(svg).on('mouseenter', '.nff-narrative-hit', function() {
+    var n = NARRATIVES[$(this).data('narrative')];
+    if (!n) return;
+    $narrativeTip.html(
+      '<div class="nff-nt-name">' + n.name + '</div>' +
+      '<div class="nff-nt-pos">' + n.pos + '</div>' +
+      '<div class="nff-nt-desc">' + n.desc + '</div>' +
+      '<div class="nff-nt-gov"><strong>Governance:</strong> ' + n.gov + '</div>'
+    ).addClass('visible');
+    svg.querySelector('.nff-narrative-marker[data-narrative="' +
+      $(this).data('narrative') + '"]').classList.add('active');
   });
 
-  $(document).on('mouseleave', '.nff-vertex', function() {
-    tooltipEl.removeClass('visible');
+  $(svg).on('mousemove', '.nff-narrative-hit', function(e) {
+    var winW = $(window).width();
+    var ttW  = $narrativeTip.outerWidth();
+    var left = e.pageX + 14;
+    if (left + ttW > winW - 20) left = e.pageX - ttW - 14;
+    $narrativeTip.css({left: left, top: e.pageY - 10});
   });
 
-});
+  $(svg).on('mouseleave', '.nff-narrative-hit', function() {
+    $narrativeTip.removeClass('visible');
+    $(svg).find('.nff-narrative-marker').removeClass('active');
+  });
+
+  $(svg).on('click', '.nff-narrative-hit', function(e) {
+    e.stopPropagation();
+    var n = NARRATIVES[$(this).data('narrative')];
+    if (!n) return;
+    updatePosition({NfN: n.bary[0], NfS: n.bary[1], NaC: n.bary[2]}, true);
+  });
+
+  /* ────── Receive weight updates from server (bidirectional sync) ────── */
+
+  if (typeof Shiny !== 'undefined') {
+    Shiny.addCustomMessageHandler('nff-update-position', function(msg) {
+      // Avoid feedback loop: only update if significantly different
+      var cur = baryCoords(
+        parseFloat(posMarker.getAttribute('cx')),
+        parseFloat(posMarker.getAttribute('cy'))
+      );
+      cur = clampBary(cur);
+      var dNfN = Math.abs(cur.NfN - msg.NfN / 100);
+      var dNfS = Math.abs(cur.NfS - msg.NfS / 100);
+      var dNaC = Math.abs(cur.NaC - msg.NaC / 100);
+      if (dNfN + dNfS + dNaC > 0.02) {
+        updatePosition({
+          NfN: msg.NfN / 100,
+          NfS: msg.NfS / 100,
+          NaC: msg.NaC / 100
+        }, false);  // false = don't send back to Shiny (avoid loop)
+      }
+    });
+  }
+}

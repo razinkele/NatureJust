@@ -1,9 +1,10 @@
 Package: NatureJust
 Title: NatureJust-EU Decision-Support Tool for Equitable Biodiversity Governance
-Version: 0.0.0.9000
+Version: 0.1.0
 Authors@R:
-    person("Antonello", "", role = c("aut", "cre"),
-           email = "antonello@example.com")
+    person("Arturas", "Baziukas", role = c("aut", "cre"),
+           email = "arturas.baziukas@ku.lt",
+           comment = "Klaipeda University")
 Description: A Shiny decision-support tool for marine planners, fisheries
     managers, regional governments, and civil society organisations. Built on
     the Nature Futures Framework (NFF), Global Biodiversity Framework (GBF),

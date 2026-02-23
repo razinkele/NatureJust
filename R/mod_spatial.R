@@ -29,6 +29,12 @@ mod_spatial_ui <- function(id) {
                     "Estuarine", "Reef", "Inland")
       ),
       hr(),
+      h6("NFF Composite"),
+      shinyWidgets::prettyCheckbox(
+        ns("show_nff_composite"), "NFF-Weighted Equity Index",
+        value = TRUE, status = "success"
+      ),
+      hr(),
       h6("Map Layers"),
       shinyWidgets::prettyCheckbox(
         ns("show_mpa"), "Show MPAs",
@@ -106,7 +112,7 @@ mod_spatial_ui <- function(id) {
 #' Spatial Equity module server
 #' @param id Module namespace id
 #' @noRd
-mod_spatial_server <- function(id) {
+mod_spatial_server <- function(id, nff_weights = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -126,6 +132,41 @@ mod_spatial_server <- function(id) {
       if (!is.null(input$ecosystem) && input$ecosystem != "All") {
         data <- data[data$ecosystem_type == input$ecosystem, ]
       }
+      data
+    })
+
+    # NFF-weighted composite equity index
+    composite_data <- reactive({
+      data <- regions()
+      if (nrow(data) == 0 || is.null(nff_weights)) return(data)
+      w <- nff_weights()
+      nfn <- w[["NfN"]] / 100
+      nfs <- w[["NfS"]] / 100
+      nac <- w[["NaC"]] / 100
+
+      # NfN indicators: ecological/conservation
+      nfn_score <- rowMeans(data.frame(
+        data$vulnerability,
+        data$mpa_coverage,
+        data$bathing_quality
+      ), na.rm = TRUE)
+
+      # NfS indicators: economic/instrumental
+      nfs_score <- rowMeans(data.frame(
+        data$blue_economy_jobs,
+        data$offshore_wind,
+        data$fisheries_dep
+      ), na.rm = TRUE)
+
+      # NaC indicators: relational/cultural
+      nac_score <- rowMeans(data.frame(
+        data$coastal_tourism,
+        data$aquaculture,
+        1 - data$income_disparity
+      ), na.rm = TRUE)
+
+      data$nff_composite <- nfn * nfn_score + nfs * nfs_score + nac * nac_score
+      data$nff_composite <- round(data$nff_composite, 3)
       data
     })
 
@@ -170,11 +211,11 @@ mod_spatial_server <- function(id) {
            pal_name = "PuBu", group = "Blue Economy Jobs")
     )
 
-    all_groups <- c(vapply(layer_defs, `[[`, "", "group"), "MPAs")
+    all_groups <- c("NFF Composite", vapply(layer_defs, `[[`, "", "group"), "MPAs")
 
     # Update layers via proxy when filters or checkboxes change
     observe({
-      data <- regions()
+      data <- composite_data()
       proxy <- leaflet::leafletProxy(ns("map"))
 
       # Clear all overlay groups and legends
@@ -213,6 +254,41 @@ mod_spatial_server <- function(id) {
             pal = pal, values = col_vals,
             title = ldef$group, position = "bottomright",
             layerId = paste0("legend_", ldef$group)
+          )
+      }
+
+      # NFF composite layer
+      if (isTRUE(input$show_nff_composite) && "nff_composite" %in% names(data)) {
+        pal_nff <- leaflet::colorNumeric(
+          palette = c("#E07A5F", "#F2CC8F", "#0E7C7B"),
+          domain = c(0, 1)
+        )
+        region_name <- if ("NUTS_NAME" %in% names(data)) {
+          ifelse(is.na(data$NUTS_NAME), data$sovereignt, data$NUTS_NAME)
+        } else {
+          data$sovereignt
+        }
+        w <- nff_weights()
+        proxy <- proxy |>
+          leaflet::addPolygons(
+            data = data,
+            fillColor = pal_nff(data$nff_composite),
+            fillOpacity = 0.7,
+            weight = 1,
+            color = "#333",
+            label = paste0(
+              region_name,
+              " \u2014 NFF Equity: ", round(data$nff_composite, 2),
+              " (NfN=", w[["NfN"]], "%",
+              " NfS=", w[["NfS"]], "%",
+              " NaC=", w[["NaC"]], "%)"),
+            group = "NFF Composite"
+          ) |>
+          leaflet::addLegend(
+            position = "bottomright",
+            pal = pal_nff, values = data$nff_composite,
+            title = "NFF Equity Index",
+            group = "NFF Composite"
           )
       }
 

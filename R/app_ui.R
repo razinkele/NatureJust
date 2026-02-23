@@ -57,6 +57,17 @@ app_ui <- function(request) {
         mod_dashboard_ui("dashboard")
       ),
       bslib::nav_spacer(),
+      bslib::nav_menu(
+        title = "Info",
+        icon = bsicons::bs_icon("info-circle"),
+        align = "right",
+        bslib::nav_item(
+          actionLink("show_about", label = tagList(bsicons::bs_icon("person-badge"), " About"))
+        ),
+        bslib::nav_item(
+          actionLink("show_help", label = tagList(bsicons::bs_icon("book"), " Help & Methodology"))
+        )
+      ),
       bslib::nav_item(
         bslib::input_dark_mode(id = "dark_mode")
       )
