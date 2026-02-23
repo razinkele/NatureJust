@@ -171,9 +171,11 @@ function initTriangle(container) {
   svg.appendChild(posRing);
   svg.appendChild(posMarker);
 
-  /* ---- Tooltips ---- */
-  var $narrativeTip = $('<div class="nff-narrative-tooltip"></div>').appendTo('body');
-  var $vertexTip    = $('<div class="nff-tooltip"></div>').appendTo('body');
+  /* ---- Tooltips (shared across widgets to avoid DOM bloat) ---- */
+  var $narrativeTip = $('.nff-narrative-tooltip');
+  if (!$narrativeTip.length) $narrativeTip = $('<div class="nff-narrative-tooltip"></div>').appendTo('body');
+  var $vertexTip = $('.nff-tooltip');
+  if (!$vertexTip.length) $vertexTip = $('<div class="nff-tooltip"></div>').appendTo('body');
 
   /* ---- Readout element ---- */
   var $readout = $ctr.siblings('.nff-weight-readout').first();
@@ -343,6 +345,18 @@ function initTriangle(container) {
     var narrativeId = $(this).data('narrative');
     if (typeof Shiny !== 'undefined' && typeof Shiny.setInputValue === 'function') {
       Shiny.setInputValue('navigate_to_narrative', narrativeId, {priority: 'event'});
+    }
+  });
+
+  /* ────── Keyboard support for narrative markers ────── */
+
+  $(svg).on('keydown', '.nff-narrative-hit', function(e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      var narrativeId = $(this).data('narrative');
+      if (typeof Shiny !== 'undefined' && typeof Shiny.setInputValue === 'function') {
+        Shiny.setInputValue('navigate_to_narrative', narrativeId, {priority: 'event'});
+      }
     }
   });
 }

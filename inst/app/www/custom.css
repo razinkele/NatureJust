@@ -47,11 +47,14 @@
   --nj-mist: #1B3A5C;
   --nj-stone: #7B8794;
   --nj-charcoal: #E2DFD7;
+  --nj-navy: #b8d4e3;
+  --nj-deep: #4a7a9b;
+  --nj-ocean: #5fa8d3;
 }
 
 /* ---------- Base ---------- */
 body {
-  font-family: var(--font-body) !important;
+  font-family: var(--font-body);
   background: var(--nj-parchment);
   color: var(--nj-charcoal);
   -webkit-font-smoothing: antialiased;
@@ -79,11 +82,11 @@ body {
 .navbar-brand svg { opacity: .85; }
 
 .navbar .nav-link {
-  font-family: var(--font-body) !important;
+  font-family: var(--font-body);
   font-weight: 500;
-  font-size: .8rem !important;
+  font-size: .8rem;
   color: rgba(255,255,255,.7) !important;
-  padding: .5rem .8rem !important;
+  padding: .5rem .8rem;
   border-radius: var(--radius-sm);
   transition: all .3s var(--ease-expo);
   position: relative;
@@ -797,16 +800,16 @@ table.dataTable tbody tr:hover {
 
 /* ---------- Headings ---------- */
 h4, h5 {
-  font-family: var(--font-display) !important;
+  font-family: var(--font-display);
   font-weight: 600;
   color: var(--nj-navy);
   letter-spacing: .01em;
 }
 
 h6 {
-  font-family: var(--font-body) !important;
+  font-family: var(--font-body);
   font-weight: 700;
-  font-size: .76rem !important;
+  font-size: .76rem;
   text-transform: uppercase;
   letter-spacing: .06em;
   color: var(--nj-stone);
@@ -1174,6 +1177,17 @@ pre, .shiny-text-output {
 }
 [data-bs-theme="dark"] .pathway-label {
   fill: #e0ddd8 !important;
+}
+
+/* ── Responsive breakpoints ── */
+@media (max-width: 768px) {
+  .home-hero h1 { font-size: 1.8rem !important; }
+  .home-hero .subtitle { font-size: 0.95rem !important; }
+  .narratives-hero h2,
+  .pathways-hero h2 { font-size: 1.5rem !important; }
+  .navbar { padding: 0.3rem 0.75rem !important; }
+  .navbar .nav-link { font-size: 0.72rem !important; padding: 0.4rem 0.5rem !important; }
+  .nff-container { max-width: 100%; }
 }
 
 /* ── Reduced motion for accessibility (WCAG 2.1 AA §2.3.3) ── */

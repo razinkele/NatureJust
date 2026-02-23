@@ -236,3 +236,42 @@ test_that("load_narratives returns 6 narratives with required fields", {
   expect_true("stewardship" %in% narr$id)
   expect_true("weights" %in% names(narr))
 })
+
+test_that("mod_narratives_server selects narrative and extracts weights", {
+  testServer(mod_narratives_server, {
+    session$setInputs(narrative_id = "arcology")
+    narr <- current()
+    expect_equal(narr$id, "arcology")
+    w <- current_weights()
+    expect_equal(sum(w), 100)
+    expect_equal(w[["NfN"]], 100)
+  })
+})
+
+test_that("mod_stakeholders_server adds and clears stakeholders", {
+  testServer(mod_stakeholders_server, {
+    # Initially empty
+    expect_equal(nrow(stakeholders()), 0)
+
+    # Add a stakeholder
+    session$setInputs(
+      stakeholder_name = "Test Fisher",
+      stakeholder_group = "Small-Scale Fishers",
+      triangle_position = list(NfN = 40, NfS = 30, NaC = 30)
+    )
+    session$setInputs(add_stakeholder = 1)
+    expect_equal(nrow(stakeholders()), 1)
+    expect_equal(stakeholders()$name[1], "Test Fisher")
+    expect_equal(stakeholders()$NfN[1], 40)
+  })
+})
+
+test_that("mod_home_server updates nff_weights from triangle position", {
+  shared_weights <- reactiveVal(c(NfN = 34, NfS = 33, NaC = 33))
+  testServer(mod_home_server, args = list(nff_weights = shared_weights), {
+    session$setInputs(nff_position = list(NfN = 60, NfS = 20, NaC = 20))
+    expect_equal(shared_weights()[["NfN"]], 60)
+    expect_equal(shared_weights()[["NfS"]], 20)
+    expect_equal(shared_weights()[["NaC"]], 20)
+  })
+})

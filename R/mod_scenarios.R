@@ -113,17 +113,18 @@ mod_scenarios_server <- function(id, nff_weights = NULL) {
   moduleServer(id, function(input, output, session) {
 
     # ---- Bidirectional NFF sync ----
+    # Flag prevents rounding-induced oscillation between observers.
+    syncing_from_external <- reactiveVal(FALSE)
+
     # When shared nff_weights changes externally, update sliders
-    # Uses freezeReactiveValue to suppress the downstream reactive
-    # from pushing stale slider values back to the shared reactive.
     observe({
       if (is.null(nff_weights)) return()
       w <- nff_weights()
-      # Only update if sliders are out of sync
       if (!isTRUE(all.equal(
         c(input$nfn, input$nfs, input$nac),
         c(w[["NfN"]], w[["NfS"]], w[["NaC"]])
       ))) {
+        syncing_from_external(TRUE)
         freezeReactiveValue(input, "nfn")
         freezeReactiveValue(input, "nfs")
         freezeReactiveValue(input, "nac")
@@ -178,12 +179,15 @@ mod_scenarios_server <- function(id, nff_weights = NULL) {
     })
 
     # When sliders change (user-driven), push to shared reactive.
-    # isolate(nff_weights()) ensures this observer only reacts to
-    # slider changes, NOT to external nff_weights changes (which
-    # would cause a write-back of stale slider values).
+    # Skip write-back when the change originated from the external sync
+    # observer to prevent rounding-induced oscillation.
     observe({
       if (is.null(nff_weights)) return()
       w <- weights()
+      if (isolate(syncing_from_external())) {
+        syncing_from_external(FALSE)
+        return()
+      }
       current <- isolate(nff_weights())
       if (!isTRUE(all.equal(unname(w), unname(current)))) {
         nff_weights(w)
@@ -217,7 +221,8 @@ mod_scenarios_server <- function(id, nff_weights = NULL) {
       }
       w <- weights()
       label <- paste0("S", length(current) + 1, ": ",
-                       w["NfN"], "/", w["NfS"], "/", w["NaC"])
+                       w["NfN"], "/", w["NfS"], "/", w["NaC"],
+                       " @", input$horizon)
       current[[label]] <- list(
         data = current_data(),
         horizon = as.integer(input$horizon)

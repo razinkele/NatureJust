@@ -24,6 +24,14 @@ mock_nuts2_data_fallback <- function() {
   europe$bathing_quality <- round(runif(nrow(europe), 0.5, 1.0), 2)
   europe$blue_economy_jobs <- round(runif(nrow(europe), 0.05, 0.5), 2)
 
+  # Schema alignment with real NUTS2 data (ensure NUTS_ID and NUTS_NAME exist)
+  if (!"NUTS_ID" %in% names(europe)) {
+    europe$NUTS_ID <- paste0(europe$iso_a2, "00")
+  }
+  if (!"NUTS_NAME" %in% names(europe)) {
+    europe$NUTS_NAME <- europe$name
+  }
+
   sea_basins <- c("Baltic", "North Sea", "Atlantic", "Mediterranean", "Black Sea")
   europe$sea_basin <- sample(sea_basins, nrow(europe), replace = TRUE)
 

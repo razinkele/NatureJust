@@ -94,33 +94,39 @@ mod_home_ui <- function(id) {
                 <polygon class="nff-narrative-marker" data-narrative="arcology"
                          points="0,-7 7,0 0,7 -7,0" transform="translate(200,65)"/>
                 <circle class="nff-narrative-hit" data-narrative="arcology"
-                        cx="200" cy="65" r="14" fill="transparent"/>
+                        cx="200" cy="65" r="14" fill="transparent"
+                        tabindex="0" role="button" aria-label="Arcology narrative"/>
 
                 <polygon class="nff-narrative-marker" data-narrative="optimizing"
                          points="0,-7 7,0 0,7 -7,0" transform="translate(339,320)"/>
                 <circle class="nff-narrative-hit" data-narrative="optimizing"
-                        cx="339" cy="320" r="14" fill="transparent"/>
+                        cx="339" cy="320" r="14" fill="transparent"
+                        tabindex="0" role="button" aria-label="Optimizing Nature narrative"/>
 
                 <polygon class="nff-narrative-marker" data-narrative="stewardship"
                          points="0,-7 7,0 0,7 -7,0" transform="translate(61,320)"/>
                 <circle class="nff-narrative-hit" data-narrative="stewardship"
-                        cx="61" cy="320" r="14" fill="transparent"/>
+                        cx="61" cy="320" r="14" fill="transparent"
+                        tabindex="0" role="button" aria-label="Reciprocal Stewardship narrative"/>
 
                 <!-- Edge narratives: at midpoints -->
                 <polygon class="nff-narrative-marker" data-narrative="sharing"
                          points="0,-7 7,0 0,7 -7,0" transform="translate(282.5,185)"/>
                 <circle class="nff-narrative-hit" data-narrative="sharing"
-                        cx="282.5" cy="185" r="14" fill="transparent"/>
+                        cx="282.5" cy="185" r="14" fill="transparent"
+                        tabindex="0" role="button" aria-label="Sharing through Sparing narrative"/>
 
                 <polygon class="nff-narrative-marker" data-narrative="commons"
                          points="0,-7 7,0 0,7 -7,0" transform="translate(200,335)"/>
                 <circle class="nff-narrative-hit" data-narrative="commons"
-                        cx="200" cy="335" r="14" fill="transparent"/>
+                        cx="200" cy="335" r="14" fill="transparent"
+                        tabindex="0" role="button" aria-label="Innovative Commons narrative"/>
 
                 <polygon class="nff-narrative-marker" data-narrative="dynamic"
                          points="0,-7 7,0 0,7 -7,0" transform="translate(117.5,185)"/>
                 <circle class="nff-narrative-hit" data-narrative="dynamic"
-                        cx="117.5" cy="185" r="14" fill="transparent"/>
+                        cx="117.5" cy="185" r="14" fill="transparent"
+                        tabindex="0" role="button" aria-label="Dynamic Natures narrative"/>
 
                 <!-- Vertex glow rings -->
                 <circle class="vertex-glow" cx="200" cy="35" r="20"/>

@@ -89,11 +89,28 @@ mod_dashboard_server <- function(id) {
       load_indicator_timeseries(input$region)
     })
 
+    # Map display names (with provenance suffixes) to data indicator names
+    indicator_display_map <- c(
+      "Marine Biodiversity Index (M)" = "Marine Biodiversity Index",
+      "Habitat Condition (M)"         = "Habitat Condition",
+      "Ecosystem Services (M)"        = "Ecosystem Services",
+      "Community Wellbeing Index (M)"  = "Community Wellbeing Index",
+      "Governance Effectiveness (M)"   = "Governance Effectiveness",
+      "Fish Stock Biomass"             = "Fish Stock Biomass",
+      "Sustainable Fishing"            = "Sustainable Fishing",
+      "Offshore Wind Capacity"         = "Offshore Wind Capacity",
+      "Coastal Tourism Pressure"       = "Coastal Tourism Pressure",
+      "Bathing Water Quality"          = "Bathing Water Quality",
+      "Contaminant Status (H)"         = "Contaminant Status",
+      "Eutrophication Status (H)"      = "Eutrophication Status",
+      "Underwater Noise (H)"           = "Underwater Noise"
+    )
+
     filtered_data <- reactive({
       df <- data()
       if (!is.null(input$indicators) && length(input$indicators) > 0) {
-        # Strip "(M)" suffix for matching against data indicator names
-        selected <- gsub(" \\([MH]\\)$", "", input$indicators)
+        selected <- unname(indicator_display_map[input$indicators])
+        selected <- selected[!is.na(selected)]
         df <- df[df$indicator %in% selected, ]
       }
       df
@@ -121,6 +138,14 @@ mod_dashboard_server <- function(id) {
     output$compliance_table <- DT::renderDataTable({
       df <- data()
       latest <- df[df$year == max(df$year), ]
+
+      # Defensive: ensure gbf_target column exists
+      if (!"gbf_target" %in% names(latest) || all(is.na(latest$gbf_target))) {
+        return(DT::datatable(
+          data.frame(Note = "GBF target data unavailable"),
+          options = list(dom = "t"), rownames = FALSE
+        ))
+      }
 
       compliance <- data.frame(
         Indicator = latest$indicator,

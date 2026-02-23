@@ -355,16 +355,19 @@ mod_pathways_server <- function(id, nff_weights = NULL) {
         future_NaC = future[["NaC"]] / future_total
       ))
 
+      # Show normalized percentages in notification
+      now_pct <- round(now / now_total * 100)
+      future_pct <- round(future / future_total * 100)
       showNotification(
         paste0(
           "Pathway drawn: Now (",
-          round(now[["NfN"]]), "/",
-          round(now[["NfS"]]), "/",
-          round(now[["NaC"]]),
-          ") \u2192 Future (",
-          round(future[["NfN"]]), "/",
-          round(future[["NfS"]]), "/",
-          round(future[["NaC"]]), ")"
+          now_pct[["NfN"]], "/",
+          now_pct[["NfS"]], "/",
+          now_pct[["NaC"]],
+          "%) \u2192 Future (",
+          future_pct[["NfN"]], "/",
+          future_pct[["NfS"]], "/",
+          future_pct[["NaC"]], "%)"
         ),
         type = "message"
       )

@@ -23,7 +23,7 @@ mod_governance_ui <- function(id) {
           sidebar = bslib::sidebar(
             title = "Check Alignment",
             selectInput(ns("cfp_measure"), "Conservation Measure",
-                        choices = tryCatch(load_interventions(), error = function(e) "MPA Establishment"))
+                        choices = "MPA Establishment")
           ),
           bslib::card(
             bslib::card_header("Common Fisheries Policy Alignment"),
@@ -70,7 +70,7 @@ mod_governance_ui <- function(id) {
           sidebar = bslib::sidebar(
             title = "Assessment",
             selectInput(ns("tenet_intervention"), "Select Intervention",
-                        choices = tryCatch(load_interventions(), error = function(e) "MPA Establishment")),
+                        choices = "MPA Establishment"),
             p(class = "text-muted small mt-2",
               "Based on Elliott (2013): 10 tenets for integrated,",
               "successful and sustainable marine management.")
@@ -97,6 +97,13 @@ mod_governance_ui <- function(id) {
 #' @noRd
 mod_governance_server <- function(id) {
   moduleServer(id, function(input, output, session) {
+
+    # Populate intervention choices from data (deferred from UI build time)
+    observe({
+      choices <- tryCatch(load_interventions(), error = function(e) "MPA Establishment")
+      updateSelectInput(session, "cfp_measure", choices = choices)
+      updateSelectInput(session, "tenet_intervention", choices = choices)
+    }) |> bindEvent(TRUE, once = TRUE)
 
     # Funding matrix table
     output$funding_table <- DT::renderDataTable({

@@ -10,7 +10,7 @@ mod_justice_ui <- function(id) {
       width = 280,
       selectInput(
         ns("intervention"), "Select Intervention",
-        choices = tryCatch(load_interventions(), error = function(e) "MPA Establishment")
+        choices = "MPA Establishment"
       ),
       selectInput(
         ns("target_area"), "Target Area",
@@ -52,6 +52,12 @@ mod_justice_ui <- function(id) {
 #' @noRd
 mod_justice_server <- function(id) {
   moduleServer(id, function(input, output, session) {
+
+    # Populate intervention choices from data (deferred from UI build time)
+    observe({
+      choices <- tryCatch(load_interventions(), error = function(e) "MPA Establishment")
+      updateSelectInput(session, "intervention", choices = choices)
+    }) |> bindEvent(TRUE, once = TRUE)
 
     # Geographic context modifiers — regional governance/equity conditions
     # shift base scores to reflect known disparities across EU sea basins
