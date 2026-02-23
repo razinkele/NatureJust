@@ -198,6 +198,7 @@ mod_scenarios_server <- function(id, nff_weights = NULL) {
 
     # Current scenario data
     current_data <- reactive({
+      req(input$region)
       load_scenario_data(
         nff_weights = weights(),
         region = input$region

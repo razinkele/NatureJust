@@ -156,7 +156,7 @@ mod_dashboard_server <- function(id) {
         return(plotly::plotly_empty())
       }
 
-      combined <- merge(
+      combined <- base::merge(
         data.frame(year = eco$year, ecological = eco$value),
         data.frame(year = equity$year, equity = equity$value),
         by = "year"
