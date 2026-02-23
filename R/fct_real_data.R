@@ -170,8 +170,9 @@ load_mpa_data <- function(n = 30) {
       )
     }
 
-    # Sample n sites if dataset is larger than requested
-    if (nrow(mpa_sf) > n) {
+    # With GEOS-simplified data (~0.8 MB), show all sites on the map.
+    # Only sample if dataset is unusually large (un-simplified fallback).
+    if (nrow(mpa_sf) > 5000 && n < nrow(mpa_sf)) {
       set.seed(123)
       mpa_sf <- mpa_sf[sample(nrow(mpa_sf), n), ]
     }

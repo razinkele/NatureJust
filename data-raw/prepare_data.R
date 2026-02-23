@@ -1060,60 +1060,67 @@ tryCatch({
 cat("\nStep 4: Downloading Natura 2000 marine MPA boundaries...\n")
 tryCatch({
   # Download Natura 2000 sites from EEA via the official GeoPackage
+  # EEA datashare (Nextcloud): sdi.eea.europa.eu/datashare
+  # Share token mwzs9eNsJ9Sn4Q4 = Natura 2000 end-2024 vector data
+  n2k_url <- "https://sdi.eea.europa.eu/datashare/s/mwzs9eNsJ9Sn4Q4/download?path=/&files=Natura2000_end2024.gpkg"
 
-  # Full dataset: ~300MB; we filter to marine-only and simplify
-  n2k_url <- "https://cmshare.eea.europa.eu/s/r5sGLkC6HAwKNBp/download?path=/&files=Natura2000_end2023_gpkg.zip"
-  temp_zip <- tempfile(fileext = ".zip")
-  temp_dir <- tempdir()
+  gpkg_path <- file.path(tempdir(), "Natura2000_end2024.gpkg")
 
-  cat("  Downloading Natura 2000 end-2023 dataset from EEA...\n")
-  cat("  (This is a large file ~300 MB, please be patient)\n")
-  download.file(n2k_url, temp_zip, mode = "wb", quiet = FALSE)
-
-  # Unzip and find the GeoPackage
-  unzip(temp_zip, exdir = temp_dir)
-  gpkg_files <- list.files(temp_dir, pattern = "\\.gpkg$",
-                           recursive = TRUE, full.names = TRUE)
-
-  if (length(gpkg_files) == 0) {
-    stop("No GeoPackage found in downloaded Natura 2000 archive")
-  }
-  gpkg_path <- gpkg_files[1]
-  cat("  Found GeoPackage:", basename(gpkg_path), "\n")
-
-  # List layers and find the sites layer
-  layers <- sf::st_layers(gpkg_path)
-  cat("  Available layers:", paste(layers$name, collapse = ", "), "\n")
-
-  # Read the sites layer (typically named "NaturaSite" or similar)
-  site_layer <- grep("site", layers$name, ignore.case = TRUE, value = TRUE)
-  if (length(site_layer) == 0) site_layer <- layers$name[1]
-  cat("  Reading layer:", site_layer[1], "...\n")
-
-  n2k <- sf::st_read(gpkg_path, layer = site_layer[1], quiet = TRUE)
-
-  # Filter to marine/coastal sites only
-  if ("MARINE_AREA_PERC" %in% names(n2k)) {
-    n2k_marine <- n2k[!is.na(n2k$MARINE_AREA_PERC) & n2k$MARINE_AREA_PERC > 0, ]
-  } else if ("MARINEAREA" %in% names(n2k)) {
-    n2k_marine <- n2k[!is.na(n2k$MARINEAREA) & n2k$MARINEAREA > 0, ]
+  if (file.exists(gpkg_path) && file.size(gpkg_path) > 1e9) {
+    cat("  Using previously downloaded file\n")
   } else {
-    cat("  Warning: Could not find marine area column, keeping all sites\n")
-    n2k_marine <- n2k
+    cat("  Downloading Natura2000_end2024.gpkg from EEA (~1.3 GB)...\n")
+    cat("  (This is a large file, please be patient)\n")
+    old_timeout <- getOption("timeout")
+    options(timeout = 1800)  # 30 minutes for large file
+    download.file(n2k_url, gpkg_path, mode = "wb", quiet = FALSE)
+    options(timeout = old_timeout)
   }
-  cat("  Marine/coastal sites:", nrow(n2k_marine), "of", nrow(n2k), "total\n")
 
-  # Select key columns
-  keep_cols <- intersect(
-    c("SITECODE", "SITENAME", "SITETYPE", "MS", "MARINE_AREA_PERC", "MARINEAREA"),
-    names(n2k_marine)
-  )
-  n2k_marine <- n2k_marine[, c(keep_cols, attr(n2k_marine, "sf_column"))]
+  if (!file.exists(gpkg_path) || file.size(gpkg_path) < 1e6) {
+    stop("Download failed or file too small")
+  }
+  cat("  Downloaded:", round(file.size(gpkg_path) / 1e6), "MB\n")
 
-  # Transform to WGS84 and simplify for web rendering
+  # The GeoPackage has a relational structure:
+  #   NaturaSite_polygon  = geometries (SITECODE, SITENAME, MS, SITETYPE, geom)
+  #   NATURA2000SITES     = attributes (SITECODE, MARINE_AREA_PERCENTAGE, ...)
+  # Read tabular data first to identify marine sites before loading heavy geometries.
+
+  cat("  Reading NATURA2000SITES attribute table...\n")
+  n2k_attrs <- sf::st_read(gpkg_path, layer = "NATURA2000SITES", quiet = TRUE)
+
+  marine_codes <- n2k_attrs |>
+    dplyr::filter(!is.na(MARINE_AREA_PERCENTAGE), MARINE_AREA_PERCENTAGE > 0) |>
+    dplyr::pull(SITECODE)
+  cat("  Marine/coastal sites:", length(marine_codes), "of", nrow(n2k_attrs), "total\n")
+
+  # Read only marine site polygons using SQL (much faster than all 27k)
+  cat("  Reading marine site polygons via SQL...\n")
+  code_list <- paste0("'", marine_codes, "'", collapse = ", ")
+  sql <- paste0("SELECT * FROM NaturaSite_polygon WHERE SITECODE IN (", code_list, ")")
+  n2k_marine <- sf::st_read(gpkg_path, query = sql, quiet = TRUE)
+
+  # Join MARINE_AREA_PERCENTAGE from attributes
+  marine_attr_df <- n2k_attrs |>
+    dplyr::filter(SITECODE %in% marine_codes) |>
+    dplyr::select(SITECODE, MARINE_AREA_PERCENTAGE) |>
+    as.data.frame()
+  if ("geometry" %in% names(marine_attr_df)) marine_attr_df$geometry <- NULL
+  n2k_marine <- merge(n2k_marine, marine_attr_df, by = "SITECODE", all.x = TRUE)
+
+  # Transform to WGS84
   n2k_marine <- sf::st_transform(n2k_marine, 4326)
-  n2k_marine <- sf::st_simplify(n2k_marine, dTolerance = 0.005,
-                                 preserveTopology = TRUE)
+
+  # Aggressive GEOS simplification for web map rendering
+  # Disable s2 to use GEOS planar Douglas-Peucker (preserveTopology=FALSE).
+  # dTol = 0.01° (≈1.1 km) reduces ~180 MB → ~0.8 MB while keeping ~93% of sites.
+  cat("  Simplifying with GEOS (dTol=0.01)...\n")
+  sf::sf_use_s2(FALSE)
+  n2k_marine <- sf::st_simplify(n2k_marine, preserveTopology = FALSE, dTolerance = 0.01)
+  n2k_marine <- n2k_marine[!sf::st_is_empty(n2k_marine), ]
+  n2k_marine <- sf::st_make_valid(n2k_marine)
+  sf::sf_use_s2(TRUE)
 
   # Map SITETYPE codes to display names
   if ("SITETYPE" %in% names(n2k_marine)) {
@@ -1128,18 +1135,22 @@ tryCatch({
   }
 
   # Rename for app compatibility
-  if ("SITENAME" %in% names(n2k_marine)) {
-    n2k_marine$name <- n2k_marine$SITENAME
-  }
-  if ("MS" %in% names(n2k_marine)) {
-    n2k_marine$country <- n2k_marine$MS
-  }
+  if ("SITENAME" %in% names(n2k_marine)) n2k_marine$name <- n2k_marine$SITENAME
+  if ("MS" %in% names(n2k_marine)) n2k_marine$country <- n2k_marine$MS
+
+  # Select final columns
+  keep_cols <- intersect(
+    c("SITECODE", "SITENAME", "SITETYPE", "MS", "MARINE_AREA_PERCENTAGE",
+      "designation", "name", "country"),
+    names(n2k_marine)
+  )
+  n2k_marine <- n2k_marine[, c(keep_cols, attr(n2k_marine, "sf_column"))]
 
   saveRDS(n2k_marine, file.path(extdata_dir, "natura2000_marine.rds"))
   cat("  Saved natura2000_marine.rds:", nrow(n2k_marine), "marine sites\n")
 
   # Cleanup temp files
-  unlink(temp_zip)
+  unlink(gpkg_path)
 }, error = function(e) {
   cat("  ERROR downloading Natura 2000 data:", conditionMessage(e), "\n")
   cat("  The app will use synthetic MPA geometries as fallback.\n")
