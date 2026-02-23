@@ -4,7 +4,7 @@
 #' @import shiny
 #' @noRd
 app_server <- function(input, output, session) {
-  mod_home_server("home", parent_session = session)
+  mod_home_server("home")
   mod_spatial_server("spatial")
   mod_scenarios_server("scenarios")
   mod_justice_server("justice")

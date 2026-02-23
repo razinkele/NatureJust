@@ -39,7 +39,28 @@ mod_governance_ui <- function(id) {
         bslib::card_body(
           p(class = "text-muted",
             "Track stakeholder consultation against GBF Target 22 requirements."),
-          uiOutput(ns("stakeholder_checklist"))
+          uiOutput(ns("stakeholder_progress")),
+          div(class = "mt-3",
+            checkboxGroupInput(
+              ns("consulted_stakeholders"),
+              label = NULL,
+              choices = c(
+                "National Fisheries Authorities",
+                "Regional/Local Government",
+                "Small-Scale Fishers Associations",
+                "Industrial Fishing Fleet Representatives",
+                "Environmental NGOs",
+                "Indigenous & Local Community Representatives",
+                "Marine Scientists & Researchers",
+                "Tourism & Recreation Sector",
+                "Port Authorities",
+                "Youth & Future Generations Representatives"
+              )
+            ),
+            actionButton(ns("reset_stakeholders"), "Reset All",
+                         class = "btn-outline-secondary btn-sm mt-2",
+                         icon = icon("rotate-left"))
+          )
         )
       ),
 
@@ -99,13 +120,10 @@ mod_governance_server <- function(id) {
         )
     })
 
-    # CFP alignment check
+    # CFP alignment check — uses evidence-based data from cfp_alignment.csv
     output$cfp_result <- renderUI({
-      measure <- input$cfp_measure
-      set.seed(nchar(measure))
-
-      alignment <- sample(c("aligned", "partial", "conflict"), 1,
-                          prob = c(0.4, 0.35, 0.25))
+      cfp_data <- mock_cfp_alignment(input$cfp_measure)
+      alignment <- cfp_data$alignment[1]
 
       status_class <- switch(alignment,
                              aligned = "alert-success",
@@ -122,29 +140,14 @@ mod_governance_server <- function(id) {
                             partial = "This measure requires modifications to align with CFP quota allocations.",
                             conflict = "This measure conflicts with existing CFP management plans and requires derogation.")
 
-      mock_details <- switch(alignment,
-                             aligned = list(
-                               "Compatible with existing Total Allowable Catch (TAC) regulations",
-                               "Supports CFP discard ban implementation",
-                               "Aligns with Maximum Sustainable Yield (MSY) objectives"
-                             ),
-                             partial = list(
-                               "May require adjustment to regional fishing effort limits",
-                               "Partial overlap with EMFAF fleet adaptation measures",
-                               "Needs coordination with Regional Advisory Councils"
-                             ),
-                             conflict = list(
-                               "Conflicts with allocated fishing quotas in target area",
-                               "Requires Article 11 MSFD/CFP coordination procedure",
-                               "May trigger compensation obligations under EMFAF Article 17"
-                             ))
+      details <- list(cfp_data$detail_1[1], cfp_data$detail_2[1], cfp_data$detail_3[1])
 
       tagList(
         div(class = paste("alert", status_class),
             bsicons::bs_icon(status_icon),
             paste0(" ", status_text)),
         tags$ul(
-          lapply(mock_details, function(d) tags$li(d))
+          lapply(details, function(d) tags$li(d))
         )
       )
     })
@@ -200,7 +203,7 @@ mod_governance_server <- function(id) {
           bslib::card(
             class = paste("justice-card", paste0("status-", status)),
             bslib::card_header(
-              tags$span(class = paste("traffic-light", status)),
+              traffic_light(status),
               if (!is.null(icon_name)) bsicons::bs_icon(icon_name),
               df$tenet[i]
             ),
@@ -290,7 +293,7 @@ mod_governance_server <- function(id) {
           div(
             class = "mb-3",
             h6(
-              tags$span(class = paste("traffic-light", gaps$status[i])),
+              traffic_light(gaps$status[i]),
               tenet_name
             ),
             tags$ul(
@@ -301,53 +304,22 @@ mod_governance_server <- function(id) {
       )
     })
 
-    # Stakeholder tracker
-    output$stakeholder_checklist <- renderUI({
-      stakeholders <- c(
-        "National Fisheries Authorities",
-        "Regional/Local Government",
-        "Small-Scale Fishers Associations",
-        "Industrial Fishing Fleet Representatives",
-        "Environmental NGOs",
-        "Indigenous & Local Community Representatives",
-        "Marine Scientists & Researchers",
-        "Tourism & Recreation Sector",
-        "Port Authorities",
-        "Youth & Future Generations Representatives"
-      )
+    # Stakeholder tracker — interactive checkboxes
+    observeEvent(input$reset_stakeholders, {
+      updateCheckboxGroupInput(session, "consulted_stakeholders", selected = character(0))
+    })
 
-      set.seed(42)
-      consulted <- sample(c(TRUE, FALSE), length(stakeholders),
-                          replace = TRUE, prob = c(0.5, 0.5))
-
-      n_consulted <- sum(consulted)
-      n_total <- length(stakeholders)
+    output$stakeholder_progress <- renderUI({
+      n_consulted <- length(input$consulted_stakeholders)
+      n_total <- 10L
       pct <- round(n_consulted / n_total * 100)
 
-      tagList(
-        bslib::value_box(
-          title = "Consultation Progress",
-          value = paste0(n_consulted, " / ", n_total),
-          showcase = bsicons::bs_icon("people-fill"),
-          theme = if (pct >= 80) "success" else if (pct >= 50) "warning" else "danger",
-          p(paste0(pct, "% of stakeholder groups consulted"))
-        ),
-        div(class = "mt-3",
-            lapply(seq_along(stakeholders), function(i) {
-              div(
-                class = "d-flex align-items-center mb-2 p-2 border rounded",
-                tags$span(
-                  class = paste("traffic-light",
-                                if (consulted[i]) "green" else "red")
-                ),
-                tags$span(stakeholders[i]),
-                if (!consulted[i]) {
-                  tags$span(class = "ms-auto badge bg-warning",
-                            "Not yet consulted")
-                }
-              )
-            })
-        )
+      bslib::value_box(
+        title = "Consultation Progress",
+        value = paste0(n_consulted, " / ", n_total),
+        showcase = bsicons::bs_icon("people-fill"),
+        theme = if (pct >= 80) "success" else if (pct >= 50) "warning" else "danger",
+        p(paste0(pct, "% of stakeholder groups consulted"))
       )
     })
   })

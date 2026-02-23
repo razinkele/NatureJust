@@ -61,7 +61,7 @@ mod_scenarios_ui <- function(id) {
             plotly::plotlyOutput(ns("radar_plot"), height = "400px")
           ),
           bslib::card(
-            bslib::card_header("Justice Dimensions"),
+            bslib::card_header("Indicator Comparison"),
             plotly::plotlyOutput(ns("bar_plot"), height = "400px")
           )
         )
@@ -99,7 +99,7 @@ mod_scenarios_server <- function(id) {
       )
     })
 
-    # Saved scenarios (up to 4)
+    # Saved scenarios (up to 4) — store data + horizon
     saved <- reactiveVal(list())
 
     observeEvent(input$save_scenario, {
@@ -112,7 +112,10 @@ mod_scenarios_server <- function(id) {
       w <- weights()
       label <- paste0("S", length(current) + 1, ": ",
                        w["NfN"], "/", w["NfS"], "/", w["NaC"])
-      current[[label]] <- current_data()
+      current[[label]] <- list(
+        data = current_data(),
+        horizon = as.integer(input$horizon)
+      )
       saved(current)
       showNotification(paste("Saved:", label), type = "message")
     })
@@ -211,7 +214,7 @@ mod_scenarios_server <- function(id) {
         lapply(seq_len(nrow(merged)), function(i) {
           div(
             class = "d-flex align-items-center mb-2",
-            tags$span(class = paste("traffic-light", merged$status[i])),
+            traffic_light(merged$status[i]),
             tags$strong(class = "me-2", merged$indicator[i]),
             tags$span(class = "text-muted small",
               paste0(round(merged$value[i], 2), " / ",
@@ -222,7 +225,7 @@ mod_scenarios_server <- function(id) {
       )
     })
 
-    # Radar comparison plot
+    # Radar comparison plot — uses saved horizon and explicit indicator matching
     output$radar_plot <- plotly::renderPlotly({
       scenarios <- saved()
       if (length(scenarios) == 0) {
@@ -237,11 +240,14 @@ mod_scenarios_server <- function(id) {
       p <- plotly::plot_ly(type = "scatterpolar", fill = "toself")
 
       for (nm in names(scenarios)) {
-        df <- scenarios[[nm]]
-        end_vals <- df |>
-          dplyr::filter(year == max(year)) |>
-          dplyr::pull(value)
-        # Normalise to 0-1 range for radar
+        sc <- scenarios[[nm]]
+        df <- sc$data
+        horizon_year <- sc$horizon
+        end_df <- df[df$year == horizon_year, ]
+        # Explicit matching: align values to categories vector
+        idx <- match(categories, end_df$indicator)
+        end_vals <- end_df$value[idx]
+        end_vals[is.na(end_vals)] <- 0
         end_vals <- pmin(pmax(end_vals, 0), 1)
 
         p <- p |> plotly::add_trace(
@@ -256,7 +262,7 @@ mod_scenarios_server <- function(id) {
       )
     })
 
-    # Stacked bar comparison
+    # Bar comparison — uses saved horizon
     output$bar_plot <- plotly::renderPlotly({
       scenarios <- saved()
       if (length(scenarios) == 0) {
@@ -265,9 +271,11 @@ mod_scenarios_server <- function(id) {
       }
 
       df_list <- lapply(names(scenarios), function(nm) {
-        d <- scenarios[[nm]]
+        sc <- scenarios[[nm]]
+        d <- sc$data
+        horizon_year <- sc$horizon
         d |>
-          dplyr::filter(year == max(year)) |>
+          dplyr::filter(year == horizon_year) |>
           dplyr::mutate(scenario = nm)
       })
 
@@ -278,7 +286,7 @@ mod_scenarios_server <- function(id) {
       )) +
         ggplot2::geom_col(position = "dodge") +
         ggplot2::theme_minimal() +
-        ggplot2::labs(x = "Scenario", y = "Final Value", fill = "Dimension") +
+        ggplot2::labs(x = "Scenario", y = "Final Value", fill = "Indicator") +
         ggplot2::coord_flip()
 
       plotly::ggplotly(p)

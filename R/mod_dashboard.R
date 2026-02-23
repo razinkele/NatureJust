@@ -16,18 +16,18 @@ mod_dashboard_ui <- function(id) {
       shinyWidgets::pickerInput(
         ns("indicators"), "Indicators",
         choices = c(
-          "Marine Biodiversity Index",
-          "Habitat Condition Score",
-          "Ecosystem Services Value",
-          "Community Wellbeing Index",
-          "Governance Effectiveness",
+          "Marine Biodiversity Index (M)",
+          "Habitat Condition (M)",
+          "Ecosystem Services (M)",
+          "Community Wellbeing Index (M)",
+          "Governance Effectiveness (M)",
           "Fish Stock Biomass",
           "Sustainable Fishing",
           "Offshore Wind Capacity",
           "Coastal Tourism Pressure",
           "Bathing Water Quality"
         ),
-        selected = c("Marine Biodiversity Index", "Habitat Condition Score"),
+        selected = c("Marine Biodiversity Index (M)", "Habitat Condition (M)"),
         multiple = TRUE,
         options = shinyWidgets::pickerOptions(actionsBox = TRUE)
       ),
@@ -42,7 +42,10 @@ mod_dashboard_ui <- function(id) {
         full_screen = TRUE,
         bslib::card_header("Indicator Time Series"),
         bslib::card_body(
-          plotly::plotlyOutput(ns("timeseries_plot"), height = "400px")
+          plotly::plotlyOutput(ns("timeseries_plot"), height = "400px"),
+          p(class = "text-muted small mt-2",
+            "Indicators marked (M) are modelled from regional assessment baselines.",
+            "Unmarked indicators are derived from Eurostat time series.")
         )
       ),
 
@@ -82,7 +85,9 @@ mod_dashboard_server <- function(id) {
     filtered_data <- reactive({
       df <- data()
       if (!is.null(input$indicators) && length(input$indicators) > 0) {
-        df <- df[df$indicator %in% input$indicators, ]
+        # Strip "(M)" suffix for matching against data indicator names
+        selected <- gsub(" \\(M\\)$", "", input$indicators)
+        df <- df[df$indicator %in% selected, ]
       }
       df
     })
@@ -137,7 +142,7 @@ mod_dashboard_server <- function(id) {
     # Equity trend decomposition
     output$equity_plot <- plotly::renderPlotly({
       df <- data()
-      eco <- df[df$indicator == "Habitat Condition Score", ]
+      eco <- df[grepl("^Habitat Condition", df$indicator), ]
       equity <- df[df$indicator == "Community Wellbeing Index", ]
 
       if (nrow(eco) == 0 || nrow(equity) == 0) {

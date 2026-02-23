@@ -21,12 +21,12 @@ mod_spatial_ui <- function(id) {
       selectInput(
         ns("sea_basin"), "Sea Basin",
         choices = c("All", "Baltic", "North Sea", "Atlantic",
-                    "Mediterranean", "Black Sea")
+                    "Mediterranean", "Black Sea", "Inland")
       ),
       selectInput(
         ns("ecosystem"), "Ecosystem Type",
         choices = c("All", "Coastal", "Pelagic", "Deep-sea",
-                    "Estuarine", "Reef")
+                    "Estuarine", "Reef", "Inland")
       ),
       hr(),
       h6("Map Layers"),
@@ -85,7 +85,10 @@ mod_spatial_ui <- function(id) {
       # Map
       bslib::card(
         full_screen = TRUE,
-        bslib::card_header("Spatial Equity Map"),
+        bslib::card_header(
+          "Spatial Equity Map",
+          tags$span(class = "badge bg-warning ms-2", "MPA layer: illustrative")
+        ),
         bslib::card_body(
           padding = 0,
           leaflet::leafletOutput(ns("map"), height = "500px")
@@ -94,7 +97,7 @@ mod_spatial_ui <- function(id) {
 
       # Overlap analysis
       bslib::card(
-        bslib::card_header("Overlap Analysis: Vulnerability vs Conservation Pressure"),
+        bslib::card_header("Overlap Analysis: Vulnerability vs Population Pressure"),
         bslib::card_body(
           plotly::plotlyOutput(ns("overlap_plot"), height = "350px")
         )
@@ -199,7 +202,10 @@ mod_spatial_server <- function(id) {
             fillOpacity = 0.6,
             weight = 1,
             color = "#666",
-            label = ~paste0(sovereignt, ": ", ldef$group, " ",
+            label = ~paste0(
+                           ifelse(!is.null(data$NUTS_NAME) & !is.na(data$NUTS_NAME),
+                                  data$NUTS_NAME, sovereignt),
+                           " (", sovereignt, "): ", ldef$group, " ",
                            round(col_vals, 2)),
             group = ldef$group
           )
@@ -223,7 +229,7 @@ mod_spatial_server <- function(id) {
             fillOpacity = 0.3,
             weight = 1,
             color = "#2c7fb8",
-            label = ~paste0(name, " (", designation, ")"),
+            label = ~paste0("[Illustrative] ", name, " (", designation, ")"),
             group = "MPAs"
           )
       }
@@ -236,17 +242,24 @@ mod_spatial_server <- function(id) {
 
       df <- sf::st_drop_geometry(data)
 
+      # Use NUTS_NAME if available, fallback to sovereignt
+      df$region_label <- if ("NUTS_NAME" %in% names(df)) {
+        ifelse(is.na(df$NUTS_NAME), df$sovereignt, df$NUTS_NAME)
+      } else {
+        df$sovereignt
+      }
+
       p <- ggplot2::ggplot(df, ggplot2::aes(
-        x = conservation_pressure,
+        x = population_pressure,
         y = vulnerability,
         color = sea_basin,
-        text = paste0(sovereignt, "\nBasin: ", sea_basin)
+        text = paste0(region_label, " (", sovereignt, ")\nBasin: ", sea_basin)
       )) +
         ggplot2::geom_point(size = 3, alpha = 0.7) +
         ggplot2::geom_smooth(method = "lm", se = FALSE, color = "grey40",
                              linetype = "dashed") +
         ggplot2::labs(
-          x = "Conservation Pressure",
+          x = "Population Pressure",
           y = "Socio-economic Vulnerability",
           color = "Sea Basin"
         ) +

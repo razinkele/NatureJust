@@ -133,9 +133,8 @@ mod_home_ui <- function(id) {
 #' Home module server
 #'
 #' @param id Module namespace id
-#' @param parent_session The parent session for navbar navigation
 #' @noRd
-mod_home_server <- function(id, parent_session = NULL) {
+mod_home_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     # Navigation from NFF triangle is handled via JS in nff_triangle.js
     # The JS sets the navbar tab directly

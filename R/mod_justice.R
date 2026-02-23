@@ -107,7 +107,7 @@ mod_justice_server <- function(id) {
           bslib::card(
             class = paste("justice-card", paste0("status-", status)),
             bslib::card_header(
-              tags$span(class = paste("traffic-light", status)),
+              traffic_light(status),
               df$dimension[i]
             ),
             bslib::card_body(
@@ -132,12 +132,39 @@ mod_justice_server <- function(id) {
       "Celtic Sea"       = "Celtic Seas Partnership and NWW RAC"
     )
 
+    # Build area-specific justice recommendations (shared by UI and report download)
+    justice_recommendations <- reactive({
+      area <- input$target_area
+      context <- area_context[[area]]
+      list(
+        Distributional = c(
+          "Consider EMFAF compensation schemes for affected fishing communities",
+          paste0("Explore Just Transition Fund eligibility for ", area, " coastal regions"),
+          "Implement benefit-sharing mechanisms for ecosystem service gains"
+        ),
+        Procedural = c(
+          "Establish Aarhus Convention-compliant consultation procedures",
+          paste0("Engage ", context, " for structured stakeholder input"),
+          "Create participatory mapping exercises with local communities"
+        ),
+        Recognitional = c(
+          "Integrate traditional ecological knowledge in impact assessments",
+          paste0("Document cultural heritage values specific to ", area, " communities"),
+          "Recognise indigenous and local community territorial rights"
+        ),
+        Restorative = c(
+          paste0("Assess historical displacement from existing protected areas in ", area),
+          "Design targeted support for communities with legacy pollution exposure",
+          "Establish monitoring of cumulative impact on marginalised groups"
+        )
+      )
+    })
+
     # Gap analysis
     output$gap_analysis <- renderUI({
       df <- scores()
       gaps <- df[df$status != "green", ]
       area <- input$target_area
-      context <- area_context[[area]]
 
       if (nrow(gaps) == 0) {
         return(div(
@@ -148,28 +175,7 @@ mod_justice_server <- function(id) {
         ))
       }
 
-      recommendations <- list(
-        Distributional = list(
-          "Consider EMFAF compensation schemes for affected fishing communities",
-          paste0("Explore Just Transition Fund eligibility for ", area, " coastal regions"),
-          "Implement benefit-sharing mechanisms for ecosystem service gains"
-        ),
-        Procedural = list(
-          "Establish Aarhus Convention-compliant consultation procedures",
-          paste0("Engage ", context, " for structured stakeholder input"),
-          "Create participatory mapping exercises with local communities"
-        ),
-        Recognitional = list(
-          "Integrate traditional ecological knowledge in impact assessments",
-          paste0("Document cultural heritage values specific to ", area, " communities"),
-          "Recognise indigenous and local community territorial rights"
-        ),
-        Restorative = list(
-          paste0("Assess historical displacement from existing protected areas in ", area),
-          "Design targeted support for communities with legacy pollution exposure",
-          "Establish monitoring of cumulative impact on marginalised groups"
-        )
-      )
+      recommendations <- justice_recommendations()
 
       tagList(
         div(class = "alert alert-warning",
@@ -182,7 +188,7 @@ mod_justice_server <- function(id) {
           div(
             class = "mb-3",
             h6(
-              tags$span(class = paste("traffic-light", gaps$status[i])),
+              traffic_light(gaps$status[i]),
               dim_name, " Justice"
             ),
             tags$ul(
@@ -193,7 +199,7 @@ mod_justice_server <- function(id) {
       )
     })
 
-    # Download report
+    # Download report — includes scorecard + gap analysis
     output$download_report <- downloadHandler(
       filename = function() {
         paste0("justice-assessment-",
@@ -202,29 +208,63 @@ mod_justice_server <- function(id) {
       },
       content = function(file) {
         df <- scores()
-        # Simple HTML report
+        area <- input$target_area
+        context <- area_context[[area]]
+        gaps <- df[df$status != "green", ]
+        recommendations <- justice_recommendations()
+
+        # Build gap analysis HTML
+        gap_html <- ""
+        if (nrow(gaps) > 0) {
+          gap_html <- paste0(
+            "<h2>Gap Analysis &amp; Recommendations</h2>",
+            "<p><strong>", nrow(gaps), "</strong> justice dimension(s) require attention ",
+            "in the ", area, " context.</p>"
+          )
+          for (i in seq_len(nrow(gaps))) {
+            dim_name <- gaps$dimension[i]
+            recs <- recommendations[[dim_name]]
+            gap_html <- paste0(gap_html,
+              "<h3 class='", gaps$status[i], "'>", dim_name, " Justice</h3>",
+              "<ul>", paste0("<li>", recs, "</li>", collapse = ""), "</ul>"
+            )
+          }
+        } else {
+          gap_html <- paste0(
+            "<h2>Gap Analysis</h2>",
+            "<p class='green'>All justice dimensions are adequately addressed ",
+            "in the ", area, " context.</p>"
+          )
+        }
+
         html <- paste0(
           "<html><head><title>Justice Impact Assessment</title>",
           "<style>body{font-family:sans-serif;max-width:800px;margin:auto;padding:2rem}",
           ".green{color:#41ae76}.amber{color:#f0ad4e}.red{color:#d9534f}",
-          "table{border-collapse:collapse;width:100%}td,th{border:1px solid #ddd;padding:8px}</style>",
+          "table{border-collapse:collapse;width:100%}td,th{border:1px solid #ddd;padding:8px}",
+          "h3{margin-top:1.5rem}</style>",
           "</head><body>",
           "<h1>Justice Impact Assessment</h1>",
           "<p><strong>Intervention:</strong> ", input$intervention, "</p>",
-          "<p><strong>Target Area:</strong> ", input$target_area, "</p>",
+          "<p><strong>Target Area:</strong> ", area, "</p>",
+          "<p><strong>Regional Context:</strong> ", context, "</p>",
           "<p><strong>Date:</strong> ", Sys.Date(), "</p>",
-          "<table><tr><th>Dimension</th><th>Score</th><th>Status</th></tr>",
+          "<h2>Justice Scorecard</h2>",
+          "<table><tr><th>Dimension</th><th>Score</th><th>Status</th><th>Description</th></tr>",
           paste0(
             "<tr><td>", df$dimension, "</td>",
             "<td>", round(df$score * 100), "%</td>",
             "<td class='", df$status, "'>",
             ifelse(df$status == "green", "Adequate",
                    ifelse(df$status == "amber", "Needs Attention", "Critical Gap")),
-            "</td></tr>",
+            "</td>",
+            "<td>", df$description, "</td></tr>",
             collapse = ""
           ),
           "</table>",
-          "<p><em>Generated by NatureJust-EU</em></p>",
+          gap_html,
+          "<hr><p><em>Generated by NatureJust-EU &mdash; ",
+          "Sources: Kunming-Montreal GBF, EU environmental justice literature</em></p>",
           "</body></html>"
         )
         writeLines(html, file)

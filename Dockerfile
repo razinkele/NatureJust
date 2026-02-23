@@ -1,4 +1,4 @@
-FROM rocker/shiny-verse:4.3.2
+FROM rocker/shiny-verse:4.4.1
 
 RUN apt-get update && apt-get install -y \
     libgdal-dev \
@@ -12,13 +12,13 @@ RUN install2.r --error --skipinstalled \
     leaflet sf plotly \
     DT shinyWidgets \
     rnaturalearth rnaturalearthdata \
-    rmarkdown
+    htmltools eurostat giscoR renv
 
 COPY . /srv/shiny-server/NatureJust
 WORKDIR /srv/shiny-server/NatureJust
 
-RUN R -e "devtools::install_deps(dependencies = TRUE)"
-RUN R -e "devtools::install()"
+RUN R -e "renv::restore()"
+RUN R CMD INSTALL .
 
 EXPOSE 3838
 

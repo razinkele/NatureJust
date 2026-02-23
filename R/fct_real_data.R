@@ -16,6 +16,11 @@ mock_nuts2_data <- function() {
     })
 
     if (!is.null(indicators)) {
+      # Migrate old column name from pre-regenerated caches
+      if ("conservation_pressure" %in% names(indicators) &&
+          !"population_pressure" %in% names(indicators)) {
+        names(indicators)[names(indicators) == "conservation_pressure"] <- "population_pressure"
+      }
       nuts2 <- dplyr::left_join(
         nuts2,
         indicators,
@@ -29,7 +34,7 @@ mock_nuts2_data <- function() {
     fallbacks <- list(
       vulnerability        = function(n) round(runif(n, 0, 1), 2),
       fisheries_dep        = function(n) round(runif(n, 0, 1), 2),
-      conservation_pressure = function(n) round(runif(n, 0, 1), 2),
+      population_pressure = function(n) round(runif(n, 0, 1), 2),
       mpa_coverage         = function(n) round(runif(n, 0.05, 0.45), 2),
       poverty_rate         = function(n) round(runif(n, 0.1, 0.6), 2),
       income_disparity     = function(n) round(runif(n, 0.2, 0.8), 2),
@@ -47,7 +52,7 @@ mock_nuts2_data <- function() {
     }
 
     # Fill any remaining NAs with medians
-    for (col in c("vulnerability", "fisheries_dep", "conservation_pressure",
+    for (col in c("vulnerability", "fisheries_dep", "population_pressure",
                    "mpa_coverage", "poverty_rate", "income_disparity",
                    "offshore_wind", "coastal_tourism", "shipping_intensity",
                    "aquaculture", "bathing_quality", "blue_economy_jobs")) {
@@ -71,22 +76,22 @@ mock_nuts2_data <- function() {
       )
       # Fill unmapped regions with nearest-neighbour guess based on CNTR_CODE
       country_basins <- c(
-        "AT" = "Mediterranean", "BE" = "North Sea", "BG" = "Black Sea",
-        "CY" = "Mediterranean", "CZ" = "North Sea", "DE" = "North Sea",
+        "AT" = "Inland", "BE" = "North Sea", "BG" = "Black Sea",
+        "CY" = "Mediterranean", "CZ" = "Inland", "DE" = "North Sea",
         "DK" = "Baltic", "EE" = "Baltic", "EL" = "Mediterranean",
         "ES" = "Mediterranean", "FI" = "Baltic", "FR" = "Atlantic",
-        "HR" = "Mediterranean", "HU" = "Mediterranean", "IE" = "Atlantic",
+        "HR" = "Mediterranean", "HU" = "Inland", "IE" = "Atlantic",
         "IT" = "Mediterranean", "LT" = "Baltic", "LV" = "Baltic",
-        "LU" = "North Sea", "MT" = "Mediterranean", "NL" = "North Sea",
+        "LU" = "Inland", "MT" = "Mediterranean", "NL" = "North Sea",
         "NO" = "North Sea", "PL" = "Baltic", "PT" = "Atlantic",
         "RO" = "Black Sea", "SE" = "Baltic", "SI" = "Mediterranean",
-        "SK" = "Mediterranean"
+        "SK" = "Inland"
       )
       missing_basin <- is.na(nuts2$sea_basin)
       if (any(missing_basin)) {
         nuts2$sea_basin[missing_basin] <- country_basins[nuts2$CNTR_CODE[missing_basin]]
-        # Any still NA get "Atlantic" as default
-        nuts2$sea_basin[is.na(nuts2$sea_basin)] <- "Atlantic"
+        # Any still NA get "Inland" as default
+        nuts2$sea_basin[is.na(nuts2$sea_basin)] <- "Inland"
       }
     } else {
       sea_basins <- c("Baltic", "North Sea", "Atlantic", "Mediterranean", "Black Sea")
@@ -105,8 +110,8 @@ mock_nuts2_data <- function() {
         eco_map[, c("NUTS_ID", "ecosystem_type")],
         by = "NUTS_ID"
       )
-      # Fill unmapped with "Coastal" (most common)
-      nuts2$ecosystem_type[is.na(nuts2$ecosystem_type)] <- "Coastal"
+      # Fill unmapped with "Inland" (landlocked / non-coastal regions)
+      nuts2$ecosystem_type[is.na(nuts2$ecosystem_type)] <- "Inland"
     } else {
       ecosystem_types <- c("Coastal", "Pelagic", "Deep-sea", "Estuarine", "Reef")
       set.seed(42)
@@ -138,6 +143,9 @@ mock_nuts2_data <- function() {
 }
 
 #' Load MPA data with real Natura 2000 designation names
+#' NOTE: MPA geometries are synthetic (random rectangles in European waters).
+#' Real MPA boundaries from EEA are not yet integrated due to GeoPackage size.
+#' The designation names are real EU MPA categories, but locations are illustrative.
 #' Falls back to mock_mpa_data_fallback() on error
 #' @param n Number of MPAs to generate
 #' @return sf object with MPA polygons
@@ -346,6 +354,28 @@ mock_funding_matrix <- function() {
   }, error = function(e) {
     message("Real funding matrix unavailable. Using fallback.")
     mock_funding_matrix_fallback()
+  })
+}
+
+#' Load CFP alignment data for a conservation measure
+#' Falls back to mock_cfp_alignment_fallback() on error
+#' @param intervention Character name of the intervention
+#' @return Data frame with alignment status and detail columns
+#' @noRd
+mock_cfp_alignment <- function(intervention = "MPA Establishment") {
+  tryCatch({
+    all_cfp <- load_extdata("cfp_alignment.csv")
+    result <- all_cfp[all_cfp$intervention == intervention, ]
+
+    if (nrow(result) == 0) {
+      stop("No CFP alignment data for intervention: ", intervention)
+    }
+
+    result
+  }, error = function(e) {
+    message("Real CFP alignment data unavailable (", conditionMessage(e),
+            "). Using fallback.")
+    mock_cfp_alignment_fallback(intervention)
   })
 }
 

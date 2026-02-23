@@ -13,7 +13,7 @@ mock_nuts2_data_fallback <- function() {
   set.seed(42)
   europe$vulnerability <- round(runif(nrow(europe), 0, 1), 2)
   europe$fisheries_dep <- round(runif(nrow(europe), 0, 1), 2)
-  europe$conservation_pressure <- round(runif(nrow(europe), 0, 1), 2)
+  europe$population_pressure <- round(runif(nrow(europe), 0, 1), 2)
   europe$mpa_coverage <- round(runif(nrow(europe), 0.05, 0.45), 2)
   europe$poverty_rate <- round(runif(nrow(europe), 0.1, 0.6), 2)
   europe$income_disparity <- round(runif(nrow(europe), 0.2, 0.8), 2)
@@ -188,6 +188,33 @@ mock_funding_matrix_fallback <- function() {
   df[, c("Intervention", funds)]
 }
 
+#' Generate mock CFP alignment data (FALLBACK)
+#' @param intervention Character name of the intervention
+#' @return Data frame with alignment status and detail columns
+#' @noRd
+mock_cfp_alignment_fallback <- function(intervention = "MPA Establishment") {
+  set.seed(nchar(intervention))
+  alignment <- sample(c("aligned", "partial", "conflict"), 1,
+                      prob = c(0.4, 0.35, 0.25))
+  data.frame(
+    intervention = intervention,
+    alignment = alignment,
+    detail_1 = switch(alignment,
+      aligned = "Compatible with existing Total Allowable Catch (TAC) regulations",
+      partial = "May require adjustment to regional fishing effort limits",
+      conflict = "Conflicts with allocated fishing quotas in target area"),
+    detail_2 = switch(alignment,
+      aligned = "Supports CFP discard ban implementation",
+      partial = "Partial overlap with EMFAF fleet adaptation measures",
+      conflict = "Requires Article 11 MSFD/CFP coordination procedure"),
+    detail_3 = switch(alignment,
+      aligned = "Aligns with Maximum Sustainable Yield (MSY) objectives",
+      partial = "Needs coordination with Regional Advisory Councils",
+      conflict = "May trigger compensation obligations under EMFAF Article 17"),
+    stringsAsFactors = FALSE
+  )
+}
+
 #' Generate mock indicator time series (FALLBACK)
 #' @param region Character region name
 #' @return Data frame with indicator values over time with confidence bands
@@ -197,8 +224,8 @@ mock_indicator_timeseries_fallback <- function(region = "Mediterranean") {
   years <- 2010:2025
   indicators <- c(
     "Marine Biodiversity Index",
-    "Habitat Condition Score",
-    "Ecosystem Services Value",
+    "Habitat Condition",
+    "Ecosystem Services",
     "Community Wellbeing Index",
     "Governance Effectiveness",
     "Fish Stock Biomass",
@@ -211,8 +238,8 @@ mock_indicator_timeseries_fallback <- function(region = "Mediterranean") {
   # GBF target values for each indicator
   gbf_targets <- c(
     "Marine Biodiversity Index" = 0.75,
-    "Habitat Condition Score" = 0.80,
-    "Ecosystem Services Value" = 0.70,
+    "Habitat Condition" = 0.80,
+    "Ecosystem Services" = 0.70,
     "Community Wellbeing Index" = 0.65,
     "Governance Effectiveness" = 0.72,
     "Fish Stock Biomass" = 0.75,

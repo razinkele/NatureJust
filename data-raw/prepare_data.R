@@ -99,14 +99,40 @@ tryCatch({
       vulnerability = if (all(is.na(gdp_per_capita))) 0.5
                       else round(1 - (gdp_per_capita - min(gdp_per_capita, na.rm = TRUE)) /
                         (max(gdp_per_capita, na.rm = TRUE) - min(gdp_per_capita, na.rm = TRUE) + 1), 2),
-      # Conservation pressure: proxy from population density
-      conservation_pressure = if (all(is.na(population))) 0.5
+      # Population pressure: proxy from population density
+      population_pressure = if (all(is.na(population))) 0.5
                               else round((population - min(population, na.rm = TRUE)) /
-                                (max(population, na.rm = TRUE) - min(population, na.rm = TRUE) + 1), 2),
-      # Fisheries dependency: placeholder (country-level data mapped)
-      fisheries_dep = round(pmin(pmax(rnorm(n(), mean = 0.3, sd = 0.15), 0.05), 0.85), 2)
+                                (max(population, na.rm = TRUE) - min(population, na.rm = TRUE) + 1), 2)
     ) |>
-    select(NUTS_ID, vulnerability, fisheries_dep, conservation_pressure)
+    select(NUTS_ID, vulnerability, population_pressure)
+
+  # Fisheries dependency: map country-level landings to NUTS2 via CNTR_CODE
+  if (!is.null(fish_raw)) {
+    cat("  Mapping fish_ld_main landings to NUTS2...\n")
+    fish_country <- fish_raw |>
+      filter(nchar(as.character(geo)) == 2) |>
+      group_by(geo) |>
+      filter(TIME_PERIOD == max(TIME_PERIOD)) |>
+      summarise(fish_val = sum(values, na.rm = TRUE), .groups = "drop") |>
+      select(CNTR_CODE = geo, fish_val)
+    indicators$CNTR_CODE <- substr(indicators$NUTS_ID, 1, 2)
+    indicators <- dplyr::left_join(indicators, fish_country, by = "CNTR_CODE")
+    f_min <- min(indicators$fish_val, na.rm = TRUE)
+    f_max <- max(indicators$fish_val, na.rm = TRUE)
+    if (f_max > f_min) {
+      indicators$fisheries_dep <- round(
+        (indicators$fish_val - f_min) / (f_max - f_min), 2)
+    } else {
+      indicators$fisheries_dep <- 0.3
+    }
+    indicators$fisheries_dep[is.na(indicators$fisheries_dep)] <- 0.05
+    indicators$fish_val <- NULL
+    indicators$CNTR_CODE <- NULL
+  } else {
+    cat("  fish_ld_main unavailable, using rnorm() fallback for fisheries_dep\n")
+    indicators$fisheries_dep <- round(pmin(pmax(
+      rnorm(nrow(indicators), mean = 0.3, sd = 0.15), 0.05), 0.85), 2)
+  }
 
 
   # --- Real MPA coverage from sdg_14_10 (marine Natura 2000 %) ---
@@ -377,13 +403,13 @@ tryCatch({
 
 
   indicators <- indicators |>
-    select(NUTS_ID, vulnerability, fisheries_dep, conservation_pressure,
+    select(NUTS_ID, vulnerability, fisheries_dep, population_pressure,
            mpa_coverage, poverty_rate, income_disparity,
            offshore_wind, coastal_tourism, shipping_intensity,
            aquaculture, bathing_quality, blue_economy_jobs)
 
   # Replace NAs with median
-  for (col in c("vulnerability", "fisheries_dep", "conservation_pressure",
+  for (col in c("vulnerability", "fisheries_dep", "population_pressure",
                  "mpa_coverage", "poverty_rate", "income_disparity",
                  "offshore_wind", "coastal_tourism", "shipping_intensity",
                  "aquaculture", "bathing_quality", "blue_economy_jobs")) {
@@ -407,8 +433,8 @@ tryCatch({
   regions <- c("Baltic", "North Sea", "Atlantic", "Mediterranean", "Black Sea")
   indicators_list <- c(
     "Marine Biodiversity Index",
-    "Habitat Condition Score",
-    "Ecosystem Services Value",
+    "Habitat Condition",
+    "Ecosystem Services",
     "Community Wellbeing Index",
     "Governance Effectiveness"
   )
