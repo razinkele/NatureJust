@@ -22,6 +22,8 @@ load_extdata <- function(filename) {
     readRDS(path)
   } else if (ext == "csv") {
     utils::read.csv(path, stringsAsFactors = FALSE, check.names = FALSE)
+  } else if (ext == "json") {
+    jsonlite::fromJSON(path, simplifyDataFrame = TRUE)
   } else {
     stop("Unsupported extdata format: ", ext, call. = FALSE)
   }

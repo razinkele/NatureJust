@@ -211,3 +211,28 @@ test_that("mod_scenarios_server computes normalised weights", {
     expect_true("indicator" %in% names(df))
   })
 })
+
+test_that("mod_narratives_ui returns taglist", {
+  ui <- mod_narratives_ui("test")
+  expect_true(inherits(ui, "shiny.tag.list") || inherits(ui, "shiny.tag"))
+})
+
+test_that("mod_stakeholders_ui returns taglist", {
+  ui <- mod_stakeholders_ui("test")
+  expect_true(inherits(ui, "shiny.tag.list") || inherits(ui, "shiny.tag"))
+})
+
+test_that("mod_pathways_ui returns taglist", {
+  ui <- mod_pathways_ui("test")
+  expect_true(inherits(ui, "shiny.tag.list") || inherits(ui, "shiny.tag"))
+})
+
+test_that("load_narratives returns 6 narratives with required fields", {
+  narr <- load_narratives()
+  expect_equal(nrow(narr), 6)
+  expect_true(all(c("id", "name", "nff_position", "description",
+                     "governance_model", "source") %in% names(narr)))
+  expect_true("arcology" %in% narr$id)
+  expect_true("stewardship" %in% narr$id)
+  expect_true("weights" %in% names(narr))
+})

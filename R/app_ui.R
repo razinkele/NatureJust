@@ -32,6 +32,21 @@ app_ui <- function(request) {
         mod_home_ui("home")
       ),
       bslib::nav_panel(
+        title = "Narratives",
+        icon = bsicons::bs_icon("book-half"),
+        mod_narratives_ui("narratives")
+      ),
+      bslib::nav_panel(
+        title = "Stakeholders",
+        icon = bsicons::bs_icon("people"),
+        mod_stakeholders_ui("stakeholders")
+      ),
+      bslib::nav_panel(
+        title = "Pathways",
+        icon = bsicons::bs_icon("signpost-split"),
+        mod_pathways_ui("pathways")
+      ),
+      bslib::nav_panel(
         title = "Spatial Equity",
         icon = bsicons::bs_icon("map"),
         mod_spatial_ui("spatial")

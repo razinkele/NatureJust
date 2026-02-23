@@ -1085,3 +1085,102 @@ pre, .shiny-text-output {
   font-size: .78rem;
   color: var(--nj-stone);
 }
+
+/* ── Narratives Module ── */
+
+.narratives-hero {
+  text-align: center;
+  padding: 1.5rem 1rem 1rem;
+}
+.narratives-hero h2 {
+  font-family: var(--font-display, "Playfair Display", serif);
+  color: var(--nj-navy, #1B4965);
+  font-weight: 700;
+}
+
+.narrative-detail-body h6,
+.overflow-auto h6 {
+  color: var(--nj-navy, #1B4965);
+  font-weight: 600;
+}
+
+.nff-nt-hint {
+  font-size: 0.72rem;
+  color: #999;
+  margin-top: 0.3rem;
+  font-style: italic;
+}
+
+/* Dark mode */
+[data-bs-theme="dark"] .narratives-hero h2 {
+  color: #e0ddd8;
+}
+[data-bs-theme="dark"] .overflow-auto h6 {
+  color: #b8d4e3;
+}
+
+/* ── Stakeholders Module ── */
+
+.stakeholders-hero {
+  text-align: center;
+  padding: 1.5rem 1rem 1rem;
+}
+.stakeholders-hero h2 {
+  font-family: var(--font-display, "Playfair Display", serif);
+  color: var(--nj-navy, #1B4965);
+  font-weight: 700;
+}
+
+.nff-stakeholder-mode .nff-position-marker {
+  opacity: 0.5;
+}
+.nff-stakeholder-mode .nff-position-ring {
+  opacity: 0.3;
+}
+
+.stakeholder-dot {
+  transition: opacity 0.2s;
+}
+.stakeholder-dot:hover {
+  opacity: 1 !important;
+  r: 7;
+}
+.stakeholder-label {
+  pointer-events: none;
+}
+
+[data-bs-theme="dark"] .stakeholders-hero h2 {
+  color: #e0ddd8;
+}
+[data-bs-theme="dark"] .stakeholder-label {
+  opacity: 0.85;
+}
+
+/* ── Pathways Module ── */
+
+.pathways-hero {
+  text-align: center;
+  padding: 1.5rem 1rem 1rem;
+}
+.pathways-hero h2 {
+  font-family: var(--font-display, "Playfair Display", serif);
+  color: var(--nj-navy, #1B4965);
+  font-weight: 700;
+}
+
+.pathway-line {
+  transition: opacity 0.3s;
+}
+.pathway-anim-dot {
+  transition: cx 0.15s ease-out, cy 0.15s ease-out;
+}
+
+[data-bs-theme="dark"] .pathways-hero h2 {
+  color: #e0ddd8;
+}
+[data-bs-theme="dark"] .pathway-line {
+  stroke: #b8d4e3;
+}
+[data-bs-theme="dark"] .pathway-label {
+  fill: #e0ddd8 !important;
+}

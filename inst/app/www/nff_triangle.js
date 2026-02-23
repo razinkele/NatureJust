@@ -308,7 +308,8 @@ function initTriangle(container) {
       '<div class="nff-nt-name">' + n.name + '</div>' +
       '<div class="nff-nt-pos">' + n.pos + '</div>' +
       '<div class="nff-nt-desc">' + n.desc + '</div>' +
-      '<div class="nff-nt-gov"><strong>Governance:</strong> ' + n.gov + '</div>'
+      '<div class="nff-nt-gov"><strong>Governance:</strong> ' + n.gov + '</div>' +
+      '<div class="nff-nt-hint">Double-click for full details</div>'
     ).addClass('visible');
     svg.querySelector('.nff-narrative-marker[data-narrative="' +
       $(this).data('narrative') + '"]').classList.add('active');
@@ -356,4 +357,141 @@ function initTriangle(container) {
       }
     });
   }
+
+  /* ────── Narrative marker double-click → navigate to Narratives tab ────── */
+
+  $(svg).on('dblclick', '.nff-narrative-hit', function(e) {
+    e.stopPropagation();
+    var narrativeId = $(this).data('narrative');
+    if (typeof Shiny !== 'undefined' && typeof Shiny.setInputValue === 'function') {
+      Shiny.setInputValue('navigate_to_narrative', narrativeId, {priority: 'event'});
+    }
+  });
 }
+
+/* ──────────────── Global Shiny message handlers ──────────────── */
+
+$(document).ready(function() {
+  if (typeof Shiny !== 'undefined') {
+    // Generic tab navigation handler (used by mod_narratives "Run as Scenario")
+    Shiny.addCustomMessageHandler('nj-nav-select', function(msg) {
+      NatureJust.navigateTo(msg.tab);
+    });
+
+    /* ────── Stakeholder dot rendering ────── */
+
+    var GROUP_COLORS = {
+      'Government':                '#1B4965',
+      'Industry':                  '#5FA8D3',
+      'Civil Society':             '#41ae76',
+      'Academia':                  '#9467bd',
+      'Indigenous/Local Community': '#E07A5F',
+      'NGO':                       '#F2CC8F',
+      'Other':                     '#9C9587'
+    };
+
+    Shiny.addCustomMessageHandler('stakeholder-add-dot', function(msg) {
+      var xy = baryToXY(msg.NfN, msg.NfS, msg.NaC);
+      var color = GROUP_COLORS[msg.group] || '#666';
+
+      // Find the stakeholder triangle's SVG (any .nff-stakeholder-mode SVG)
+      var svgEl = document.querySelector('.nff-stakeholder-mode .nff-svg');
+      if (!svgEl) return;
+
+      var ring = makeSVG('circle', {
+        cx: xy.x, cy: xy.y, r: 9,
+        fill: 'none', stroke: color, 'stroke-width': 2,
+        opacity: 0.5, 'class': 'stakeholder-dot-ring'
+      });
+      var dot = makeSVG('circle', {
+        cx: xy.x, cy: xy.y, r: 5,
+        fill: color, opacity: 0.85, 'class': 'stakeholder-dot'
+      });
+      var label = makeSVG('text', {
+        x: xy.x + 12, y: xy.y + 4,
+        'font-size': '9', fill: color, opacity: 0.7,
+        'class': 'stakeholder-label'
+      });
+      label.textContent = msg.name.substring(0, 14);
+
+      svgEl.appendChild(ring);
+      svgEl.appendChild(dot);
+      svgEl.appendChild(label);
+    });
+
+    Shiny.addCustomMessageHandler('stakeholder-clear-dots', function() {
+      var svgEl = document.querySelector('.nff-stakeholder-mode .nff-svg');
+      if (!svgEl) return;
+      $(svgEl).find('.stakeholder-dot, .stakeholder-dot-ring, .stakeholder-label').remove();
+    });
+
+    /* ────── Pathway rendering ────── */
+
+    var pathwayElements = [];
+    var currentPathway = null;
+
+    Shiny.addCustomMessageHandler('pathway-draw', function(msg) {
+      var svgEl = document.querySelector('.nff-pathway-mode .nff-svg');
+      if (!svgEl) return;
+
+      var startXY = baryToXY(msg.now_NfN, msg.now_NfS, msg.now_NaC);
+      var endXY   = baryToXY(msg.future_NfN, msg.future_NfS, msg.future_NaC);
+
+      var path = makeSVG('line', {
+        x1: startXY.x, y1: startXY.y,
+        x2: endXY.x, y2: endXY.y,
+        stroke: '#1B4965', 'stroke-width': 2.5,
+        'stroke-dasharray': '6,4', opacity: 0.7,
+        'class': 'pathway-line'
+      });
+      var nowMarker = makeSVG('rect', {
+        x: startXY.x - 6, y: startXY.y - 6,
+        width: 12, height: 12,
+        fill: '#d9534f', stroke: '#fff', 'stroke-width': 1.5,
+        rx: 2, 'class': 'pathway-now'
+      });
+      var futureMarker = makeSVG('circle', {
+        cx: endXY.x, cy: endXY.y, r: 8,
+        fill: '#41ae76', stroke: '#fff', 'stroke-width': 1.5,
+        'class': 'pathway-future'
+      });
+      var nowLabel = makeSVG('text', {
+        x: startXY.x, y: startXY.y - 12,
+        'text-anchor': 'middle', 'font-size': '10',
+        fill: '#d9534f', 'class': 'pathway-label'
+      });
+      nowLabel.textContent = 'Now';
+      var futureLabel = makeSVG('text', {
+        x: endXY.x, y: endXY.y - 14,
+        'text-anchor': 'middle', 'font-size': '10',
+        fill: '#41ae76', 'class': 'pathway-label'
+      });
+      futureLabel.textContent = 'Future';
+      var animDot = makeSVG('circle', {
+        cx: startXY.x, cy: startXY.y, r: 6,
+        fill: '#F2CC8F', stroke: '#1B4965', 'stroke-width': 1.5,
+        'class': 'pathway-anim-dot'
+      });
+
+      var els = [path, nowMarker, futureMarker, nowLabel, futureLabel, animDot];
+      els.forEach(function(el) { svgEl.appendChild(el); });
+      pathwayElements = pathwayElements.concat(els);
+      currentPathway = { start: startXY, end: endXY, animDot: animDot };
+    });
+
+    Shiny.addCustomMessageHandler('pathway-animate', function(msg) {
+      if (!currentPathway) return;
+      var t = Math.max(0, Math.min(1, msg.progress));
+      var x = currentPathway.start.x + t * (currentPathway.end.x - currentPathway.start.x);
+      var y = currentPathway.start.y + t * (currentPathway.end.y - currentPathway.start.y);
+      currentPathway.animDot.setAttribute('cx', x);
+      currentPathway.animDot.setAttribute('cy', y);
+    });
+
+    Shiny.addCustomMessageHandler('pathway-clear', function() {
+      pathwayElements.forEach(function(el) { el.remove(); });
+      pathwayElements = [];
+      currentPathway = null;
+    });
+  }
+});

@@ -9,11 +9,21 @@ app_server <- function(input, output, session) {
   nff_weights <- reactiveVal(c(NfN = 34, NfS = 33, NaC = 33))
 
   mod_home_server("home", nff_weights = nff_weights)
+  mod_narratives_server("narratives", nff_weights = nff_weights)
+  mod_stakeholders_server("stakeholders", nff_weights = nff_weights)
+  mod_pathways_server("pathways", nff_weights = nff_weights)
   mod_spatial_server("spatial", nff_weights = nff_weights)
   mod_scenarios_server("scenarios", nff_weights = nff_weights)
   mod_justice_server("justice")
   mod_governance_server("governance")
   mod_dashboard_server("dashboard")
+
+  # ---- Navigate to narrative from triangle double-click ----
+  observeEvent(input$navigate_to_narrative, {
+    updateSelectInput(session, "narratives-narrative_id",
+                      selected = input$navigate_to_narrative)
+    bslib::nav_select("main_nav", "Narratives", session = session)
+  })
 
   # ---- About modal ----
   observeEvent(input$show_about, {

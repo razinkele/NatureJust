@@ -1,0 +1,164 @@
+[
+  {
+    "id": "arcology",
+    "name": "Arcology",
+    "nff_position": "Nature for Nature corner",
+    "weights": { "NfN": 100, "NfS": 0, "NaC": 0 },
+    "description": "A future where marine ecosystems are governed primarily to preserve and restore intrinsic biodiversity value. Large-scale ocean wilderness areas are established as strictly protected no-take zones, allowing depleted ecosystems to recover autonomously. Human activities are excluded from ecologically critical areas, prioritizing species and habitat recovery over extractive use.",
+    "governance_model": "Top-down regulatory governance with legally binding protection mandates. International treaties enforce high-seas marine protected area networks with permanent no-take designations and independent scientific oversight bodies.",
+    "key_policies": [
+      "Designation of 50%+ of ocean area as strictly protected no-take marine reserves",
+      "Moratorium on deep-sea mining and bottom-trawling in all protected waters",
+      "Legally binding high-seas biodiversity treaty (BBNJ) with strong compliance mechanisms",
+      "Satellite-based vessel monitoring and AI-driven enforcement of exclusion zones"
+    ],
+    "marine_examples": [
+      "Papah\u0101naumoku\u0101kea Marine National Monument (USA) \u2014 one of the world's largest fully protected marine areas covering 1.5 million km\u00b2 with no extractive activities permitted",
+      "Ross Sea Marine Protected Area (CCAMLR) \u2014 the largest MPA in the Southern Ocean with a 1.55 million km\u00b2 no-take general protection zone",
+      "Chagos Archipelago Marine Protected Area (UK) \u2014 a 640,000 km\u00b2 no-take zone in the Indian Ocean demonstrating large-scale pelagic protection"
+    ],
+    "trade_offs": [
+      "Displacement of fishing communities from traditional grounds without adequate livelihood alternatives",
+      "Enforcement costs escalate with remoteness, requiring substantial long-term public investment",
+      "Potential conflict with food security goals in coastal developing nations dependent on marine protein",
+      "Risk of 'paper parks' if political will for enforcement diminishes over time"
+    ],
+    "gbf_targets_prioritized": [3, 2, 1, 4],
+    "source": "Dur\u00e1n et al. (2023); Pereira et al. (2020) Nature Futures Framework"
+  },
+  {
+    "id": "sharing",
+    "name": "Sharing through Sparing",
+    "nff_position": "Nature for Nature \u2013 Nature for Society edge",
+    "weights": { "NfN": 50, "NfS": 50, "NaC": 0 },
+    "description": "A future balancing conservation ambitions with sustainable resource use through spatial zoning and science-based harvest limits. Dedicated marine reserves 'spare' biodiversity-rich areas from extraction, while adjacent zones are managed for optimal sustainable yield. The approach integrates ecosystem-based fisheries management with robust stock assessments.",
+    "governance_model": "Science-advisory governance with integrated spatial planning. Regional fisheries management organizations and national agencies co-manage zones using adaptive harvest control rules informed by regular stock assessments and ecosystem modeling.",
+    "key_policies": [
+      "Maximum Sustainable Yield (MSY) targets for all commercially exploited fish stocks with precautionary buffers",
+      "Marine Spatial Planning directives that designate core conservation zones, buffer zones, and sustainable-use areas",
+      "Transferable fishing quotas allocated through transparent, science-based Total Allowable Catch systems",
+      "Mandatory ecosystem impact assessments before licensing any new marine extractive activity"
+    ],
+    "marine_examples": [
+      "EU Common Fisheries Policy MSY mandate \u2014 legally requires all EU fish stocks to be managed at or below MSY by 2020, with multiannual plans for mixed fisheries",
+      "Great Barrier Reef Marine Park zoning (Australia) \u2014 a multi-use zoning system with 33% no-take areas alongside regulated fishing and tourism zones",
+      "Norwegian integrated ocean management plans \u2014 spatial plans for the Barents Sea balancing petroleum extraction, fisheries, and marine protection"
+    ],
+    "trade_offs": [
+      "MSY-based management may underestimate ecosystem interactions, leading to cascading effects on non-target species",
+      "Spatial zoning can create winners and losers among fishing fleets depending on historic access rights",
+      "High data requirements for stock assessments limit applicability in data-poor fisheries",
+      "Tension between short-term economic optimization and long-term ecological recovery timelines"
+    ],
+    "gbf_targets_prioritized": [3, 5, 6, 1],
+    "source": "Dur\u00e1n et al. (2023); Hilborn (2007) Managing fisheries is managing people"
+  },
+  {
+    "id": "optimizing",
+    "name": "Optimizing Nature",
+    "nff_position": "Nature for Society corner",
+    "weights": { "NfN": 0, "NfS": 100, "NaC": 0 },
+    "description": "A techno-optimist future where marine resources are maximized through innovation, precision aquaculture, and blue economy growth. Advanced monitoring, genetic improvement of farmed species, offshore renewable energy, and biotechnology drive efficient use of ocean resources. Nature is valued primarily for the services and economic returns it provides to society.",
+    "governance_model": "Market-driven governance with strong public-private partnerships. Regulatory sandboxes enable rapid technology deployment while performance-based environmental standards replace prescriptive rules. Blue economy investment frameworks channel capital toward scalable marine enterprises.",
+    "key_policies": [
+      "Blue Economy Growth Strategy with streamlined permitting for offshore aquaculture and renewable energy installations",
+      "Performance-based environmental standards for marine industries replacing prescriptive input controls",
+      "Public investment in marine biotechnology R&D, precision aquaculture genetics, and digital ocean monitoring",
+      "Payments for Ecosystem Services (PES) schemes monetizing carbon sequestration, coastal protection, and nutrient cycling"
+    ],
+    "marine_examples": [
+      "Norway's offshore aquaculture licenses \u2014 development permits for exposed ocean farming sites using submersible cage technology to scale salmon production beyond fjord carrying capacities",
+      "North Sea offshore wind farm clusters (EU) \u2014 large-scale renewable energy zones with co-location of mariculture, demonstrating multi-use ocean platforms",
+      "Singapore's vertical ocean farms and cellular aquaculture \u2014 high-tech urban seafood production combining recirculating systems with alternative protein development"
+    ],
+    "trade_offs": [
+      "Technology-intensive approaches may concentrate benefits among capital-rich actors, increasing inequality",
+      "Offshore aquaculture expansion risks pollution, disease transmission to wild stocks, and habitat disturbance",
+      "Overemphasis on economic optimization may neglect non-monetizable biodiversity and cultural values",
+      "Dependence on technological solutions creates vulnerability to infrastructure failure and cybersecurity risks"
+    ],
+    "gbf_targets_prioritized": [11, 6, 7, 14],
+    "source": "Dur\u00e1n et al. (2023); Bennett et al. (2021) Blue growth and blue justice"
+  },
+  {
+    "id": "commons",
+    "name": "Innovative Commons",
+    "nff_position": "Nature for Society \u2013 Nature as Culture edge",
+    "weights": { "NfN": 0, "NfS": 50, "NaC": 50 },
+    "description": "A future centered on participatory co-management and community-based governance of shared marine resources. Local fishing cooperatives, territorial use rights, and community-led ecological restoration projects ensure that both livelihoods and cultural ties to the sea are maintained. Innovation emerges from collective action rather than top-down regulation or market forces.",
+    "governance_model": "Polycentric co-management with nested governance scales. Local resource user associations hold primary management authority over near-shore commons, coordinated through regional councils and supported by legal frameworks that recognize customary tenure and community-based monitoring.",
+    "key_policies": [
+      "Territorial Use Rights in Fisheries (TURFs) granting exclusive access and management responsibility to local communities",
+      "Community-based marine area management with legally recognized local governance bodies and bylaws",
+      "Cooperative marketing and fair-trade certification systems linking small-scale producers to ethical supply chains",
+      "Participatory ecological restoration programs combining scientific expertise with local ecological knowledge"
+    ],
+    "marine_examples": [
+      "Chilean TURF-reserve system (AMERB) \u2014 over 700 community-managed benthic territories combining exclusive harvest rights with no-take reference areas for lolo, limpets, and kelp",
+      "Locally Managed Marine Areas in Fiji and the Pacific \u2014 networks of community-governed reef closures (tabu areas) integrated with periodic harvest and adaptive management",
+      "Japanese fishery cooperative associations (Gyoky\u014d) \u2014 centuries-old community-based management of coastal fisheries with collective quota setting and habitat stewardship"
+    ],
+    "trade_offs": [
+      "Collective action challenges may lead to governance failures in heterogeneous or large-scale communities",
+      "TURFs can exclude newcomers and migrant fishers, creating equity issues around access rights",
+      "Community-based management may lack capacity for addressing cross-boundary or highly migratory species",
+      "Scaling up local innovations to regional or national levels requires institutional bridging that is often absent"
+    ],
+    "gbf_targets_prioritized": [22, 5, 11, 14],
+    "source": "Dur\u00e1n et al. (2023); Ostrom (1990) Governing the Commons; Gelcich et al. (2010)"
+  },
+  {
+    "id": "stewardship",
+    "name": "Reciprocal Stewardship",
+    "nff_position": "Nature as Culture corner",
+    "weights": { "NfN": 0, "NfS": 0, "NaC": 100 },
+    "description": "A future where marine governance is rooted in cultural heritage, traditional ecological knowledge (TEK), and relational values between people and the sea. Small-scale artisanal fisheries are prioritized as carriers of intergenerational knowledge. Governance centers on reciprocity \u2014 communities care for marine ecosystems as culturally embedded stewards, and the sea in turn sustains cultural identity and wellbeing.",
+    "governance_model": "Heritage-based governance grounded in customary marine tenure and Indigenous rights frameworks. Legal pluralism recognizes TEK alongside Western science in management decisions. Cultural seascape designations protect both biological and cultural heritage of marine areas.",
+    "key_policies": [
+      "Formal recognition of Indigenous and community-conserved marine areas (ICCAs) in national legislation",
+      "Integration of Traditional Ecological Knowledge in stock assessments and environmental monitoring programs",
+      "Preferential access rights for small-scale artisanal fisheries in coastal zones as per FAO SSF Guidelines",
+      "UNESCO-style Cultural Seascape designations protecting biocultural marine heritage sites"
+    ],
+    "marine_examples": [
+      "Sasi laut marine tenure in Maluku, Indonesia \u2014 customary periodic reef closures governed by community elders that regulate harvest of trochus, sea cucumber, and reef fish",
+      "M\u0101ori customary fishing rights and r\u0101hui (New Zealand) \u2014 legally recognized temporary closures and species bans under the Treaty of Waitangi settlement framework",
+      "Mediterranean small-scale fisheries (cofrad\u00edas in Spain) \u2014 centuries-old fishing brotherhoods managing inshore resources through collective rules, seasonal closures, and shared ecological knowledge"
+    ],
+    "trade_offs": [
+      "TEK-based governance may struggle to address novel threats like ocean acidification or invasive species outside historical experience",
+      "Legal recognition of customary tenure can conflict with state sovereignty claims and existing regulatory frameworks",
+      "Risk of romanticizing traditional practices while overlooking internal community power asymmetries",
+      "Cultural preservation goals may resist necessary adaptation to climate-driven ecosystem shifts"
+    ],
+    "gbf_targets_prioritized": [22, 21, 13, 3],
+    "source": "Dur\u00e1n et al. (2023); Pereira et al. (2020); FAO (2015) Voluntary Guidelines for SSF"
+  },
+  {
+    "id": "dynamic",
+    "name": "Dynamic Natures",
+    "nff_position": "Nature as Culture \u2013 Nature for Nature edge",
+    "weights": { "NfN": 50, "NfS": 0, "NaC": 50 },
+    "description": "A future integrating biocultural conservation with ecosystem-based management, recognizing that biodiversity and cultural diversity are co-produced. Traditional fishing rights coexist with scientifically informed conservation measures. Dynamic, adaptive management responds to both ecological change and evolving cultural relationships with the sea, emphasizing resilience over static protection.",
+    "governance_model": "Adaptive co-governance blending scientific monitoring with Indigenous and local knowledge systems. Management boundaries and rules shift in response to ecological and social signals. Rights-based approaches ensure both biodiversity outcomes and cultural continuity through flexible institutional arrangements.",
+    "key_policies": [
+      "Adaptive ecosystem-based marine management with dynamic spatial closures responding to real-time ecological indicators",
+      "Biocultural heritage marine areas co-governed by Indigenous communities and conservation agencies",
+      "Rights-based fisheries management integrating customary tenure with science-informed catch limits",
+      "Climate adaptation corridors allowing mobile species protection zones to shift with changing ocean conditions"
+    ],
+    "marine_examples": [
+      "Great Bear Sea Indigenous Protected and Conserved Areas (Canada) \u2014 First Nations-led marine planning combining traditional governance with ecosystem-based management across 100,000+ km\u00b2 of coastal waters",
+      "Australian Indigenous Rangers sea country programs \u2014 Indigenous land and sea management combining traditional burning, turtle monitoring, and modern surveillance to manage marine biodiversity on customary estates",
+      "Galician marisqueo a pie (Spain) \u2014 women-led intertidal shellfish harvesting cooperatives combining traditional knowledge of species biology with scientific monitoring and adaptive seasonal closures"
+    ],
+    "trade_offs": [
+      "Dynamic management requires sophisticated real-time monitoring infrastructure that may not be universally available",
+      "Integrating multiple knowledge systems creates epistemic tensions and requires skilled intercultural facilitation",
+      "Adaptive rules may create uncertainty for industries requiring stable long-term investment conditions",
+      "Balancing conservation strictness with cultural access rights demands ongoing negotiation and conflict resolution capacity"
+    ],
+    "gbf_targets_prioritized": [3, 1, 22, 21],
+    "source": "Dur\u00e1n et al. (2023); Sterling et al. (2017) Biocultural approaches to well-being; Ban et al. (2018)"
+  }
+]

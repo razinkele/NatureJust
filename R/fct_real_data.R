@@ -412,3 +412,35 @@ load_indicator_timeseries <- function(region = "Mediterranean") {
     result
   })
 }
+
+#' Load narrative data (Durán et al. 2023)
+#'
+#' Returns a data.frame of 6 illustrative NFF narratives with
+#' structured governance, policy, and marine example data.
+#'
+#' @return data.frame with columns: id, name, nff_position, weights,
+#'   description, governance_model, key_policies, marine_examples,
+#'   trade_offs, gbf_targets_prioritized, source
+#' @noRd
+load_narratives <- function() {
+  tryCatch({
+    narr <- load_extdata("narratives.json")
+    attr(narr, "provenance") <- "json"
+    narr
+  }, error = function(e) {
+    message("Narrative data unavailable (", conditionMessage(e),
+            "). Using minimal fallback.")
+    data.frame(
+      id = c("arcology", "sharing", "optimizing", "commons", "stewardship", "dynamic"),
+      name = c("Arcology", "Sharing through Sparing", "Optimizing Nature",
+               "Innovative Commons", "Reciprocal Stewardship", "Dynamic Natures"),
+      nff_position = c("Nature for Nature corner", "NfN-NfS edge",
+                        "Nature for Society corner", "NfS-NaC edge",
+                        "Nature as Culture corner", "NaC-NfN edge"),
+      description = rep("Narrative data unavailable. See Duran et al. (2023).", 6),
+      governance_model = rep("", 6),
+      source = rep("Duran et al. (2023)", 6),
+      stringsAsFactors = FALSE
+    )
+  })
+}
