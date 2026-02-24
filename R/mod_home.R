@@ -114,10 +114,17 @@ mod_home_ui <- function(id) {
 #' @noRd
 mod_home_server <- function(id, nff_weights = NULL) {
   moduleServer(id, function(input, output, session) {
+    # Flag prevents echo loop between triangle click and external sync
+    syncing_from_external <- reactiveVal(FALSE)
+
     # Receive NFF position from JS triangle interaction
     observeEvent(input$nff_position, {
       pos <- input$nff_position
       if (!is.null(pos) && !is.null(nff_weights)) {
+        if (isolate(syncing_from_external())) {
+          syncing_from_external(FALSE)
+          return()
+        }
         nff_weights(c(
           NfN = as.integer(pos$NfN),
           NfS = as.integer(pos$NfS),
@@ -130,6 +137,7 @@ mod_home_server <- function(id, nff_weights = NULL) {
     observe({
       if (is.null(nff_weights)) return()
       w <- nff_weights()
+      syncing_from_external(TRUE)
       session$sendCustomMessage("nff-update-position", list(
         NfN = w[["NfN"]], NfS = w[["NfS"]], NaC = w[["NaC"]]
       ))

@@ -290,3 +290,88 @@ test_that("mod_home_server updates nff_weights from triangle position", {
     expect_equal(shared_weights()[["NaC"]], 20)
   })
 })
+
+test_that("mod_pathways_server normalizes now_pos to sum=100", {
+  testServer(mod_pathways_server, {
+    session$setInputs(
+      now_nfn = 30, now_nfs = 50, now_nac = 20,
+      future_preset = "custom",
+      future_nfn = 40, future_nfs = 30, future_nac = 30,
+      timeline = 2025
+    )
+    pos <- now_pos()
+    expect_equal(sum(pos), 100)
+    expect_equal(pos[["NfN"]], 30)
+    expect_equal(pos[["NfS"]], 50)
+
+    # Verify normalization when inputs don't sum to 100
+    # round() can yield ±1 due to independent per-element rounding
+    session$setInputs(now_nfn = 60, now_nfs = 60, now_nac = 60)
+    pos2 <- now_pos()
+    expect_true(abs(sum(pos2) - 100) <= 1)
+    expect_equal(pos2[["NfN"]], pos2[["NfS"]])  # all equal inputs → equal outputs
+
+    # Verify future_pos uses NARRATIVE_PRESETS
+    session$setInputs(future_preset = "arcology")
+    fp <- future_pos()
+    expect_equal(fp[["NfN"]], 100)
+    expect_equal(fp[["NfS"]], 0)
+  })
+})
+
+test_that("mod_justice_server loads scores and applies area modifiers", {
+  testServer(mod_justice_server, {
+    session$setInputs(
+      intervention = "MPA Establishment",
+      target_area = "Baltic Sea"
+    )
+    df <- scores()
+    expect_s3_class(df, "data.frame")
+    expect_equal(nrow(df), 4)
+    expect_true(all(c("dimension", "score", "status", "description") %in% names(df)))
+    expect_true(all(df$score >= 0 & df$score <= 1))
+    expect_true(all(df$status %in% c("green", "amber", "red")))
+  })
+})
+
+test_that("mod_governance_server loads funding matrix and tenet scores", {
+  testServer(mod_governance_server, {
+    # Funding data is loaded once as a reactive
+    df <- funding_data()
+    expect_s3_class(df, "data.frame")
+    expect_true("intervention" %in% names(df))
+    expect_true("EMFAF" %in% names(df))
+
+    # Tenet scores load for a given intervention
+    session$setInputs(tenet_intervention = "MPA Establishment")
+    tenets <- tenet_scores()
+    expect_s3_class(tenets, "data.frame")
+    expect_equal(nrow(tenets), 10)
+    expect_true(all(tenets$score >= 0 & tenets$score <= 1))
+
+    # CFP alignment loads for a given measure
+    session$setInputs(cfp_measure = "MPA Establishment")
+    cfp <- cfp_data()
+    expect_s3_class(cfp, "data.frame")
+    expect_true(cfp$alignment[1] %in% c("aligned", "partial", "conflict"))
+  })
+})
+
+test_that("mod_scenarios_server HELCOM indicators included only for Baltic", {
+  testServer(mod_scenarios_server, {
+    session$setInputs(nfn = 34, nfs = 33, nac = 33,
+                      region = "Baltic", horizon = "2050")
+    baltic_df <- current_data()
+    baltic_indicators <- unique(baltic_df$indicator)
+    expect_true("Contaminant Status" %in% baltic_indicators)
+    expect_true("Eutrophication Status" %in% baltic_indicators)
+    expect_true("Underwater Noise" %in% baltic_indicators)
+
+    session$setInputs(region = "Mediterranean")
+    med_df <- current_data()
+    med_indicators <- unique(med_df$indicator)
+    expect_false("Contaminant Status" %in% med_indicators)
+    expect_false("Eutrophication Status" %in% med_indicators)
+    expect_false("Underwater Noise" %in% med_indicators)
+  })
+})

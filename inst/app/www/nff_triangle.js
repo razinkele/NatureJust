@@ -7,13 +7,16 @@ var NatureJust = NatureJust || {};
 /* ──────────────── Navigation helper ──────────────── */
 
 NatureJust.navigateTo = function(target) {
-  if (typeof Shiny !== 'undefined') {
-    Shiny.setInputValue('main_nav', target, {priority: 'event'});
-  }
+  // Navigate by clicking the matching navbar link (bslib::page_navbar)
   document.querySelectorAll('.navbar-nav .nav-link').forEach(function(link) {
     if (link.textContent.trim().indexOf(target) !== -1) link.click();
   });
 };
+
+// IIFE wraps internal helpers to avoid global namespace pollution.
+// Only NatureJust (above) is intentionally global.
+(function() {
+'use strict';
 
 /* ──────────────── Triangle geometry ──────────────── */
 
@@ -537,3 +540,5 @@ $(document).ready(function() {
     });
   }
 });
+
+})(); // end IIFE

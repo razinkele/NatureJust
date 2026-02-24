@@ -160,7 +160,8 @@ mock_justice_scores_fallback <- function(intervention = "MPA Establishment") {
       "Meaningful participation of affected stakeholders in decision-making",
       "Recognition of diverse knowledge systems and cultural values",
       "Remediation of historical environmental injustices"
-    )
+    ),
+    stringsAsFactors = FALSE
   )
 }
 
@@ -184,7 +185,8 @@ mock_elliott_tenets_fallback <- function(intervention = "MPA Establishment") {
       scores >= 0.4 ~ "amber",
       TRUE ~ "red"
     ),
-    description = paste("Assessment of", tolower(tenets), "for", intervention)
+    description = paste("Assessment of", tolower(tenets), "for", intervention),
+    stringsAsFactors = FALSE
   )
 }
 
@@ -302,7 +304,7 @@ mock_indicator_timeseries_fallback <- function(region = "Mediterranean") {
 
     trend <- cumsum(rnorm(length(years), mean = 0.01, sd = 0.03))
     value <- 0.5 + trend
-    gbf_val <- if (ind %in% names(gbf_targets)) gbf_targets[[ind]] else 0.70
+    gbf_val <- if (ind %in% names(gbf_targets)) gbf_targets[[ind]] else NA_real_
     data.frame(
       year = years,
       indicator = ind,
@@ -310,7 +312,8 @@ mock_indicator_timeseries_fallback <- function(region = "Mediterranean") {
       lower = round(value - abs(rnorm(length(years), 0.05, 0.02)), 3),
       upper = round(value + abs(rnorm(length(years), 0.05, 0.02)), 3),
       region = region,
-      gbf_target = gbf_val
+      gbf_target = gbf_val,
+      stringsAsFactors = FALSE
     )
   }))
 }
