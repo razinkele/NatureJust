@@ -1,3 +1,6 @@
+# Shiny Server compatibility: resolve inst/ paths without golem
+app_sys <- function(...) file.path(getwd(), "inst", ...)
+
 #' The application User-Interface
 #'
 #' @param request Internal parameter for `{shiny}`.
@@ -90,13 +93,14 @@ app_ui <- function(request) {
   )
 }
 
-#' Add external Resources to the Application
+#' Add external resources to the application
 #'
+#' Self-contained: registers the www/ resource path and returns all
+#' head tags (favicon, fonts, CSS, JS) without requiring golem.
 #' @import shiny
-#' @importFrom golem add_resource_path activate_js bundle_resources
 #' @noRd
 golem_add_external_resources <- function() {
-  add_resource_path("www", app_sys("app/www"))
+  shiny::addResourcePath("www", app_sys("app/www"))
   tags$head(
     tags$link(
       rel = "icon", type = "image/svg+xml",
@@ -112,9 +116,18 @@ golem_add_external_resources <- function() {
         "%3C/svg%3E"
       )
     ),
-    bundle_resources(
-      path = app_sys("app/www"),
-      app_title = "NatureJust-EU"
-    )
+    tags$link(
+      rel = "preconnect", href = "https://fonts.googleapis.com"
+    ),
+    tags$link(
+      rel = "preconnect", href = "https://fonts.gstatic.com", crossorigin = NA
+    ),
+    tags$link(
+      rel = "stylesheet",
+      href = "https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Figtree:wght@300;400;500;600;700&display=swap"
+    ),
+    tags$link(rel = "stylesheet", href = "www/custom.css"),
+    tags$script(src = "www/nff_triangle.js"),
+    tags$title("NatureJust-EU")
   )
 }

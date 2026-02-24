@@ -4,7 +4,7 @@
 #
 # Prerequisites:
 #   - Passwordless SSH access to laguna.ku.lt as razinka
-#   - R packages installed on server (see install_deps below)
+#   - R packages installed on server
 #   - /srv/shiny-server/naturejust writable by razinka
 
 set -euo pipefail
@@ -40,42 +40,27 @@ info "SSH connection OK."
 info "Ensuring ${REMOTE_DIR} exists on server..."
 ssh "${REMOTE}" "mkdir -p ${REMOTE_DIR}"
 
-# ── Sync files ────────────────────────────────────────────────
-info "Syncing project files to ${REMOTE_HOST}:${REMOTE_DIR}..."
+# ── Deploy via tar over SSH ───────────────────────────────────
+# Clean remote directory, then stream a tar archive of only the
+# files needed at runtime. This is portable (no rsync needed).
+info "Deploying to ${REMOTE_HOST}:${REMOTE_DIR}..."
 
-rsync -avz --delete \
-    --exclude='.git' \
-    --exclude='.github' \
-    --exclude='.claude' \
-    --exclude='.Rproj.user' \
-    --exclude='renv/library' \
-    --exclude='renv/staging' \
-    --exclude='renv/sandbox' \
-    --exclude='data-raw' \
-    --exclude='dev' \
-    --exclude='docs' \
-    --exclude='tests' \
-    --exclude='man' \
-    --exclude='.playwright-mcp' \
-    --exclude='*.Rproj' \
-    --exclude='Dockerfile' \
-    --exclude='docker-compose.yml' \
-    --exclude='.Rbuildignore' \
-    --exclude='.gitignore' \
-    --exclude='deploy.sh' \
-    --exclude='*.png' \
-    --exclude='*.jpg' \
-    --exclude='*.jpeg' \
-    "${PROJECT_DIR}/" \
-    "${REMOTE}:${REMOTE_DIR}/"
+ssh "${REMOTE}" "rm -rf ${REMOTE_DIR}/R ${REMOTE_DIR}/inst ${REMOTE_DIR}/app.R"
 
-info "File sync complete."
+cd "${PROJECT_DIR}"
+tar cf - \
+    app.R \
+    R/ \
+    inst/ \
+    2>/dev/null | ssh "${REMOTE}" "tar xf - -C ${REMOTE_DIR}/"
+
+info "File transfer complete."
 
 # ── Set permissions ───────────────────────────────────────────
 info "Setting file permissions..."
 ssh "${REMOTE}" "chmod -R u+rw,g+r,o+r ${REMOTE_DIR}"
 
-# ── Restart Shiny Server (if you have sudo) ───────────────────
+# ── Restart Shiny Server ──────────────────────────────────────
 info "Restarting Shiny Server..."
 if ssh "${REMOTE}" "sudo systemctl restart shiny-server 2>/dev/null"; then
     info "Shiny Server restarted."
