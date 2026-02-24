@@ -159,6 +159,10 @@ body::after {
 .card:hover {
   box-shadow: var(--shadow-md);
   border-left-color: var(--nj-blue) !important;
+}
+/* Skip transform on cards containing interactive widgets (plotly, leaflet, DT)
+   — translateX shift disrupts hover/tooltip event coordinates */
+.card:not(:has(.js-plotly-plot)):not(:has(.leaflet-container)):not(:has(.dataTable)):hover {
   transform: translateX(2px);
 }
 
@@ -996,7 +1000,7 @@ hr {
 
 /* ---------- Info Dropdown ---------- */
 .navbar .dropdown-menu {
-  background: var(--nj-deep);
+  background: var(--nj-deep) !important;
   border: 1px solid rgba(95,168,211,.15);
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow-lg);

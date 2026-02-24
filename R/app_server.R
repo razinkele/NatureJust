@@ -218,15 +218,39 @@ app_server <- function(input, output, session) {
           title = "Indicators",
           icon = bsicons::bs_icon("speedometer2"),
           tags$p(
-            "Indicators displayed in the dashboard come from multiple sources.",
-            "Suffixes in indicator names denote their origin:"
+            "The dashboard tracks 13 indicators across five sources.",
+            "Suffixes in the chart legend denote origin:",
+            tags$strong("(M)"), "= modelled,",
+            tags$strong("(H)"), "= HELCOM (Baltic only),",
+            "no suffix = observed time-series."
           ),
+          tags$h6("Modelled Indicators (M)"),
           tags$ul(
-            tags$li(tags$strong("(M)"), " \u2014 Modelled/scenario-projected value"),
-            tags$li(tags$strong("(H)"), " \u2014 HELCOM data, Baltic Sea region only"),
-            tags$li("No suffix \u2014 direct time-series from Eurostat or ICES")
+            tags$li("Marine Biodiversity Index"),
+            tags$li("Habitat Condition"),
+            tags$li("Ecosystem Services"),
+            tags$li("Community Wellbeing Index"),
+            tags$li("Governance Effectiveness")
+          ),
+          tags$h6("ICES SAG / GFCM"),
+          tags$ul(
+            tags$li("Fish Stock Biomass \u2014 aggregate F/F", tags$sub("MSY"), " status"),
+            tags$li("Sustainable Fishing \u2014 share of stocks fished sustainably")
+          ),
+          tags$h6("Eurostat"),
+          tags$ul(
+            tags$li("Offshore Wind Capacity \u2014 nrg_inf_epcrw (renewable capacity)"),
+            tags$li("Coastal Tourism Pressure \u2014 tour_occ_nin2c (nights at coastal NUTS-2)"),
+            tags$li("Bathing Water Quality \u2014 sdg_14_40 (% excellent)")
+          ),
+          tags$h6("HELCOM HOLAS III (Baltic Sea only) (H)"),
+          tags$ul(
+            tags$li("Contaminant Status"),
+            tags$li("Eutrophication Status"),
+            tags$li("Underwater Noise")
           ),
           tags$p(
+            class = "text-muted small",
             "All indicators are normalised to [0, 1] for cross-comparison.",
             "The Spatial Equity map shows per-region composite scores computed from",
             "the weighted NFF combination of all available sub-indicators."

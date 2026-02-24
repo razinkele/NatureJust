@@ -140,24 +140,30 @@ mod_dashboard_server <- function(id, nff_weights = NULL) {
 
       # Build native plotly traces per indicator for performance
       indicators <- unique(df$indicator)
+      # Use a qualitative palette (plotly default D3 category10)
+      palette <- c("#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
+                   "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf",
+                   "#0E7C7B", "#E07A5F", "#F2CC8F")
       p <- plotly::plot_ly()
-      for (ind in indicators) {
+      for (i in seq_along(indicators)) {
+        ind <- indicators[i]
         ind_df <- df[df$indicator == ind, ]
+        col <- palette[((i - 1) %% length(palette)) + 1]
         # Confidence ribbon
         p <- p |>
           plotly::add_ribbons(
             data = ind_df, x = ~year, ymin = ~lower, ymax = ~upper,
             name = ind, legendgroup = ind,
             line = list(width = 0),
-            fillcolor = plotly::toRGB(ind, alpha = 0.15),
+            fillcolor = plotly::toRGB(col, alpha = 0.15),
             showlegend = FALSE
           ) |>
           plotly::add_trace(
             data = ind_df, x = ~year, y = ~value,
             name = ind, legendgroup = ind,
             type = "scatter", mode = "lines+markers",
-            line = list(width = 2),
-            marker = list(size = 5)
+            line = list(width = 2, color = col),
+            marker = list(size = 5, color = col)
           )
       }
       p <- p |> plotly::layout(
