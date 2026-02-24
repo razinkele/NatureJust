@@ -1028,9 +1028,7 @@ hr {
 .modebar { opacity: .4; transition: opacity .3s; }
 .modebar:hover { opacity: 1; }
 
-/* Plotly chart transparent backgrounds */
-.js-plotly-plot .plotly .main-svg { background: transparent !important; }
-.js-plotly-plot .plotly .bg { fill: transparent !important; }
+/* Plotly: only hide the outermost plot background, not legend/tooltip bgs */
 
 /* Download btn icon */
 .btn .bi { margin-right: .3rem; }
@@ -1550,9 +1548,6 @@ pre, .shiny-text-output {
 [data-bs-theme="dark"] .nff-weight-readout {
   background: rgba(255,255,255,.04);
 }
-
-/* Dark plotly */
-[data-bs-theme="dark"] .js-plotly-plot .plotly .main-svg { background: transparent !important; }
 
 /* Dark recalculating */
 [data-bs-theme="dark"] .recalculating {
