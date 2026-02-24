@@ -60,6 +60,8 @@ function clampBary(bary) {
 }
 
 /* ──────────────── 6 Illustrative Narratives (Durán et al. 2023) ──────────────── */
+/* Default values — overridden at runtime by server-sent 'set-narratives' message
+   to maintain a single source of truth (narratives.json). */
 
 var NARRATIVES = {
   arcology: {
@@ -464,7 +466,7 @@ $(document).ready(function() {
       svgEl.appendChild(label);
     });
 
-    Shiny.addCustomMessageHandler('stakeholder-clear-dots', function() {
+    Shiny.addCustomMessageHandler('stakeholder-clear-dots', function(_msg) {
       var svgEl = document.querySelector('.nff-stakeholder-mode .nff-svg');
       if (!svgEl) return;
       $(svgEl).find('.stakeholder-dot, .stakeholder-dot-ring, .stakeholder-label').remove();
@@ -533,10 +535,17 @@ $(document).ready(function() {
       currentPathway.animDot.setAttribute('cy', y);
     });
 
-    Shiny.addCustomMessageHandler('pathway-clear', function() {
+    Shiny.addCustomMessageHandler('pathway-clear', function(_msg) {
       pathwayElements.forEach(function(el) { el.remove(); });
       pathwayElements = [];
       currentPathway = null;
+    });
+
+    /* ──────────────── Server-side narrative data injection ──────────────── */
+    Shiny.addCustomMessageHandler('set-narratives', function(data) {
+      if (data && typeof data === 'object') {
+        NARRATIVES = data;
+      }
     });
   }
 });

@@ -8,8 +8,14 @@ app_server <- function(input, output, session) {
   # Writeable from Home triangle and Scenarios sliders
   nff_weights <- reactiveVal(c(NfN = 34, NfS = 33, NaC = 33))
 
+  # ---- Shared reactive for narrative navigation ----
+  # The narratives module listens to this reactive instead of app_server
+  # reaching into the module's internal selectInput ID.
+  selected_narrative <- reactiveVal(NULL)
+
   mod_home_server("home", nff_weights = nff_weights)
-  mod_narratives_server("narratives", nff_weights = nff_weights)
+  mod_narratives_server("narratives", nff_weights = nff_weights,
+                        selected_narrative = selected_narrative)
   mod_stakeholders_server("stakeholders", nff_weights = nff_weights)
   mod_pathways_server("pathways", nff_weights = nff_weights)
   mod_spatial_server("spatial", nff_weights = nff_weights)
@@ -18,14 +24,44 @@ app_server <- function(input, output, session) {
   intervention_choices <- tryCatch(load_interventions(), error = function(e) "MPA Establishment")
   mod_justice_server("justice", intervention_choices = intervention_choices)
   mod_governance_server("governance", intervention_choices = intervention_choices)
-  mod_dashboard_server("dashboard")
+  mod_dashboard_server("dashboard", nff_weights = nff_weights)
+
+  # ---- Send canonical narrative data to JS (single-source) ----
+  # No reactive inputs → fires once on session start
+  observe({
+    narr <- tryCatch(load_narratives(), error = function(e) NULL)
+    if (!is.null(narr) && is.data.frame(narr) && nrow(narr) > 0) {
+      js_narr <- lapply(seq_len(nrow(narr)), function(i) {
+        row <- narr[i, ]
+        w <- if ("weights" %in% names(row) && is.data.frame(row$weights)) {
+          list(NfN = row$weights$NfN[1], NfS = row$weights$NfS[1],
+               NaC = row$weights$NaC[1])
+        } else if ("weights" %in% names(row) && is.list(row$weights)) {
+          ww <- row$weights[[1]]
+          if (is.list(ww)) ww else list(NfN = 34, NfS = 33, NaC = 33)
+        } else {
+          list(NfN = 34, NfS = 33, NaC = 33)
+        }
+        bary <- c(w$NfN, w$NfS, w$NaC)
+        bary <- bary / max(sum(bary), 1) # normalize to 0-1
+        list(
+          id   = row$id,
+          name = row$name,
+          pos  = if ("nff_position" %in% names(row)) row$nff_position else "",
+          bary = bary,
+          desc = if ("description" %in% names(row)) row$description else "",
+          gov  = if ("governance_model" %in% names(row)) row$governance_model else ""
+        )
+      })
+      names(js_narr) <- narr$id
+      session$sendCustomMessage("set-narratives", js_narr)
+    }
+  })
 
   # ---- Navigate to narrative from triangle double-click ----
-  # Note: "narratives-narrative_id" couples to mod_narratives_ui's selectInput ID.
-  # If that input is renamed, update this reference too.
+  # Uses a shared reactiveVal so the narratives module manages its own inputs.
   observeEvent(input$navigate_to_narrative, {
-    updateSelectInput(session, "narratives-narrative_id",
-                      selected = input$navigate_to_narrative)
+    selected_narrative(input$navigate_to_narrative)
     bslib::nav_select("main_nav", "Narratives", session = session)
   })
 
@@ -34,13 +70,8 @@ app_server <- function(input, output, session) {
     app_version <- tryCatch(
       as.character(utils::packageVersion("NatureJust")),
       error = function(e) {
-        desc_file <- file.path(app_sys(".."), "DESCRIPTION")
-        if (file.exists(desc_file)) {
-          desc <- read.dcf(desc_file, fields = "Version")
-          as.character(desc[1, "Version"])
-        } else {
-          "0.1.0"
-        }
+        desc <- utils::packageDescription("NatureJust", fields = "Version")
+        if (!is.na(desc)) desc else "0.1.0"
       }
     )
     showModal(modalDialog(
