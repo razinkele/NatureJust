@@ -14,6 +14,70 @@ NFF_COLORS <- list(
   NaC = "#E07A5F"
 )
 
+#' NFF narrative preset weights (single source of truth)
+#' Used by mod_pathways, mod_scenarios, and conceptually by nff_triangle.js.
+#' If weights change, update the JS NARRATIVES object too.
+#' @noRd
+NARRATIVE_PRESETS <- list(
+  arcology    = c(NfN = 100, NfS = 0,   NaC = 0),
+  sharing     = c(NfN = 50,  NfS = 50,  NaC = 0),
+  optimizing  = c(NfN = 0,   NfS = 100, NaC = 0),
+  commons     = c(NfN = 0,   NfS = 50,  NaC = 50),
+  stewardship = c(NfN = 0,   NfS = 0,   NaC = 100),
+  dynamic     = c(NfN = 50,  NfS = 0,   NaC = 50),
+  balanced    = c(NfN = 34,  NfS = 33,  NaC = 33)
+)
+
+#' Generate NFF weight badge set (colored pill spans)
+#' @param w Named numeric vector with NfN, NfS, NaC keys (percentages)
+#' @return shiny.tag (div with 3 badge spans)
+#' @noRd
+nff_badge_set <- function(w) {
+  htmltools::div(
+    class = "d-flex gap-2 flex-wrap",
+    htmltools::tags$span(
+      class = "badge rounded-pill",
+      style = paste0("background-color: ", NFF_COLORS$NfN, "; font-size: 0.85rem;"),
+      paste0("NfN ", w[["NfN"]], "%")
+    ),
+    htmltools::tags$span(
+      class = "badge rounded-pill",
+      style = paste0("background-color: ", NFF_COLORS$NfS, "; font-size: 0.85rem;"),
+      paste0("NfS ", w[["NfS"]], "%")
+    ),
+    htmltools::tags$span(
+      class = "badge rounded-pill",
+      style = paste0("background-color: ", NFF_COLORS$NaC, "; font-size: 0.85rem;"),
+      paste0("NaC ", w[["NaC"]], "%")
+    )
+  )
+}
+
+#' Convert traffic light status to human-readable label
+#' @param status Character: "green", "amber", or "red"
+#' @return Character label
+#' @noRd
+status_to_label <- function(status) {
+  switch(status,
+         green = "Adequate",
+         amber = "Needs Attention",
+         red = "Critical Gap",
+         "Unknown")
+}
+
+#' Build a display name for a NUTS2 region
+#' Falls back to sovereignt when NUTS_NAME is missing.
+#' @param data sf or data.frame with optional NUTS_NAME and sovereignt columns
+#' @return Character vector of display names
+#' @noRd
+region_display_name <- function(data) {
+  if ("NUTS_NAME" %in% names(data)) {
+    ifelse(is.na(data$NUTS_NAME), data$sovereignt, data$NUTS_NAME)
+  } else {
+    data$sovereignt
+  }
+}
+
 #' Generate NFF triangle SVG markup
 #'
 #' Shared helper for the three triangle widgets (Home, Stakeholders, Pathways).

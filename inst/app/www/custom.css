@@ -1115,7 +1115,18 @@ pre, .shiny-text-output {
 
 /* ── Stakeholders Module ── */
 
-/* Stakeholders module reuses .narratives-hero for header styling */
+.stakeholders-hero {
+  text-align: center;
+  padding: 1.5rem 1rem 1rem;
+}
+.stakeholders-hero h2 {
+  font-family: var(--font-display, "Playfair Display", serif);
+  color: var(--nj-navy, #1B4965);
+  font-weight: 700;
+}
+[data-bs-theme="dark"] .stakeholders-hero h2 {
+  color: #e0ddd8;
+}
 
 .nff-stakeholder-mode .nff-position-marker {
   opacity: 0.5;
@@ -1174,10 +1185,10 @@ pre, .shiny-text-output {
   .home-hero h1 { font-size: 1.8rem !important; }
   .home-hero .subtitle { font-size: 0.95rem !important; }
   .narratives-hero h2,
+  .stakeholders-hero h2,
   .pathways-hero h2 { font-size: 1.5rem !important; }
   .navbar { padding: 0.3rem 0.75rem !important; }
   .navbar .nav-link { font-size: 0.72rem !important; padding: 0.4rem 0.5rem !important; }
-  .nff-container { max-width: 100%; }
 }
 
 /* ── Reduced motion for accessibility (WCAG 2.1 AA §2.3.3) ── */

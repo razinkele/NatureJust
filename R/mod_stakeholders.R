@@ -317,24 +317,12 @@ mod_stakeholders_server <- function(id, nff_weights = NULL) {
           bsicons::bs_icon("bullseye"),
           "Centroid (Mean Position)"
         ),
-        div(
-          class = "d-flex gap-2 flex-wrap mb-3",
-          tags$span(
-            class = "badge rounded-pill",
-            style = paste0("background-color: ", NFF_COLORS$NfN, "; font-size: 0.85rem;"),
-            paste0("NfN ", round(centroid_nfn, 1), "%")
-          ),
-          tags$span(
-            class = "badge rounded-pill",
-            style = paste0("background-color: ", NFF_COLORS$NfS, "; font-size: 0.85rem;"),
-            paste0("NfS ", round(centroid_nfs, 1), "%")
-          ),
-          tags$span(
-            class = "badge rounded-pill",
-            style = paste0("background-color: ", NFF_COLORS$NaC, "; font-size: 0.85rem;"),
-            paste0("NaC ", round(centroid_nac, 1), "%")
-          )
-        ),
+        nff_badge_set(c(
+          NfN = round(centroid_nfn, 1),
+          NfS = round(centroid_nfs, 1),
+          NaC = round(centroid_nac, 1)
+        )),
+        tags$div(class = "mb-3"),
 
         # Spread
         if (!is.na(spread_val)) {

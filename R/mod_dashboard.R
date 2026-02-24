@@ -86,6 +86,7 @@ mod_dashboard_server <- function(id) {
   moduleServer(id, function(input, output, session) {
 
     data <- reactive({
+      req(input$region)
       load_indicator_timeseries(input$region)
     })
 

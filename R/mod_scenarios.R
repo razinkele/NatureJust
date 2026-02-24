@@ -154,14 +154,16 @@ mod_scenarios_server <- function(id, nff_weights = NULL) {
     )
 
     # ---- NFF narrative presets (Duran et al. 2023) ----
-    narrative_presets <- list(
-      preset_arcology    = c(NfN = 100, NfS = 0,  NaC = 0),
-      preset_sharing     = c(NfN = 50,  NfS = 50, NaC = 0),
-      preset_optimizing  = c(NfN = 0,   NfS = 100, NaC = 0),
-      preset_commons     = c(NfN = 0,   NfS = 50, NaC = 50),
-      preset_stewardship = c(NfN = 0,   NfS = 0,  NaC = 100),
-      preset_dynamic     = c(NfN = 50,  NfS = 0,  NaC = 50)
+    # Derived from shared NARRATIVE_PRESETS with preset_ prefix for button IDs
+    narrative_presets <- stats::setNames(
+      NARRATIVE_PRESETS[c("arcology", "sharing", "optimizing",
+                          "commons", "stewardship", "dynamic")],
+      paste0("preset_", c("arcology", "sharing", "optimizing",
+                           "commons", "stewardship", "dynamic"))
     )
+
+    # GBF targets — loaded once (static reference data)
+    gbf_targets <- tryCatch(load_extdata("gbf_targets.csv"), error = function(e) NULL)
 
     all_presets <- c(ssp_presets, narrative_presets)
 
@@ -296,11 +298,8 @@ mod_scenarios_server <- function(id, nff_weights = NULL) {
       # Get projected end-values at the chosen horizon
       end_vals <- data[data$year == horizon_year, c("indicator", "value")]
 
-      # Load GBF target thresholds
-      gbf <- tryCatch(
-        load_extdata("gbf_targets.csv"),
-        error = function(e) NULL
-      )
+      # Use pre-loaded GBF target thresholds
+      gbf <- gbf_targets
 
       if (is.null(gbf) || nrow(end_vals) == 0) {
         return(div(class = "alert alert-secondary",

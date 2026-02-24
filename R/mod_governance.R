@@ -95,19 +95,23 @@ mod_governance_ui <- function(id) {
 #' Governance & Funding module server
 #' @param id Module namespace id
 #' @noRd
-mod_governance_server <- function(id) {
+mod_governance_server <- function(id, intervention_choices = NULL) {
   moduleServer(id, function(input, output, session) {
 
     # Populate intervention choices from data (deferred from UI build time)
     observe({
-      choices <- tryCatch(load_interventions(), error = function(e) "MPA Establishment")
+      choices <- intervention_choices %||%
+        tryCatch(load_interventions(), error = function(e) "MPA Establishment")
       updateSelectInput(session, "cfp_measure", choices = choices)
       updateSelectInput(session, "tenet_intervention", choices = choices)
     }) |> bindEvent(TRUE, once = TRUE)
 
+    # Funding matrix — loaded once (static data)
+    funding_data <- reactive({ load_funding_matrix() })
+
     # Funding matrix table
     output$funding_table <- DT::renderDataTable({
-      df <- load_funding_matrix()
+      df <- funding_data()
       DT::datatable(
         df,
         options = list(
@@ -127,10 +131,16 @@ mod_governance_server <- function(id) {
         )
     })
 
+    # CFP alignment data — reactive (re-evaluates only when input changes)
+    cfp_data <- reactive({
+      req(input$cfp_measure)
+      load_cfp_alignment(input$cfp_measure)
+    })
+
     # CFP alignment check — uses evidence-based data from cfp_alignment.csv
     output$cfp_result <- renderUI({
-      cfp_data <- load_cfp_alignment(input$cfp_measure)
-      alignment <- cfp_data$alignment[1]
+      cfp <- cfp_data()
+      alignment <- cfp$alignment[1]
 
       status_class <- switch(alignment,
                              aligned = "alert-success",
@@ -147,7 +157,7 @@ mod_governance_server <- function(id) {
                             partial = "This measure requires modifications to align with CFP quota allocations.",
                             conflict = "This measure conflicts with existing CFP management plans and requires derogation.")
 
-      details <- list(cfp_data$detail_1[1], cfp_data$detail_2[1], cfp_data$detail_3[1])
+      details <- list(cfp$detail_1[1], cfp$detail_2[1], cfp$detail_3[1])
 
       tagList(
         div(class = paste("alert", status_class),
@@ -161,6 +171,7 @@ mod_governance_server <- function(id) {
 
     # --- Elliott's 10 Tenets ---
     tenet_scores <- reactive({
+      req(input$tenet_intervention)
       load_elliott_tenets(input$tenet_intervention)
     })
 
@@ -201,10 +212,6 @@ mod_governance_server <- function(id) {
         lapply(seq_len(nrow(df)), function(i) {
           status <- df$status[i]
           score_pct <- round(df$score[i] * 100)
-          status_label <- switch(status,
-                                 green = "Adequate",
-                                 amber = "Needs Attention",
-                                 red = "Critical Gap")
           icon_name <- tenet_icons[[df$tenet[i]]]
 
           bslib::card(
@@ -216,7 +223,7 @@ mod_governance_server <- function(id) {
             ),
             bslib::card_body(
               h3(paste0(score_pct, "%"), class = "mb-1"),
-              p(class = "text-muted mb-1", status_label),
+              p(class = "text-muted mb-1", status_to_label(status)),
               p(class = "small", df$description[i])
             )
           )

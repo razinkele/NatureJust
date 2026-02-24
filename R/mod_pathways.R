@@ -222,17 +222,6 @@ mod_pathways_server <- function(id, nff_weights = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    # ---- Narrative preset weights ----
-    narrative_weights <- list(
-      arcology    = c(NfN = 100, NfS = 0,   NaC = 0),
-      sharing     = c(NfN = 50,  NfS = 50,  NaC = 0),
-      optimizing  = c(NfN = 0,   NfS = 100, NaC = 0),
-      commons     = c(NfN = 0,   NfS = 50,  NaC = 50),
-      stewardship = c(NfN = 0,   NfS = 0,   NaC = 100),
-      dynamic     = c(NfN = 50,  NfS = 0,   NaC = 50),
-      balanced    = c(NfN = 34,  NfS = 33,  NaC = 33)
-    )
-
     # ---- Reactive: future position ----
     future_pos <- reactive({
       preset <- input$future_preset %||% "custom"
@@ -243,17 +232,20 @@ mod_pathways_server <- function(id, nff_weights = NULL) {
           NaC = input$future_nac %||% 30
         )
       } else {
-        narrative_weights[[preset]] %||% c(NfN = 34, NfS = 33, NaC = 33)
+        NARRATIVE_PRESETS[[preset]] %||% c(NfN = 34, NfS = 33, NaC = 33)
       }
     })
 
-    # ---- Reactive: current (now) position ----
+    # ---- Reactive: current (now) position (normalized to sum=100) ----
     now_pos <- reactive({
-      c(
+      raw <- c(
         NfN = input$now_nfn %||% 20,
         NfS = input$now_nfs %||% 60,
         NaC = input$now_nac %||% 20
       )
+      total <- sum(raw)
+      if (total == 0) total <- 1
+      round(raw / total * 100)
     })
 
     # ---- Draw pathway observer ----

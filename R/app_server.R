@@ -14,8 +14,10 @@ app_server <- function(input, output, session) {
   mod_pathways_server("pathways", nff_weights = nff_weights)
   mod_spatial_server("spatial", nff_weights = nff_weights)
   mod_scenarios_server("scenarios", nff_weights = nff_weights)
-  mod_justice_server("justice")
-  mod_governance_server("governance")
+  # Load intervention choices once (shared by justice + governance)
+  intervention_choices <- tryCatch(load_interventions(), error = function(e) "MPA Establishment")
+  mod_justice_server("justice", intervention_choices = intervention_choices)
+  mod_governance_server("governance", intervention_choices = intervention_choices)
   mod_dashboard_server("dashboard")
 
   # ---- Navigate to narrative from triangle double-click ----

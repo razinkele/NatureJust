@@ -124,24 +124,7 @@ mod_narratives_server <- function(id, nff_weights = NULL) {
     # ---- NFF Position Badges ----
     output$nff_badges <- renderUI({
       w <- current_weights()
-      div(
-        class = "d-flex gap-2 flex-wrap",
-        tags$span(
-          class = "badge rounded-pill",
-          style = paste0("background-color: ", NFF_COLORS$NfN, "; font-size: 0.85rem;"),
-          paste0("NfN ", w[["NfN"]], "%")
-        ),
-        tags$span(
-          class = "badge rounded-pill",
-          style = paste0("background-color: ", NFF_COLORS$NfS, "; font-size: 0.85rem;"),
-          paste0("NfS ", w[["NfS"]], "%")
-        ),
-        tags$span(
-          class = "badge rounded-pill",
-          style = paste0("background-color: ", NFF_COLORS$NaC, "; font-size: 0.85rem;"),
-          paste0("NaC ", w[["NaC"]], "%")
-        )
-      )
+      nff_badge_set(w)
     })
 
     # ---- Dynamic header for right card ----

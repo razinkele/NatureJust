@@ -50,12 +50,13 @@ mod_justice_ui <- function(id) {
 #' Justice Impact Assessment module server
 #' @param id Module namespace id
 #' @noRd
-mod_justice_server <- function(id) {
+mod_justice_server <- function(id, intervention_choices = NULL) {
   moduleServer(id, function(input, output, session) {
 
     # Populate intervention choices from data (deferred from UI build time)
     observe({
-      choices <- tryCatch(load_interventions(), error = function(e) "MPA Establishment")
+      choices <- intervention_choices %||%
+        tryCatch(load_interventions(), error = function(e) "MPA Establishment")
       updateSelectInput(session, "intervention", choices = choices)
     }) |> bindEvent(TRUE, once = TRUE)
 
@@ -85,6 +86,7 @@ mod_justice_server <- function(id) {
     })
 
     scores <- reactive({
+      req(input$intervention)
       df <- load_justice_scores(input$intervention)
       area <- input$target_area
       mods <- area_modifiers[[area]]
@@ -113,11 +115,6 @@ mod_justice_server <- function(id) {
         lapply(seq_len(nrow(df)), function(i) {
           status <- df$status[i]
           score_pct <- round(df$score[i] * 100)
-          status_label <- switch(status,
-                                 green = "Adequate",
-                                 amber = "Needs Attention",
-                                 red = "Critical Gap")
-
           bslib::card(
             class = paste("justice-card", paste0("status-", status)),
             bslib::card_header(
@@ -126,7 +123,7 @@ mod_justice_server <- function(id) {
             ),
             bslib::card_body(
               h3(paste0(score_pct, "%"), class = "mb-1"),
-              p(class = "text-muted mb-1", status_label),
+              p(class = "text-muted mb-1", status_to_label(status)),
               p(class = "small", df$description[i])
             )
           )

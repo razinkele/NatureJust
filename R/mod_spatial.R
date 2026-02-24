@@ -233,13 +233,8 @@ mod_spatial_server <- function(id, nff_weights = NULL) {
         pal <- leaflet::colorNumeric(ldef$pal_name, domain = c(0, 1))
         col_vals <- data[[ldef$col]]
 
-        region_name <- if ("NUTS_NAME" %in% names(data)) {
-          ifelse(is.na(data$NUTS_NAME), data$sovereignt, data$NUTS_NAME)
-        } else {
-          data$sovereignt
-        }
         label_text <- paste0(
-          region_name, " (", data$sovereignt, "): ",
+          region_display_name(data), " (", data$sovereignt, "): ",
           ldef$group, " ", round(col_vals, 2)
         )
 
@@ -269,11 +264,6 @@ mod_spatial_server <- function(id, nff_weights = NULL) {
           palette = c("#E07A5F", "#F2CC8F", "#0E7C7B"),
           domain = c(0, 1)
         )
-        region_name <- if ("NUTS_NAME" %in% names(data)) {
-          ifelse(is.na(data$NUTS_NAME), data$sovereignt, data$NUTS_NAME)
-        } else {
-          data$sovereignt
-        }
         w <- nff_weights()
         proxy <- proxy |>
           leaflet::addPolygons(
@@ -283,7 +273,7 @@ mod_spatial_server <- function(id, nff_weights = NULL) {
             weight = 1,
             color = "#333",
             label = paste0(
-              region_name,
+              region_display_name(data),
               " \u2014 NFF Equity: ", round(data$nff_composite, 2),
               " (NfN=", w[["NfN"]], "%",
               " NfS=", w[["NfS"]], "%",
@@ -321,12 +311,7 @@ mod_spatial_server <- function(id, nff_weights = NULL) {
 
       df <- sf::st_drop_geometry(data)
 
-      # Use NUTS_NAME if available, fallback to sovereignt
-      df$region_label <- if ("NUTS_NAME" %in% names(df)) {
-        ifelse(is.na(df$NUTS_NAME), df$sovereignt, df$NUTS_NAME)
-      } else {
-        df$sovereignt
-      }
+      df$region_label <- region_display_name(df)
 
       p <- ggplot2::ggplot(df, ggplot2::aes(
         x = population_pressure,
