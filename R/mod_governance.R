@@ -125,14 +125,24 @@ mod_governance_server <- function(id, intervention_choices = NULL) {
           dom = "ft",
           columnDefs = list(list(className = "dt-center", targets = 1:5))
         ),
-        rownames = FALSE
+        rownames = FALSE,
+        class = "cell-border"
       ) |>
         DT::formatStyle(
           columns = c("EMFAF", "LIFE", "Cohesion Fund", "EAFRD",
                        "Just Transition Fund"),
+          color = DT::styleEqual(
+            c("Eligible", "Partial", "Not eligible"),
+            c("#0E7C7B", "#C1800B", "#C1666B")
+          ),
+          fontWeight = DT::styleEqual(
+            c("Eligible", "Partial", "Not eligible"),
+            c("600", "600", "400")
+          ),
           backgroundColor = DT::styleEqual(
             c("Eligible", "Partial", "Not eligible"),
-            c("#d4edda", "#fff3cd", "#f8d7da")
+            c("rgba(14,124,123,.06)", "rgba(242,204,143,.08)",
+              "rgba(224,122,95,.04)")
           )
         )
     })
@@ -257,8 +267,13 @@ mod_governance_server <- function(id, intervention_choices = NULL) {
           ),
           bslib::card_body(
             class = "p-3",
-            h3(paste0(score_pct, "%"), class = "mb-1"),
+            h3(
+              HTML(paste0(score_pct, "<span class='pct-symbol'>%</span>")),
+              class = "mb-1"
+            ),
             p(class = "text-muted mb-1", status_to_label(status)),
+            div(class = "justice-progress",
+                style = paste0("--score:", score_pct, "%")),
             p(class = "small mb-0", df$description[i])
           )
         )

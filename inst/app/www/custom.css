@@ -1,7 +1,7 @@
 /* ============================================
    NatureJust-EU Design System
-   Aesthetic: "Bathymetric Atlas"
-   Marine cartography meets modern governance
+   Aesthetic: "Cartographic Editorial"
+   Marine cartography meets typographic governance
    ============================================ */
 
 /* System font stack — eliminates external Google Fonts dependency for offline
@@ -28,8 +28,12 @@
   --nj-stone: #9C9587;
   --nj-charcoal: #3D3B37;
 
-  --font-display: Georgia, 'Times New Roman', 'Palatino Linotype', serif;
-  --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --font-body: 'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --nj-amber-text: #C1800B;
+  --nj-green-text: #0E7C7B;
+  --nj-red-text: #C1666B;
 
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -41,6 +45,7 @@
 
   --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-editorial: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 [data-bs-theme="dark"] {
@@ -63,19 +68,31 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* ---------- Paper Grain Texture ---------- */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.025;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23grain)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+}
+
 /* ---------- Navbar ---------- */
 .navbar {
   background: linear-gradient(135deg, var(--nj-deep) 0%, var(--nj-navy) 40%, var(--nj-ocean) 100%) !important;
   border-bottom: 1px solid rgba(95,168,211,.15);
   box-shadow: 0 4px 24px rgba(10,22,40,.3);
-  padding: .4rem 1.5rem !important;
+  padding: .3rem 1.5rem !important;
   min-height: auto;
 }
 
 .navbar-brand {
   font-family: var(--font-display) !important;
   font-weight: 600 !important;
-  font-size: 1.2rem !important;
+  font-size: 1.15rem !important;
   letter-spacing: .015em;
   color: #fff !important;
   gap: .45rem;
@@ -86,13 +103,14 @@ body {
 .navbar .nav-link {
   font-family: var(--font-body);
   font-weight: 500;
-  font-size: .8rem;
+  font-size: .76rem;
   color: rgba(255,255,255,.7) !important;
   padding: .5rem .8rem;
   border-radius: var(--radius-sm);
   transition: all .3s var(--ease-expo);
   position: relative;
-  letter-spacing: .01em;
+  letter-spacing: .06em;
+  text-transform: uppercase;
 }
 
 .navbar .nav-link:hover {
@@ -111,8 +129,8 @@ body {
   bottom: 2px;
   left: 50%;
   transform: translateX(-50%);
-  width: 18px;
-  height: 2px;
+  width: 24px;
+  height: 3px;
   background: var(--nj-coral);
   border-radius: 1px;
 }
@@ -125,20 +143,27 @@ body {
 .navbar .nav-link:hover svg,
 .navbar .nav-link.active svg { opacity: 1; }
 
-/* ---------- Cards ---------- */
+/* ---------- Cards (Asymmetric Editorial) ---------- */
 .card {
   background: #fff;
-  border: 1px solid rgba(10,22,40,.05) !important;
-  border-radius: var(--radius-md) !important;
-  box-shadow: var(--shadow-sm);
-  transition: box-shadow .3s var(--ease-expo), transform .3s var(--ease-expo);
+  border-top: 1px solid rgba(10,22,40,.06) !important;
+  border-right: 1px solid rgba(10,22,40,.06) !important;
+  border-bottom: 1px solid rgba(10,22,40,.06) !important;
+  border-left: 3px solid var(--nj-ocean) !important;
+  border-radius: 2px var(--radius-sm) var(--radius-sm) 2px !important;
+  box-shadow: 0 1px 3px rgba(10,22,40,.04);
+  transition: box-shadow .3s var(--ease-editorial), transform .3s var(--ease-editorial), border-left-color .3s var(--ease-editorial);
   overflow: hidden;
 }
 
-.card:hover { box-shadow: var(--shadow-md); }
+.card:hover {
+  box-shadow: var(--shadow-md);
+  border-left-color: var(--nj-blue) !important;
+  transform: translateX(2px);
+}
 
 .card-header {
-  font-family: var(--font-body) !important;
+  font-family: var(--font-display) !important;
   font-weight: 600;
   font-size: .85rem;
   letter-spacing: .01em;
@@ -149,19 +174,21 @@ body {
 }
 
 .card-header.bg-primary {
-  background: linear-gradient(135deg, var(--nj-ocean), var(--nj-blue)) !important;
-  color: #fff !important;
-  border-bottom-color: transparent !important;
+  background: transparent !important;
+  color: var(--nj-navy) !important;
+  border-bottom-color: rgba(10,22,40,.05) !important;
 }
 
-.card-header.bg-primary .text-white { color: #fff !important; }
+.card-header.bg-primary .text-white { color: var(--nj-navy) !important; }
 
 [data-bs-theme="dark"] .card {
   background: var(--nj-warm-white);
-  border-color: rgba(255,255,255,.06) !important;
+  border-color: rgba(255,255,255,.08) !important;
+  border-left-color: var(--nj-sky) !important;
 }
 [data-bs-theme="dark"] .card-header {
   color: var(--nj-charcoal) !important;
+  border-bottom-color: rgba(255,255,255,.06) !important;
 }
 
 /* ---------- Sidebar ---------- */
@@ -177,6 +204,13 @@ body {
   color: var(--nj-navy);
 }
 
+.sidebar h6 {
+  font-variant: small-caps;
+  letter-spacing: 0.1em;
+  border-bottom: 1px solid var(--nj-mist);
+  padding-bottom: 0.35rem;
+}
+
 .sidebar .form-label,
 .sidebar .control-label,
 .sidebar label {
@@ -185,6 +219,10 @@ body {
   text-transform: uppercase;
   letter-spacing: .05em;
   color: var(--nj-stone) !important;
+}
+
+.sidebar .form-check {
+  margin-bottom: 0.35rem;
 }
 
 .sidebar .form-select,
@@ -198,7 +236,7 @@ body {
 .sidebar .form-select:focus,
 .sidebar .form-control:focus {
   border-color: var(--nj-blue);
-  box-shadow: 0 0 0 3px rgba(42,111,151,.1);
+  box-shadow: 0 0 0 3px rgba(224,122,95,.12);
 }
 
 /* ---------- Buttons ---------- */
@@ -244,24 +282,13 @@ body {
 /* ---------- Home Hero ---------- */
 .home-hero {
   text-align: center;
-  padding: 3.5rem 2rem 2rem;
+  padding: 4rem 2rem 2.5rem;
   position: relative;
   overflow: hidden;
 }
 
 .home-hero::before {
-  content: '';
-  position: absolute;
-  top: -60%;
-  left: -60%;
-  width: 220%;
-  height: 220%;
-  background:
-    radial-gradient(ellipse at 30% 40%, rgba(42,111,151,.05) 0%, transparent 55%),
-    radial-gradient(ellipse at 70% 25%, rgba(14,124,123,.04) 0%, transparent 45%),
-    radial-gradient(ellipse at 50% 80%, rgba(224,122,95,.025) 0%, transparent 50%);
-  animation: hero-drift 30s ease-in-out infinite;
-  pointer-events: none;
+  display: none;
 }
 
 @keyframes hero-drift {
@@ -272,20 +299,20 @@ body {
 
 .home-hero h1 {
   font-family: var(--font-display) !important;
-  font-weight: 700 !important;
-  font-size: 2.8rem !important;
+  font-weight: 800 !important;
+  font-size: 3.8rem !important;
   color: var(--nj-navy) !important;
   margin-bottom: .5rem;
   position: relative;
-  letter-spacing: -.01em;
+  letter-spacing: -.02em;
   line-height: 1.1;
 }
 
 .home-hero h1::after {
   content: '';
   display: block;
-  width: 56px;
-  height: 3px;
+  width: 80px;
+  height: 2px;
   background: linear-gradient(90deg, var(--nj-coral), var(--nj-teal));
   margin: .85rem auto 0;
   border-radius: 2px;
@@ -297,9 +324,9 @@ body {
   font-style: italic;
   color: var(--nj-ocean) !important;
   font-size: 1.12rem !important;
-  max-width: 640px;
+  max-width: 600px;
   margin: 1.3rem auto .6rem !important;
-  line-height: 1.65;
+  line-height: 1.7;
 }
 
 .home-hero .text-muted {
@@ -622,8 +649,8 @@ body {
 
 .bslib-value-box .value-box-value {
   font-family: var(--font-display) !important;
-  font-weight: 600 !important;
-  font-size: 1.5rem !important;
+  font-weight: 700 !important;
+  font-size: 1.6rem !important;
 }
 
 /* ---------- Justice Scorecard ---------- */
@@ -645,7 +672,42 @@ body {
 .justice-card h3 {
   font-family: var(--font-display) !important;
   font-weight: 700 !important;
+  font-size: 2.8rem !important;
   color: var(--nj-navy);
+  line-height: 1;
+}
+
+.pct-symbol {
+  font-size: 1.4rem;
+  font-weight: 600;
+  opacity: 0.6;
+}
+
+.justice-progress {
+  height: 4px;
+  background: var(--nj-mist);
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 0.5rem 0;
+}
+
+.justice-progress::after {
+  content: '';
+  display: block;
+  height: 100%;
+  width: var(--score);
+  border-radius: 2px;
+  transition: width 0.8s var(--ease-expo);
+}
+
+.status-green .justice-progress::after {
+  background: linear-gradient(90deg, var(--nj-teal), var(--nj-seafoam));
+}
+.status-amber .justice-progress::after {
+  background: linear-gradient(90deg, var(--nj-sand), #E0B06B);
+}
+.status-red .justice-progress::after {
+  background: linear-gradient(90deg, var(--nj-coral), var(--nj-rose));
 }
 
 /* ---------- Traffic Lights ---------- */
@@ -689,7 +751,7 @@ body {
 }
 .traffic-light.red::after { border: 1.5px solid var(--nj-coral); }
 
-/* ---------- DataTables ---------- */
+/* ---------- DataTables (Minimal Rule) ---------- */
 .dataTables_wrapper { font-size: .84rem; }
 
 .dataTables_wrapper .dataTables_filter input {
@@ -709,23 +771,34 @@ body {
 table.dataTable thead th {
   font-family: var(--font-body) !important;
   font-weight: 700 !important;
-  font-size: .73rem;
+  font-size: .7rem;
   text-transform: uppercase;
-  letter-spacing: .06em;
+  letter-spacing: .08em;
   color: var(--nj-navy);
   border-bottom: 2px solid var(--nj-ocean) !important;
-  padding: .7rem .9rem !important;
+  padding: .75rem 1rem !important;
+  background: transparent !important;
 }
 
 table.dataTable tbody td {
-  padding: .6rem .9rem !important;
+  padding: .75rem 1rem !important;
   vertical-align: middle;
-  border-bottom: 1px solid rgba(10,22,40,.04) !important;
+  border-bottom: 1px solid rgba(10,22,40,.06) !important;
   font-size: .84rem;
+  background: transparent !important;
+}
+
+table.dataTable tbody tr {
+  background: transparent !important;
 }
 
 table.dataTable tbody tr:hover {
-  background: rgba(42,111,151,.025) !important;
+  background: rgba(42,111,151,.02) !important;
+}
+
+table.dataTable tbody tr:nth-child(odd),
+table.dataTable tbody tr:nth-child(even) {
+  background: transparent !important;
 }
 
 /* ---------- Nav Tabs (Scenarios, Governance) ---------- */
@@ -803,7 +876,8 @@ table.dataTable tbody tr:hover {
 /* ---------- Headings ---------- */
 h4, h5 {
   font-family: var(--font-display);
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 1.3rem;
   color: var(--nj-navy);
   letter-spacing: .01em;
 }
@@ -852,34 +926,38 @@ h6 {
 }
 ::-webkit-scrollbar-thumb:hover { background: var(--nj-stone); }
 
-/* ---------- Page Animations ---------- */
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(14px); }
-  to   { opacity: 1; transform: translateY(0); }
+/* ---------- Page Animations (Staggered Diagonal) ---------- */
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateX(-8px) translateY(10px); }
+  to   { opacity: 1; transform: translateX(0) translateY(0); }
 }
 
 .tab-pane > .bslib-gap-spacing > .card,
-.tab-pane > .bslib-gap-spacing > .bslib-value-box {
-  animation: fadeInUp .45s var(--ease-expo) both;
+.tab-pane > .bslib-gap-spacing > .bslib-value-box,
+.tab-pane > .bslib-gap-spacing > .bslib-layout-columns,
+.tab-pane > .bslib-gap-spacing > h5 {
+  animation: fadeSlideIn .45s var(--ease-editorial) both;
 }
 
 .tab-pane > .bslib-gap-spacing > *:nth-child(1) { animation-delay: 0s; }
-.tab-pane > .bslib-gap-spacing > *:nth-child(2) { animation-delay: .07s; }
-.tab-pane > .bslib-gap-spacing > *:nth-child(3) { animation-delay: .14s; }
-.tab-pane > .bslib-gap-spacing > *:nth-child(4) { animation-delay: .21s; }
+.tab-pane > .bslib-gap-spacing > *:nth-child(2) { animation-delay: .06s; }
+.tab-pane > .bslib-gap-spacing > *:nth-child(3) { animation-delay: .12s; }
+.tab-pane > .bslib-gap-spacing > *:nth-child(4) { animation-delay: .18s; }
+.tab-pane > .bslib-gap-spacing > *:nth-child(5) { animation-delay: .24s; }
+.tab-pane > .bslib-gap-spacing > *:nth-child(6) { animation-delay: .30s; }
 
 /* ---------- Section heading deco ---------- */
 h4.text-center {
-  font-size: 1.25rem !important;
+  font-size: 1.3rem !important;
   position: relative;
 }
 
 h4.text-center::after {
   content: '';
   display: block;
-  width: 36px;
+  width: 48px;
   height: 2px;
-  background: var(--nj-coral);
+  background: linear-gradient(90deg, var(--nj-coral), var(--nj-teal));
   margin: .45rem auto 0;
   border-radius: 1px;
 }
@@ -1093,6 +1171,7 @@ pre, .shiny-text-output {
   font-family: var(--font-display, "Playfair Display", serif);
   color: var(--nj-navy, #1B4965);
   font-weight: 700;
+  font-size: 2.2rem;
 }
 
 .overflow-auto h6 {
@@ -1149,6 +1228,7 @@ pre, .shiny-text-output {
   font-family: var(--font-display, "Playfair Display", serif);
   color: var(--nj-navy, #1B4965);
   font-weight: 700;
+  font-size: 2.2rem;
 }
 [data-bs-theme="dark"] .stakeholders-hero h2 {
   color: #e0ddd8;
@@ -1187,6 +1267,7 @@ pre, .shiny-text-output {
   font-family: var(--font-display, "Playfair Display", serif);
   color: var(--nj-navy, #1B4965);
   font-weight: 700;
+  font-size: 2.2rem;
 }
 
 .pathway-line {
@@ -1279,6 +1360,24 @@ pre, .shiny-text-output {
 
 [data-bs-theme="dark"] .scenario-spinner-text {
   color: var(--nj-sky);
+}
+
+/* ---------- Dark Mode Refinements ---------- */
+[data-bs-theme="dark"] body::after {
+  opacity: 0.015;
+  filter: invert(1);
+}
+
+[data-bs-theme="dark"] table.dataTable tbody td {
+  border-bottom-color: rgba(255,255,255,.06) !important;
+}
+
+[data-bs-theme="dark"] table.dataTable thead th {
+  border-bottom-color: rgba(255,255,255,.12) !important;
+}
+
+[data-bs-theme="dark"] .justice-card h3 {
+  color: var(--nj-charcoal);
 }
 
 /* ── Responsive breakpoints ── */

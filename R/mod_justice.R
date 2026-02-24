@@ -125,8 +125,13 @@ mod_justice_server <- function(id, intervention_choices = NULL) {
               df$dimension[i]
             ),
             bslib::card_body(
-              h3(paste0(score_pct, "%"), class = "mb-1"),
+              h3(
+                HTML(paste0(score_pct, "<span class='pct-symbol'>%</span>")),
+                class = "mb-1"
+              ),
               p(class = "text-muted mb-1", status_to_label(status)),
+              div(class = "justice-progress",
+                  style = paste0("--score:", score_pct, "%")),
               p(class = "small", df$description[i])
             )
           )
