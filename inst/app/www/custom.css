@@ -74,7 +74,7 @@ body::after {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 9999;
+  z-index: 1;
   opacity: 0.025;
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23grain)'/%3E%3C/svg%3E");
   background-repeat: repeat;
@@ -159,10 +159,6 @@ body::after {
 .card:hover {
   box-shadow: var(--shadow-md);
   border-left-color: var(--nj-blue) !important;
-}
-/* Skip transform on cards containing interactive widgets (plotly, leaflet, DT)
-   — translateX shift disrupts hover/tooltip event coordinates */
-.card:not(:has(.js-plotly-plot)):not(:has(.leaflet-container)):not(:has(.dataTable)):hover {
   transform: translateX(2px);
 }
 
