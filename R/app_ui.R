@@ -93,12 +93,25 @@ app_ui <- function(request) {
 #' Add external Resources to the Application
 #'
 #' @import shiny
-#' @importFrom golem add_resource_path activate_js favicon bundle_resources
+#' @importFrom golem add_resource_path activate_js bundle_resources
 #' @noRd
 golem_add_external_resources <- function() {
   add_resource_path("www", app_sys("app/www"))
   tags$head(
-    favicon(),
+    tags$link(
+      rel = "icon", type = "image/svg+xml",
+      href = paste0(
+        "data:image/svg+xml,",
+        "%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E",
+        "%3Ccircle cx='16' cy='16' r='14' fill='%231B3A4B'/%3E",
+        "%3Cellipse cx='16' cy='16' rx='6' ry='14' fill='none' ",
+        "stroke='%2381C3D7' stroke-width='1.5'/%3E",
+        "%3Cline x1='2' y1='16' x2='30' y2='16' stroke='%2381C3D7' ",
+        "stroke-width='1.5'/%3E",
+        "%3Cpath d='M4 10h24M4 22h24' stroke='%2381C3D7' stroke-width='1'/%3E",
+        "%3C/svg%3E"
+      )
+    ),
     bundle_resources(
       path = app_sys("app/www"),
       app_title = "NatureJust-EU"

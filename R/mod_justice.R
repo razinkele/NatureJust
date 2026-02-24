@@ -53,10 +53,13 @@ mod_justice_ui <- function(id) {
 mod_justice_server <- function(id, intervention_choices = NULL) {
   moduleServer(id, function(input, output, session) {
 
-    # Populate intervention choices from data (deferred from UI build time)
+    # Populate intervention choices (passed from app_server, no redundant load)
     observe({
-      choices <- intervention_choices %||%
-        tryCatch(load_interventions(), error = function(e) "MPA Establishment")
+      choices <- if (!is.null(intervention_choices)) {
+        intervention_choices
+      } else {
+        "MPA Establishment"
+      }
       updateSelectInput(session, "intervention", choices = choices)
     }) |> bindEvent(TRUE, once = TRUE)
 

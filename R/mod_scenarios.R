@@ -79,11 +79,25 @@ mod_scenarios_ui <- function(id) {
           width = 1/2,
           bslib::card(
             bslib::card_header("Indicator Projections"),
-            plotly::plotlyOutput(ns("projection_plot"), height = "400px")
+            div(
+              class = "scenario-output-wrap",
+              plotly::plotlyOutput(ns("projection_plot"), height = "400px"),
+              div(class = "scenario-spinner",
+                  div(class = "scenario-spinner-ring"),
+                  tags$p(class = "scenario-spinner-text",
+                         "Computing scenario projections\u2026"))
+            )
           ),
           bslib::card(
             bslib::card_header("GBF Target Compliance"),
-            uiOutput(ns("gbf_compliance"))
+            div(
+              class = "scenario-output-wrap",
+              uiOutput(ns("gbf_compliance")),
+              div(class = "scenario-spinner",
+                  div(class = "scenario-spinner-ring"),
+                  tags$p(class = "scenario-spinner-text",
+                         "Evaluating GBF compliance\u2026"))
+            )
           )
         )
       ),
@@ -94,11 +108,25 @@ mod_scenarios_ui <- function(id) {
           width = 1/2,
           bslib::card(
             bslib::card_header("Radar Comparison (Ecological)"),
-            plotly::plotlyOutput(ns("radar_plot"), height = "400px")
+            div(
+              class = "scenario-output-wrap",
+              plotly::plotlyOutput(ns("radar_plot"), height = "400px"),
+              div(class = "scenario-spinner",
+                  div(class = "scenario-spinner-ring"),
+                  tags$p(class = "scenario-spinner-text",
+                         "Building radar comparison\u2026"))
+            )
           ),
           bslib::card(
             bslib::card_header("Indicator Comparison"),
-            plotly::plotlyOutput(ns("bar_plot"), height = "400px")
+            div(
+              class = "scenario-output-wrap",
+              plotly::plotlyOutput(ns("bar_plot"), height = "400px"),
+              div(class = "scenario-spinner",
+                  div(class = "scenario-spinner-ring"),
+                  tags$p(class = "scenario-spinner-text",
+                         "Building indicator comparison\u2026"))
+            )
           )
         )
       )
@@ -401,15 +429,15 @@ mod_scenarios_server <- function(id, nff_weights = NULL) {
 
       df <- do.call(rbind, df_list)
 
-      p <- ggplot2::ggplot(df, ggplot2::aes(
-        x = scenario, y = value, fill = indicator
-      )) +
-        ggplot2::geom_col(position = "dodge") +
-        ggplot2::theme_minimal() +
-        ggplot2::labs(x = "Scenario", y = "Final Value", fill = "Indicator") +
-        ggplot2::coord_flip()
-
-      plotly::ggplotly(p)
+      p <- plotly::plot_ly(
+        data = df, y = ~scenario, x = ~value, color = ~indicator,
+        type = "bar", orientation = "h"
+      ) |> plotly::layout(
+        barmode = "group",
+        xaxis = list(title = "Final Value"),
+        yaxis = list(title = "Scenario")
+      )
+      p
     })
   })
 }

@@ -336,8 +336,8 @@ test_that("mod_justice_server loads scores and applies area modifiers", {
 
 test_that("mod_governance_server loads funding matrix and tenet scores", {
   testServer(mod_governance_server, {
-    # Funding data is loaded once as a reactive
-    df <- funding_data()
+    # Funding data is loaded once as a plain data frame
+    df <- funding_data
     expect_s3_class(df, "data.frame")
     expect_true("intervention" %in% names(df))
     expect_true("EMFAF" %in% names(df))
@@ -374,4 +374,78 @@ test_that("mod_scenarios_server HELCOM indicators included only for Baltic", {
     expect_false("Eutrophication Status" %in% med_indicators)
     expect_false("Underwater Noise" %in% med_indicators)
   })
+})
+
+# ---- Edge-case tests ----
+
+test_that("nff_weight_modifier returns sensible value for all known indicators", {
+  indicators <- c(
+    "Marine Biodiversity Index", "Habitat Condition", "Ecosystem Services",
+    "Fish Stock Biomass", "Sustainable Fishing", "Bathing Water Quality",
+    "Offshore Wind Capacity", "Coastal Tourism Pressure",
+    "Community Wellbeing Index", "Governance Effectiveness",
+    "Contaminant Status", "Eutrophication Status", "Underwater Noise"
+  )
+  for (ind in indicators) {
+    val <- nff_weight_modifier(ind, 34, 33, 33)
+    expect_true(is.numeric(val) && length(val) == 1,
+                info = paste("Failed for indicator:", ind))
+    expect_true(val >= 0 && val <= 2,
+                info = paste("Out of range for:", ind))
+  }
+})
+
+test_that("nff_weight_modifier handles zero weights", {
+  val <- nff_weight_modifier("Marine Biodiversity Index", 0, 0, 0)
+  expect_true(is.numeric(val) && !is.na(val))
+})
+
+test_that("load_scenario_data handles extreme NFF weight combos", {
+  # All weight on NfN
+  df1 <- load_scenario_data(c(NfN = 100, NfS = 0, NaC = 0), "Baltic")
+  expect_s3_class(df1, "data.frame")
+  expect_true(nrow(df1) > 0)
+
+  # All weight on NaC
+  df2 <- load_scenario_data(c(NfN = 0, NfS = 0, NaC = 100), "Atlantic")
+  expect_s3_class(df2, "data.frame")
+  expect_true(nrow(df2) > 0)
+})
+
+test_that("load_nuts2_data returns required indicator columns", {
+  nuts2 <- load_nuts2_data()
+  required_cols <- c("vulnerability", "fisheries_dep", "population_pressure",
+                     "mpa_coverage", "sea_basin", "sovereignt")
+  missing <- setdiff(required_cols, names(nuts2))
+  expect_length(missing, 0)
+})
+
+test_that("NUTS2 cache returns same object on repeated calls", {
+  d1 <- load_nuts2_data()
+  d2 <- load_nuts2_data()
+  expect_identical(nrow(d1), nrow(d2))
+  expect_identical(names(d1), names(d2))
+})
+
+test_that("traffic_light returns a shiny.tag span with the correct class", {
+  tl_green <- traffic_light("green")
+  expect_true(inherits(tl_green, "shiny.tag"))
+  expect_match(tl_green$attribs$class, "green")
+
+  tl_red <- traffic_light("red")
+  expect_match(tl_red$attribs$class, "red")
+})
+
+test_that("status_to_label returns correct character labels", {
+  expect_equal(status_to_label("green"), "Adequate")
+  expect_equal(status_to_label("amber"), "Needs Attention")
+  expect_equal(status_to_label("red"), "Critical Gap")
+  expect_equal(status_to_label("unknown_value"), "Unknown")
+})
+
+test_that("HELCOM_INDICATORS constant has expected values", {
+  expect_true(is.character(HELCOM_INDICATORS))
+  expect_true("Contaminant Status" %in% HELCOM_INDICATORS)
+  expect_true("Eutrophication Status" %in% HELCOM_INDICATORS)
+  expect_true("Underwater Noise" %in% HELCOM_INDICATORS)
 })

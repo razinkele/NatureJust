@@ -10,8 +10,9 @@ Description: A Shiny decision-support tool for marine planners, fisheries
     the Nature Futures Framework (NFF), Global Biodiversity Framework (GBF),
     and environmental justice principles.
 License: MIT + file LICENSE
+Depends:
+    R (>= 4.1.0)
 Encoding: UTF-8
-LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.1
 Imports:
@@ -32,7 +33,9 @@ Imports:
     rnaturalearth,
     rnaturalearthdata,
     sf,
-    shinyWidgets
+    shinyWidgets,
+    withr,
+    cachem
 Suggests:
     httr2,
     icesSAG,

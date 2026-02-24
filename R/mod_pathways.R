@@ -222,15 +222,21 @@ mod_pathways_server <- function(id, nff_weights = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    # ---- Reactive: future position ----
+    # Helper: clamp NA/negative to 0
+    clamp_pct <- function(x) max(0, x %||% 0, na.rm = TRUE)
+
+    # ---- Reactive: future position (normalized to sum=100) ----
     future_pos <- reactive({
       preset <- input$future_preset %||% "custom"
       if (preset == "custom") {
-        c(
-          NfN = input$future_nfn %||% 40,
-          NfS = input$future_nfs %||% 30,
-          NaC = input$future_nac %||% 30
+        raw <- c(
+          NfN = clamp_pct(input$future_nfn),
+          NfS = clamp_pct(input$future_nfs),
+          NaC = clamp_pct(input$future_nac)
         )
+        total <- sum(raw)
+        if (total == 0) total <- 1
+        round(raw / total * 100)
       } else {
         NARRATIVE_PRESETS[[preset]] %||% c(NfN = 34, NfS = 33, NaC = 33)
       }
@@ -239,14 +245,25 @@ mod_pathways_server <- function(id, nff_weights = NULL) {
     # ---- Reactive: current (now) position (normalized to sum=100) ----
     now_pos <- reactive({
       raw <- c(
-        NfN = input$now_nfn %||% 20,
-        NfS = input$now_nfs %||% 60,
-        NaC = input$now_nac %||% 20
+        NfN = clamp_pct(input$now_nfn),
+        NfS = clamp_pct(input$now_nfs),
+        NaC = clamp_pct(input$now_nac)
       )
       total <- sum(raw)
       if (total == 0) total <- 1
       round(raw / total * 100)
     })
+
+    # Update inputs from shared NFF weights (one-way sync).
+    # Guard: nff_weights is NULL when module is used standalone (tests, etc.).
+    if (!is.null(nff_weights)) {
+      observeEvent(nff_weights(), {
+        w <- nff_weights()
+        updateNumericInput(session, "now_nfn", value = w[["NfN"]])
+        updateNumericInput(session, "now_nfs", value = w[["NfS"]])
+        updateNumericInput(session, "now_nac", value = w[["NaC"]])
+      })
+    }
 
     # ---- Draw pathway observer ----
     observeEvent(input$draw_pathway, {

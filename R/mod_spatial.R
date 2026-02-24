@@ -116,6 +116,12 @@ mod_spatial_server <- function(id, nff_weights = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
+    # Gate: prevent leafletProxy calls before the map is rendered.
+    # Leaflet sets input$map_bounds once the map widget initialises in the DOM,
+    # which only happens when the Spatial Equity tab becomes visible.
+    map_ready <- reactiveVal(FALSE)
+    observeEvent(input$map_bounds, { map_ready(TRUE) }, once = TRUE)
+
     # Load full data once (cached)
     all_data <- reactive({ load_nuts2_data() })
     mpas <- reactive({ load_mpa_data() })
@@ -213,65 +219,63 @@ mod_spatial_server <- function(id, nff_weights = NULL) {
 
     all_groups <- c("NFF Composite", vapply(layer_defs, `[[`, "", "group"), "MPAs")
 
-    # Update layers via proxy when filters or checkboxes change
-    observe({
-      data <- composite_data()
-      proxy <- leaflet::leafletProxy(ns("map"))
-
-      # Clear all overlay groups and legends
-      proxy <- proxy |>
-        leaflet::clearGroup(all_groups) |>
-        leaflet::clearControls()
-
-      if (nrow(data) == 0) return()
-
-      # Add each checked indicator layer
-      for (ldef in layer_defs) {
-        if (!isTRUE(input[[ldef$input_id]])) next
-        if (!ldef$col %in% names(data)) next
-
-        pal <- leaflet::colorNumeric(ldef$pal_name, domain = c(0, 1))
-        col_vals <- data[[ldef$col]]
-
-        label_text <- paste0(
-          region_display_name(data), " (", data$sovereignt, "): ",
-          ldef$group, " ", round(col_vals, 2)
+    # Helper: add a single indicator layer to the proxy
+    add_indicator_layer <- function(proxy, data, ldef) {
+      pal <- leaflet::colorNumeric(ldef$pal_name, domain = c(0, 1))
+      col_vals <- data[[ldef$col]]
+      label_text <- paste0(
+        region_display_name(data), " (", data$sovereignt, "): ",
+        ldef$group, " ", round(col_vals, 2)
+      )
+      proxy |>
+        leaflet::addPolygons(
+          data = data, fillColor = pal(col_vals), fillOpacity = 0.6,
+          weight = 1, color = "#666", label = label_text, group = ldef$group
+        ) |>
+        leaflet::addLegend(
+          pal = pal, values = col_vals,
+          title = ldef$group, position = "bottomright",
+          layerId = paste0("legend_", ldef$group)
         )
+    }
 
-        proxy <- proxy |>
-          leaflet::addPolygons(
-            data = data,
-            fillColor = pal(col_vals),
-            fillOpacity = 0.6,
-            weight = 1,
-            color = "#666",
-            label = label_text,
-            group = ldef$group
-          )
+    # Per-layer observers — only clear & redraw the toggled group.
+    # map_ready() in the trigger ensures the observer re-fires once the map
+    # is actually rendered (tab visible) and prevents leafletProxy spam.
+    lapply(layer_defs, function(ldef) {
+      observeEvent(list(input[[ldef$input_id]], composite_data(), map_ready()), {
+        if (!map_ready()) return()
+        data <- composite_data()
+        proxy <- leaflet::leafletProxy(ns("map")) |>
+          leaflet::clearGroup(ldef$group) |>
+          leaflet::removeControl(paste0("legend_", ldef$group))
+        if (nrow(data) == 0) return()
+        if (!isTRUE(input[[ldef$input_id]])) return()
+        if (!ldef$col %in% names(data)) return()
+        add_indicator_layer(proxy, data, ldef)
+      }, ignoreInit = FALSE)
+    })
 
-        # Add legend for the first active layer only (avoid clutter)
-        proxy <- proxy |>
-          leaflet::addLegend(
-            pal = pal, values = col_vals,
-            title = ldef$group, position = "bottomright",
-            layerId = paste0("legend_", ldef$group)
-          )
-      }
+    # NFF composite layer observer.
+    # Guard: nff_weights is NULL when module is used standalone (tests, etc.).
+    if (!is.null(nff_weights)) {
+      observeEvent(list(input$show_nff_composite, composite_data(), nff_weights(), map_ready()), {
+        if (!map_ready()) return()
+        data <- composite_data()
+        proxy <- leaflet::leafletProxy(ns("map")) |>
+          leaflet::clearGroup("NFF Composite") |>
+          leaflet::removeControl("legend_NFF Composite")
+        if (nrow(data) == 0) return()
+        if (!isTRUE(input$show_nff_composite) || !"nff_composite" %in% names(data)) return()
 
-      # NFF composite layer
-      if (isTRUE(input$show_nff_composite) && "nff_composite" %in% names(data)) {
         pal_nff <- leaflet::colorNumeric(
-          palette = c("#E07A5F", "#F2CC8F", "#0E7C7B"),
-          domain = c(0, 1)
+          palette = c("#E07A5F", "#F2CC8F", "#0E7C7B"), domain = c(0, 1)
         )
         w <- nff_weights()
-        proxy <- proxy |>
+        proxy |>
           leaflet::addPolygons(
-            data = data,
-            fillColor = pal_nff(data$nff_composite),
-            fillOpacity = 0.7,
-            weight = 1,
-            color = "#333",
+            data = data, fillColor = pal_nff(data$nff_composite),
+            fillOpacity = 0.7, weight = 1, color = "#333",
             label = paste0(
               region_display_name(data),
               " \u2014 NFF Equity: ", round(data$nff_composite, 2),
@@ -284,25 +288,27 @@ mod_spatial_server <- function(id, nff_weights = NULL) {
             position = "bottomright",
             pal = pal_nff, values = data$nff_composite,
             title = "NFF Equity Index",
-            group = "NFF Composite"
+            layerId = "legend_NFF Composite"
           )
-      }
+      }, ignoreInit = FALSE)
+    }
 
-      # MPA layer
-      if (isTRUE(input$show_mpa)) {
-        mpa_data <- mpas()
-        proxy <- proxy |>
-          leaflet::addPolygons(
-            data = mpa_data,
-            fillColor = "#41ae76",
-            fillOpacity = 0.3,
-            weight = 1,
-            color = "#2c7fb8",
-            label = ~paste0(name, " (", designation, ")"),
-            group = "MPAs"
-          )
-      }
-    })
+    # MPA layer observer
+    observeEvent(list(input$show_mpa, mpas(), map_ready()), {
+      if (!map_ready()) return()
+      proxy <- leaflet::leafletProxy(ns("map")) |>
+        leaflet::clearGroup("MPAs")
+      if (!isTRUE(input$show_mpa)) return()
+      mpa_data <- mpas()
+      if (nrow(mpa_data) == 0) return()
+      proxy |>
+        leaflet::addPolygons(
+          data = mpa_data, fillColor = "#41ae76", fillOpacity = 0.3,
+          weight = 1, color = "#2c7fb8",
+          label = ~paste0(name, " (", designation, ")"),
+          group = "MPAs"
+        )
+    }, ignoreInit = FALSE)
 
     # Overlap scatter plot
     output$overlap_plot <- plotly::renderPlotly({
@@ -313,31 +319,29 @@ mod_spatial_server <- function(id, nff_weights = NULL) {
 
       df$region_label <- region_display_name(df)
 
-      p <- ggplot2::ggplot(df, ggplot2::aes(
-        x = population_pressure,
-        y = vulnerability,
-        color = sea_basin,
-        text = paste0(region_label, " (", sovereignt, ")\nBasin: ", sea_basin)
-      )) +
-        ggplot2::geom_point(size = 3, alpha = 0.7) +
-        ggplot2::geom_smooth(method = "lm", se = FALSE, color = "grey40",
-                             linetype = "dashed") +
-        ggplot2::labs(
-          x = "Population Pressure",
-          y = "Socio-economic Vulnerability",
-          color = "Sea Basin"
-        ) +
-        ggplot2::theme_minimal() +
-        ggplot2::annotate(
-          "rect", xmin = 0.6, xmax = 1, ymin = 0.6, ymax = 1,
-          alpha = 0.1, fill = "red"
-        ) +
-        ggplot2::annotate(
-          "text", x = 0.8, y = 0.95, label = "Equity\nHotspots",
-          size = 3, color = "red"
-        )
+      # Equity hotspot rectangle
+      hotspot_rect <- list(
+        type = "rect", x0 = 0.6, x1 = 1, y0 = 0.6, y1 = 1,
+        fillcolor = "rgba(255,0,0,0.1)", line = list(width = 0)
+      )
+      hotspot_label <- list(
+        x = 0.8, y = 0.95, text = "Equity\nHotspots",
+        showarrow = FALSE, font = list(color = "red", size = 11)
+      )
 
-      plotly::ggplotly(p, tooltip = "text")
+      p <- plotly::plot_ly(
+        data = df, x = ~population_pressure, y = ~vulnerability,
+        color = ~sea_basin, type = "scatter", mode = "markers",
+        text = ~paste0(region_label, " (", sovereignt, ")\nBasin: ", sea_basin),
+        hoverinfo = "text",
+        marker = list(size = 10, opacity = 0.7)
+      ) |> plotly::layout(
+        xaxis = list(title = "Population Pressure"),
+        yaxis = list(title = "Socio-economic Vulnerability"),
+        shapes = list(hotspot_rect),
+        annotations = list(hotspot_label)
+      )
+      p
     })
   })
 }

@@ -541,6 +541,19 @@ $(document).ready(function() {
       currentPathway = null;
     });
 
+    /* ──────────────── Narrative page highlight ──────────────── */
+    Shiny.addCustomMessageHandler('narrative-highlight', function(msg) {
+      var svgEl = document.querySelector('.nff-narrative-mode .nff-svg');
+      if (!svgEl) return;
+      // Dim all narrative markers
+      $(svgEl).find('.nff-narrative-marker')
+        .css({opacity: 0.25})
+        .removeClass('narrative-active');
+      // Highlight selected
+      var sel = $(svgEl).find('.nff-narrative-marker[data-narrative="' + msg.id + '"]');
+      sel.css({opacity: 1}).addClass('narrative-active');
+    });
+
     /* ──────────────── Server-side narrative data injection ──────────────── */
     Shiny.addCustomMessageHandler('set-narratives', function(data) {
       if (data && typeof data === 'object') {

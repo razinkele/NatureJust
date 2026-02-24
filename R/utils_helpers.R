@@ -14,9 +14,15 @@ NFF_COLORS <- list(
   NaC = "#E07A5F"
 )
 
+#' HELCOM-only indicators — only valid for Baltic region
+#' Single source of truth used by fct_real_data, fct_fallback_data, mod_scenarios
+#' @noRd
+HELCOM_INDICATORS <- c("Contaminant Status", "Eutrophication Status", "Underwater Noise")
+
 #' NFF narrative preset weights (single source of truth)
-#' Used by mod_pathways, mod_scenarios, and conceptually by nff_triangle.js.
-#' If weights change, update the JS NARRATIVES object too.
+#' Used by mod_pathways and mod_scenarios. At session start, app_server.R sends
+#' these to the JS runtime via the 'set-narratives' custom message handler, so
+#' nff_triangle.js is automatically kept in sync — no manual JS update needed.
 #' @noRd
 NARRATIVE_PRESETS <- list(
   arcology    = c(NfN = 100, NfS = 0,   NaC = 0),
@@ -27,6 +33,32 @@ NARRATIVE_PRESETS <- list(
   dynamic     = c(NfN = 50,  NfS = 0,   NaC = 50),
   balanced    = c(NfN = 34,  NfS = 33,  NaC = 33)
 )
+
+#' Compute NFF weight modifier for an indicator
+#'
+#' Shared helper used by both load_scenario_data() and mock_scenario_data_fallback().
+#' Encapsulates the NFF weight coefficients so they are defined in one place.
+#'
+#' @param indicator Character indicator name
+#' @param nfn Numeric NfN weight as fraction (0–1)
+#' @param nfs Numeric NfS weight as fraction (0–1)
+#' @param nac Numeric NaC weight as fraction (0–1)
+#' @return Numeric modifier
+#' @noRd
+nff_weight_modifier <- function(indicator, nfn, nfs, nac) {
+  switch(indicator,
+    "Habitat Condition"          = 0.02 * nfn,
+    "Ecosystem Services"         = 0.015 * nfs,
+    "Livelihoods & Employment"   = 0.01 * nac - 0.005 * nfn,
+    "Equity Score"               = 0.01 * (1 - max(abs(nfn - nfs), abs(nfs - nac), abs(nfn - nac))),
+    "Offshore Wind Capacity"     = 0.012 * nfs + 0.005 * nac,
+    "Bathing Water Quality"      = 0.008 * nfn + 0.005 * nfs,
+    "Contaminant Status"         = 0.010 * nfn + 0.003 * nfs,
+    "Eutrophication Status"      = 0.008 * nfn + 0.005 * nfs,
+    "Underwater Noise"           = -0.003 * nfs + 0.005 * nfn,
+    0  # default: no NFF weight modification for unknown indicators
+  )
+}
 
 #' Generate NFF weight badge set (colored pill spans)
 #' @param w Named numeric vector with NfN, NfS, NaC keys (percentages)
@@ -80,12 +112,13 @@ region_display_name <- function(data) {
 
 #' Generate NFF triangle SVG markup
 #'
-#' Shared helper for the three triangle widgets (Home, Stakeholders, Pathways).
+#' Shared helper for the triangle widgets (Home, Stakeholders, Pathways, Narratives).
 #' Each instance gets a unique suffix for SVG element IDs.
 #'
-#' @param suffix Character suffix for SVG IDs (e.g. "h", "s", "p")
+#' @param suffix Character suffix for SVG IDs (e.g. "h", "s", "p", "n")
 #' @param mode Character: "home" (narratives + clickable vertices),
-#'   "stakeholder" (stakeholder dot group), "pathway" (pathway elements)
+#'   "stakeholder" (stakeholder dot group), "pathway" (pathway elements),
+#'   "narrative" (read-only with narrative markers highlighted)
 #' @return HTML string
 #' @noRd
 nff_triangle_svg <- function(suffix, mode = "home") {
@@ -144,8 +177,8 @@ nff_triangle_svg <- function(suffix, mode = "home") {
     <text class="edge-label" x="200" y="320"
           text-anchor="middle">Social &amp; Cultural Values</text>' else ""
 
-  # Narrative markers (Home only)
-  narratives <- if (mode == "home") '
+  # Narrative markers (Home and Narrative modes)
+  narratives <- if (mode %in% c("home", "narrative")) '
     <polygon class="nff-narrative-marker" data-narrative="arcology"
              points="0,-7 7,0 0,7 -7,0" transform="translate(200,65)"/>
     <circle class="nff-narrative-hit" data-narrative="arcology"
@@ -213,6 +246,7 @@ nff_triangle_svg <- function(suffix, mode = "home") {
     <g class="stakeholder-dots"></g>',
     pathway = '
     <!-- Pathway elements will be inserted by JS -->',
+    narrative = '',
     ""
   )
 
@@ -222,7 +256,8 @@ nff_triangle_svg <- function(suffix, mode = "home") {
     ' aria-label="', switch(mode,
       home = "Interactive Nature Futures Framework triangle",
       stakeholder = "Stakeholder NFF positioning triangle",
-      pathway = "Pathway NFF positioning triangle"), '">',
+      pathway = "Pathway NFF positioning triangle",
+      narrative = "Narrative NFF positioning triangle"), '">',
     defs, gradient_bg, edge_labels, narratives,
     glow_rings, vertices, vlabels, mode_group,
     '</svg>'

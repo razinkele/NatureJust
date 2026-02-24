@@ -82,7 +82,7 @@ mod_dashboard_ui <- function(id) {
 #' Indicator Dashboard module server
 #' @param id Module namespace id
 #' @noRd
-mod_dashboard_server <- function(id) {
+mod_dashboard_server <- function(id, nff_weights = NULL) {
   moduleServer(id, function(input, output, session) {
 
     data <- reactive({
@@ -114,6 +114,22 @@ mod_dashboard_server <- function(id) {
         selected <- selected[!is.na(selected)]
         df <- df[df$indicator %in% selected, ]
       }
+      
+      # Sort indicators by NFF relevance when weights are available
+      # nff_weights is a reactiveVal (a function); call it to get the numeric vector
+      if (is.function(nff_weights)) {
+        w <- nff_weights()
+        inds <- unique(df$indicator)
+        scores <- vapply(inds, function(ind) {
+          # Divide by 100: nff_weight_modifier expects fractions (0-1), not %
+          nff_weight_modifier(ind, w[["NfN"]] / 100, w[["NfS"]] / 100, w[["NaC"]] / 100)
+        }, numeric(1))
+        sorted_inds <- inds[order(scores, decreasing = TRUE)]
+        df$indicator <- factor(df$indicator, levels = sorted_inds)
+        df <- df[order(df$indicator, df$year), ]
+        df$indicator <- as.character(df$indicator) # drop factor for downstream code
+      }
+      
       df
     })
 
@@ -122,17 +138,33 @@ mod_dashboard_server <- function(id) {
       df <- filtered_data()
       if (nrow(df) == 0) return(plotly::plotly_empty())
 
-      p <- ggplot2::ggplot(df, ggplot2::aes(x = year, color = indicator,
-                                             fill = indicator)) +
-        ggplot2::geom_ribbon(ggplot2::aes(ymin = lower, ymax = upper),
-                             alpha = 0.15, color = NA) +
-        ggplot2::geom_line(ggplot2::aes(y = value), linewidth = 1) +
-        ggplot2::geom_point(ggplot2::aes(y = value), size = 1.5) +
-        ggplot2::theme_minimal() +
-        ggplot2::labs(x = "Year", y = "Index Value",
-                      color = "Indicator", fill = "Indicator")
-
-      plotly::ggplotly(p)
+      # Build native plotly traces per indicator for performance
+      indicators <- unique(df$indicator)
+      p <- plotly::plot_ly()
+      for (ind in indicators) {
+        ind_df <- df[df$indicator == ind, ]
+        # Confidence ribbon
+        p <- p |>
+          plotly::add_ribbons(
+            data = ind_df, x = ~year, ymin = ~lower, ymax = ~upper,
+            name = ind, legendgroup = ind,
+            line = list(width = 0),
+            fillcolor = plotly::toRGB(ind, alpha = 0.15),
+            showlegend = FALSE
+          ) |>
+          plotly::add_trace(
+            data = ind_df, x = ~year, y = ~value,
+            name = ind, legendgroup = ind,
+            type = "scatter", mode = "lines+markers",
+            line = list(width = 2),
+            marker = list(size = 5)
+          )
+      }
+      p <- p |> plotly::layout(
+        xaxis = list(title = "Year"),
+        yaxis = list(title = "Index Value")
+      )
+      p
     })
 
     # GBF compliance table

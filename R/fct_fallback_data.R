@@ -10,19 +10,19 @@ mock_nuts2_data_fallback <- function() {
   europe <- europe[!europe$sovereignt %in% c("Russia", "Iceland"), ]
   europe <- sf::st_transform(europe, 4326)
 
-  set.seed(42)
-  europe$vulnerability <- round(runif(nrow(europe), 0, 1), 2)
-  europe$fisheries_dep <- round(runif(nrow(europe), 0, 1), 2)
-  europe$population_pressure <- round(runif(nrow(europe), 0, 1), 2)
-  europe$mpa_coverage <- round(runif(nrow(europe), 0.05, 0.45), 2)
-  europe$poverty_rate <- round(runif(nrow(europe), 0.1, 0.6), 2)
-  europe$income_disparity <- round(runif(nrow(europe), 0.2, 0.8), 2)
-  europe$offshore_wind <- round(runif(nrow(europe), 0, 0.5), 2)
-  europe$coastal_tourism <- round(runif(nrow(europe), 0.1, 0.9), 2)
-  europe$shipping_intensity <- round(runif(nrow(europe), 0.05, 0.7), 2)
-  europe$aquaculture <- round(runif(nrow(europe), 0, 0.4), 2)
-  europe$bathing_quality <- round(runif(nrow(europe), 0.5, 1.0), 2)
-  europe$blue_economy_jobs <- round(runif(nrow(europe), 0.05, 0.5), 2)
+  withr::with_seed(42, {
+    europe$vulnerability <- round(runif(nrow(europe), 0, 1), 2)
+    europe$fisheries_dep <- round(runif(nrow(europe), 0, 1), 2)
+    europe$population_pressure <- round(runif(nrow(europe), 0, 1), 2)
+    europe$mpa_coverage <- round(runif(nrow(europe), 0.05, 0.45), 2)
+    europe$poverty_rate <- round(runif(nrow(europe), 0.1, 0.6), 2)
+    europe$income_disparity <- round(runif(nrow(europe), 0.2, 0.8), 2)
+    europe$offshore_wind <- round(runif(nrow(europe), 0, 0.5), 2)
+    europe$coastal_tourism <- round(runif(nrow(europe), 0.1, 0.9), 2)
+    europe$shipping_intensity <- round(runif(nrow(europe), 0.05, 0.7), 2)
+    europe$aquaculture <- round(runif(nrow(europe), 0, 0.4), 2)
+    europe$bathing_quality <- round(runif(nrow(europe), 0.5, 1.0), 2)
+    europe$blue_economy_jobs <- round(runif(nrow(europe), 0.05, 0.5), 2)
 
   # Schema alignment with real NUTS2 data (ensure NUTS_ID, NUTS_NAME, CNTR_CODE exist)
   if (!"NUTS_ID" %in% names(europe)) {
@@ -35,11 +35,12 @@ mock_nuts2_data_fallback <- function() {
     europe$CNTR_CODE <- europe$iso_a2
   }
 
-  sea_basins <- c("Baltic", "North Sea", "Atlantic", "Mediterranean", "Black Sea")
-  europe$sea_basin <- sample(sea_basins, nrow(europe), replace = TRUE)
+    sea_basins <- c("Baltic", "North Sea", "Atlantic", "Mediterranean", "Black Sea")
+    europe$sea_basin <- sample(sea_basins, nrow(europe), replace = TRUE)
 
-  ecosystem_types <- c("Coastal", "Pelagic", "Deep-sea", "Estuarine", "Reef")
-  europe$ecosystem_type <- sample(ecosystem_types, nrow(europe), replace = TRUE)
+    ecosystem_types <- c("Coastal", "Pelagic", "Deep-sea", "Estuarine", "Reef")
+    europe$ecosystem_type <- sample(ecosystem_types, nrow(europe), replace = TRUE)
+  })  # end withr::with_seed
 
   europe
 }
@@ -50,7 +51,7 @@ mock_nuts2_data_fallback <- function() {
 #' @return sf object with random MPA rectangles across Europe
 #' @noRd
 mock_mpa_data_fallback <- function(n = 30) {
-  set.seed(123)
+  withr::local_seed(123)
   lons <- runif(n, -10, 30)
   lats <- runif(n, 35, 65)
   size <- runif(n, 0.5, 2)
@@ -83,7 +84,10 @@ mock_mpa_data_fallback <- function(n = 30) {
 #' @noRd
 mock_scenario_data_fallback <- function(nff_weights = c(NfN = 34, NfS = 33, NaC = 33),
                                 region = "Mediterranean") {
-  set.seed(sum(nff_weights) + nchar(region))
+  # Use all 3 weight components individually to avoid seed collisions
+  seed_val <- nff_weights["NfN"] * 10000L + nff_weights["NfS"] * 100L +
+              nff_weights["NaC"] + nchar(region)
+  withr::local_seed(seed_val)
   years <- 2025:2050
 
   # NFF weights influence trends
@@ -97,24 +101,14 @@ mock_scenario_data_fallback <- function(nff_weights = c(NfN = 34, NfS = 33, NaC 
     "Offshore Wind Capacity", "Bathing Water Quality",
     "Contaminant Status", "Eutrophication Status", "Underwater Noise"
   )
-  means <- c(
-    0.02 * nfn,
-    0.015 * nfs,
-    0.01 * nac - 0.005 * nfn,
-    0.01 * (1 - max(abs(nfn - nfs), abs(nfs - nac), abs(nfn - nac))),
-    0.012 * nfs + 0.005 * nac,
-    0.008 * nfn + 0.005 * nfs,
-    0.010 * nfn + 0.003 * nfs,
-    0.008 * nfn + 0.005 * nfs,
-    -0.003 * nfs + 0.005 * nfn
-  )
+  # Use shared nff_weight_modifier helper
+  means <- vapply(indicators, function(ind) nff_weight_modifier(ind, nfn, nfs, nac), numeric(1))
   sds <- c(0.01, 0.01, 0.01, 0.008, 0.01, 0.01, 0.01, 0.01, 0.01)
   bases <- c(0.5, 0.5, 0.6, 0.5, 0.3, 0.7, 0.6, 0.55, 0.5)
 
   # HELCOM indicators only exist for Baltic region
-  helcom_only <- c("Contaminant Status", "Eutrophication Status", "Underwater Noise")
   if (region != "Baltic") {
-    keep <- !indicators %in% helcom_only
+    keep <- !indicators %in% HELCOM_INDICATORS
     indicators <- indicators[keep]
     means <- means[keep]
     sds <- sds[keep]
@@ -142,7 +136,7 @@ mock_scenario_data_fallback <- function(nff_weights = c(NfN = 34, NfS = 33, NaC 
 #' @return Data frame with 4 justice dimension scores
 #' @noRd
 mock_justice_scores_fallback <- function(intervention = "MPA Establishment") {
-  set.seed(nchar(intervention))
+  withr::local_seed(sum(utf8ToInt(intervention)))
 
   dimensions <- c("Distributional", "Procedural", "Recognitional", "Restorative")
   scores <- pmin(pmax(rnorm(4, mean = 0.6, sd = 0.25), 0), 1)
@@ -170,7 +164,7 @@ mock_justice_scores_fallback <- function(intervention = "MPA Establishment") {
 #' @return Data frame with 10 tenet scores
 #' @noRd
 mock_elliott_tenets_fallback <- function(intervention = "MPA Establishment") {
-  set.seed(nchar(intervention) + 10)
+  withr::local_seed(sum(utf8ToInt(intervention)) + 10)
   tenets <- c("Ecologically sustainable", "Technologically feasible",
               "Economically viable", "Socially desirable",
               "Ethically defensible", "Culturally inclusive",
@@ -215,7 +209,7 @@ mock_funding_matrix_fallback <- function() {
   interventions <- mock_interventions_fallback()
   funds <- c("EMFAF", "LIFE", "Cohesion Fund", "EAFRD", "Just Transition Fund")
 
-  set.seed(99)
+  withr::local_seed(99)
   mat <- matrix(
     sample(c("Eligible", "Partial", "Not eligible"), length(interventions) * length(funds), replace = TRUE,
            prob = c(0.4, 0.3, 0.3)),
@@ -233,7 +227,7 @@ mock_funding_matrix_fallback <- function() {
 #' @return Data frame with alignment status and detail columns
 #' @noRd
 mock_cfp_alignment_fallback <- function(intervention = "MPA Establishment") {
-  set.seed(nchar(intervention))
+  withr::local_seed(sum(utf8ToInt(intervention)))
   alignment <- sample(c("aligned", "partial", "conflict"), 1,
                       prob = c(0.4, 0.35, 0.25))
   data.frame(
@@ -260,7 +254,7 @@ mock_cfp_alignment_fallback <- function(intervention = "MPA Establishment") {
 #' @return Data frame with indicator values over time with confidence bands
 #' @noRd
 mock_indicator_timeseries_fallback <- function(region = "Mediterranean") {
-  set.seed(nchar(region))
+  withr::local_seed(sum(utf8ToInt(region)))
   years <- 2010:2025
   indicators <- c(
     "Marine Biodiversity Index",
@@ -296,11 +290,9 @@ mock_indicator_timeseries_fallback <- function(region = "Mediterranean") {
   )
 
   # HELCOM-only indicators — only generate for Baltic, skip for other basins
-  helcom_only <- c("Contaminant Status", "Eutrophication Status", "Underwater Noise")
-
   do.call(rbind, lapply(indicators, function(ind) {
     # Skip HELCOM-only indicators for non-Baltic basins
-    if (ind %in% helcom_only && region != "Baltic") return(NULL)
+    if (ind %in% HELCOM_INDICATORS && region != "Baltic") return(NULL)
 
     trend <- cumsum(rnorm(length(years), mean = 0.01, sd = 0.03))
     value <- 0.5 + trend

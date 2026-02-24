@@ -1,8 +1,24 @@
+#' In-memory cache for expensive data loads (survives across reactive invalidations)
+#' @noRd
+.data_cache <- cachem::cache_mem(max_age = 600, max_size = 200 * 1024^2)
+
 #' Load real NUTS2 regions with indicators from cached Eurostat/giscoR data
 #' Falls back to mock_nuts2_data_fallback() on error (synthetic fallback)
+#' Results are cached in memory for 10 minutes to avoid repeated I/O.
 #' @return sf object with NUTS2 polygons and indicator columns
 #' @noRd
 load_nuts2_data <- function() {
+  cached <- .data_cache$get("nuts2")
+  if (!cachem::is.key_missing(cached)) return(cached)
+
+  result <- .load_nuts2_data_impl()
+  .data_cache$set("nuts2", result)
+  result
+}
+
+#' Internal implementation for load_nuts2_data (not cached)
+#' @noRd
+.load_nuts2_data_impl <- function() {
   tryCatch({
     # Load NUTS2 geometries
     nuts2 <- load_extdata("nuts2_eu.rds")
@@ -44,13 +60,14 @@ load_nuts2_data <- function() {
       bathing_quality      = function(n) round(runif(n, 0.5, 1.0), 2),
       blue_economy_jobs    = function(n) round(runif(n, 0.05, 0.5), 2)
     )
-    set.seed(42)
-    for (col in names(fallbacks)) {
-      if (!col %in% names(nuts2)) {
-        message("Column '", col, "' missing from cache, using random fallback")
-        nuts2[[col]] <- fallbacks[[col]](nrow(nuts2))
+    withr::with_seed(42, {
+      for (col in names(fallbacks)) {
+        if (!col %in% names(nuts2)) {
+          message("Column '", col, "' missing from cache, using random fallback")
+          nuts2[[col]] <- fallbacks[[col]](nrow(nuts2))
+        }
       }
-    }
+    })
 
     # Fill any remaining NAs with medians
     for (col in c("vulnerability", "fisheries_dep", "population_pressure",
@@ -96,8 +113,9 @@ load_nuts2_data <- function() {
       }
     } else {
       sea_basins <- c("Baltic", "North Sea", "Atlantic", "Mediterranean", "Black Sea")
-      set.seed(42)
-      nuts2$sea_basin <- sample(sea_basins, nrow(nuts2), replace = TRUE)
+      withr::with_seed(42, {
+        nuts2$sea_basin <- sample(sea_basins, nrow(nuts2), replace = TRUE)
+      })
     }
 
     # Join ecosystem type mapping
@@ -115,8 +133,9 @@ load_nuts2_data <- function() {
       nuts2$ecosystem_type[is.na(nuts2$ecosystem_type)] <- "Inland"
     } else {
       ecosystem_types <- c("Coastal", "Pelagic", "Deep-sea", "Estuarine", "Reef")
-      set.seed(42)
-      nuts2$ecosystem_type <- sample(ecosystem_types, nrow(nuts2), replace = TRUE)
+      withr::with_seed(42, {
+        nuts2$ecosystem_type <- sample(ecosystem_types, nrow(nuts2), replace = TRUE)
+      })
     }
 
     # Add sovereignt column from CNTR_CODE for compatibility with spatial module
@@ -211,7 +230,9 @@ load_scenario_data <- function(nff_weights = c(NfN = 34, NfS = 33, NaC = 33),
       stop("No baseline data for region: ", region)
     }
 
-    set.seed(sum(nff_weights) + nchar(region))
+    # Use all 3 weight components individually to avoid seed collisions
+    seed_val <- nff_weights["NfN"] * 10000L + nff_weights["NfS"] * 100L +
+                nff_weights["NaC"] + nchar(region)
     years <- 2025:2050
 
     # NFF weights influence trends
@@ -219,25 +240,15 @@ load_scenario_data <- function(nff_weights = c(NfN = 34, NfS = 33, NaC = 33),
     nfs <- nff_weights["NfS"] / 100
     nac <- nff_weights["NaC"] / 100
 
-    result <- do.call(rbind, lapply(seq_len(nrow(region_data)), function(i) {
+    result <- withr::with_seed(seed_val, {
+      do.call(rbind, lapply(seq_len(nrow(region_data)), function(i) {
       row <- region_data[i, ]
       base <- row$baseline_2025
       trend <- row$trend_rate
       var <- row$variance
 
-      # Indicator-specific NFF weight modifiers
-      weight_mod <- switch(row$indicator,
-        "Habitat Condition" = 0.02 * nfn,
-        "Ecosystem Services" = 0.015 * nfs,
-        "Livelihoods & Employment" = 0.01 * nac - 0.005 * nfn,
-        "Equity Score" = 0.01 * (1 - max(abs(nfn - nfs), abs(nfs - nac), abs(nfn - nac))),
-        "Offshore Wind Capacity" = 0.012 * nfs + 0.005 * nac,
-        "Bathing Water Quality" = 0.008 * nfn + 0.005 * nfs,
-        "Contaminant Status" = 0.010 * nfn + 0.003 * nfs,
-        "Eutrophication Status" = 0.008 * nfn + 0.005 * nfs,
-        "Underwater Noise" = -0.003 * nfs + 0.005 * nfn,
-        0  # default: no NFF weight modification for unknown indicators
-      )
+      # Indicator-specific NFF weight modifiers (shared helper)
+      weight_mod <- nff_weight_modifier(row$indicator, nfn, nfs, nac)
 
       values <- base + cumsum(rnorm(length(years), mean = weight_mod + trend, sd = var))
       values <- pmin(pmax(values, 0.05), 0.99)
@@ -257,6 +268,7 @@ load_scenario_data <- function(nff_weights = c(NfN = 34, NfS = 33, NaC = 33),
         stringsAsFactors = FALSE
       )
     }))
+    })  # end withr::with_seed
     attr(result, "provenance") <- "csv"
     result
   }, error = function(e) {
@@ -407,7 +419,7 @@ load_indicator_timeseries <- function(region = "Mediterranean") {
     }
 
     # HELCOM indicators only for Baltic (consistent with fallback logic)
-    helcom_only <- c("Contaminant Status", "Eutrophication Status", "Underwater Noise")
+    helcom_only <- HELCOM_INDICATORS
     if (region != "Baltic") {
       result <- result[!result$indicator %in% helcom_only, ]
     }

@@ -98,5 +98,5 @@ cat("Starting NatureJust-EU on http://127.0.0.1:", app_port, "\n", sep = "")
 shiny::shinyApp(
   ui = app_ui,
   server = app_server,
-  options = list(port = app_port, host = "127.0.0.1", launch.browser = FALSE)
+  options = list(port = app_port, host = "127.0.0.1", launch.browser = TRUE)
 )

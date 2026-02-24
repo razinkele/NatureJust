@@ -40,6 +40,14 @@ mod_narratives_ui <- function(id) {
           ),
           selected = "arcology"
         ),
+        div(
+          class = "nff-narrative-mode mt-3",
+          HTML(nff_triangle_svg("n", mode = "narrative")),
+          tags$p(
+            class = "text-muted text-center small mt-1 mb-0",
+            "Selected narrative highlighted on the NFF space"
+          )
+        ),
         tags$h6(class = "mt-3 mb-2", "NFF Position"),
         uiOutput(ns("nff_badges")),
         tags$hr(),
@@ -77,13 +85,26 @@ mod_narratives_ui <- function(id) {
 #'
 #' @param id Module namespace id
 #' @param nff_weights A reactiveVal holding named numeric c(NfN, NfS, NaC)
+#' @param selected_narrative A reactiveVal holding a narrative id (set externally,
+#'   e.g. from Home triangle double-click). Module updates its own selectInput.
 #' @import shiny
 #' @noRd
-mod_narratives_server <- function(id, nff_weights = NULL) {
+mod_narratives_server <- function(id, nff_weights = NULL,
+                                   selected_narrative = NULL) {
   moduleServer(id, function(input, output, session) {
 
     # Load narrative data once at startup
     narratives <- load_narratives()
+
+    # ---- Respond to external narrative selection ----
+    if (!is.null(selected_narrative)) {
+      observeEvent(selected_narrative(), {
+        narr_id <- selected_narrative()
+        if (!is.null(narr_id) && narr_id %in% narratives$id) {
+          updateSelectInput(session, "narrative_id", selected = narr_id)
+        }
+      })
+    }
 
     # ---- Current selected narrative (single row) ----
     current <- reactive({
@@ -119,6 +140,12 @@ mod_narratives_server <- function(id, nff_weights = NULL) {
         # Fallback for minimal fallback data (no weights column)
         c(NfN = 34, NfS = 33, NaC = 33)
       }
+    })
+
+    # ---- Highlight selected narrative on triangle ----
+    observeEvent(input$narrative_id, {
+      session$sendCustomMessage("narrative-highlight",
+                                list(id = input$narrative_id))
     })
 
     # ---- NFF Position Badges ----

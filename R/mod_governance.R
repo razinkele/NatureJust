@@ -77,9 +77,12 @@ mod_governance_ui <- function(id) {
           ),
           tagList(
             h5("Tenet Radar Profile", class = "mb-3"),
-            plotly::plotlyOutput(ns("tenet_radar"), height = "400px"),
+            div(
+              style = "max-width: 640px; margin: 0 auto;",
+              plotly::plotlyOutput(ns("tenet_radar"), height = "560px")
+            ),
             h5("Tenet Scorecard", class = "mt-4 mb-3"),
-            bslib::layout_column_wrap(width = 1/2, uiOutput(ns("tenet_cards"))),
+            uiOutput(ns("tenet_cards")),
             bslib::card(
               class = "mt-3",
               bslib::card_header("Gap Analysis & Recommendations"),
@@ -98,20 +101,23 @@ mod_governance_ui <- function(id) {
 mod_governance_server <- function(id, intervention_choices = NULL) {
   moduleServer(id, function(input, output, session) {
 
-    # Populate intervention choices from data (deferred from UI build time)
+    # Populate intervention choices (passed from app_server, no redundant load)
     observe({
-      choices <- intervention_choices %||%
-        tryCatch(load_interventions(), error = function(e) "MPA Establishment")
+      choices <- if (!is.null(intervention_choices)) {
+        intervention_choices
+      } else {
+        "MPA Establishment"
+      }
       updateSelectInput(session, "cfp_measure", choices = choices)
       updateSelectInput(session, "tenet_intervention", choices = choices)
     }) |> bindEvent(TRUE, once = TRUE)
 
-    # Funding matrix — loaded once (static data)
-    funding_data <- reactive({ load_funding_matrix() })
+    # Funding matrix — loaded once (static data, no reactive inputs)
+    funding_data <- load_funding_matrix()
 
     # Funding matrix table
     output$funding_table <- DT::renderDataTable({
-      df <- funding_data()
+      df <- funding_data
       DT::datatable(
         df,
         options = list(
@@ -178,16 +184,44 @@ mod_governance_server <- function(id, intervention_choices = NULL) {
     # Tenet radar chart
     output$tenet_radar <- plotly::renderPlotly({
       df <- tenet_scores()
+      # Single-word labels for compact polar axis display
+      short_labels <- c(
+        "Ecologically sustainable" = "Ecological",
+        "Technologically feasible" = "Technical",
+        "Economically viable"     = "Economic",
+        "Socially desirable"      = "Social",
+        "Ethically defensible"    = "Ethical",
+        "Culturally inclusive"     = "Cultural",
+        "Legally permissible"     = "Legal",
+        "Administratively achievable" = "Admin",
+        "Effectively communicable" = "Comms",
+        "Politically expedient"   = "Political"
+      )
+      labels <- unname(short_labels[df$tenet])
       plotly::plot_ly(type = "scatterpolar", fill = "toself") |>
         plotly::add_trace(
           r = c(df$score, df$score[1]),
-          theta = c(df$tenet, df$tenet[1]),
+          theta = c(labels, labels[1]),
           name = input$tenet_intervention,
-          fillcolor = "rgba(27,73,101,0.2)",
-          line = list(color = "#1B4965")
+          fillcolor = "rgba(27,73,101,0.25)",
+          line = list(color = "#1B4965", width = 2),
+          marker = list(size = 6, color = "#1B4965")
         ) |>
         plotly::layout(
-          polar = list(radialaxis = list(visible = TRUE, range = c(0, 1))),
+          polar = list(
+            radialaxis = list(
+              visible = TRUE,
+              range = c(0, 1),
+              tickvals = c(0.25, 0.5, 0.75, 1),
+              ticktext = c("25%", "50%", "75%", "100%"),
+              tickfont = list(size = 10)
+            ),
+            angularaxis = list(
+              tickfont = list(size = 12, color = "#1B4965")
+            ),
+            domain = list(x = c(0, 1), y = c(0, 1))
+          ),
+          margin = list(t = 40, b = 40, l = 40, r = 40),
           showlegend = FALSE
         )
     })
@@ -208,27 +242,29 @@ mod_governance_server <- function(id, intervention_choices = NULL) {
         "Politically expedient" = "flag"
       )
 
-      tagList(
-        lapply(seq_len(nrow(df)), function(i) {
-          status <- df$status[i]
-          score_pct <- round(df$score[i] * 100)
-          icon_name <- tenet_icons[[df$tenet[i]]]
+      cards <- lapply(seq_len(nrow(df)), function(i) {
+        status <- df$status[i]
+        score_pct <- round(df$score[i] * 100)
+        icon_name <- tenet_icons[[df$tenet[i]]]
 
-          bslib::card(
-            class = paste("justice-card", paste0("status-", status)),
-            bslib::card_header(
-              traffic_light(status),
-              if (!is.null(icon_name)) bsicons::bs_icon(icon_name),
-              df$tenet[i]
-            ),
-            bslib::card_body(
-              h3(paste0(score_pct, "%"), class = "mb-1"),
-              p(class = "text-muted mb-1", status_to_label(status)),
-              p(class = "small", df$description[i])
-            )
+        bslib::card(
+          class = paste("justice-card", paste0("status-", status)),
+          bslib::card_header(
+            class = "d-flex align-items-center gap-1",
+            traffic_light(status),
+            if (!is.null(icon_name)) bsicons::bs_icon(icon_name),
+            tags$span(class = "fw-semibold", df$tenet[i])
+          ),
+          bslib::card_body(
+            class = "p-3",
+            h3(paste0(score_pct, "%"), class = "mb-1"),
+            p(class = "text-muted mb-1", status_to_label(status)),
+            p(class = "small mb-0", df$description[i])
           )
-        })
-      )
+        )
+      })
+
+      do.call(bslib::layout_column_wrap, c(list(width = 1/2, fillable = FALSE), cards))
     })
 
     # Tenet gap analysis
