@@ -225,6 +225,26 @@ body::after {
   margin-bottom: 0.35rem;
 }
 
+/* ---------- Checkbox & Radio Theming ---------- */
+.form-check-input {
+  border-color: var(--nj-mist);
+  transition: background-color .15s, border-color .15s, box-shadow .15s;
+}
+
+.form-check-input:checked {
+  background-color: var(--nj-ocean);
+  border-color: var(--nj-ocean);
+}
+
+.form-check-input:focus {
+  border-color: var(--nj-blue);
+  box-shadow: 0 0 0 3px rgba(27,73,101,.15);
+}
+
+.form-check-input:checked:focus {
+  box-shadow: 0 0 0 3px rgba(27,73,101,.2);
+}
+
 .sidebar .form-select,
 .sidebar .form-control {
   border-radius: var(--radius-sm);
@@ -476,13 +496,16 @@ body::after {
 .nff-weight-readout {
   display: flex;
   justify-content: center;
-  gap: 1rem;
-  padding: .5rem 0 .2rem;
+  gap: .75rem;
+  padding: .5rem .8rem .3rem;
   font-family: var(--font-body);
-  font-size: .78rem;
+  font-size: .74rem;
   font-weight: 600;
   color: var(--nj-charcoal);
-  letter-spacing: .01em;
+  letter-spacing: .02em;
+  background: rgba(10,22,40,.025);
+  border-radius: var(--radius-sm);
+  margin-top: .3rem;
 }
 
 .nff-weight {
@@ -684,9 +707,9 @@ body::after {
 }
 
 .justice-progress {
-  height: 4px;
+  height: 6px;
   background: var(--nj-mist);
-  border-radius: 2px;
+  border-radius: 3px;
   overflow: hidden;
   margin: 0.5rem 0;
 }
@@ -980,18 +1003,73 @@ hr {
 
 .leaflet-container { border-radius: var(--radius-sm); }
 
+.leaflet-popup-content-wrapper {
+  border-radius: var(--radius-sm) !important;
+  box-shadow: var(--shadow-md) !important;
+  font-family: var(--font-body);
+  font-size: .84rem;
+}
+
+.leaflet-popup-tip { box-shadow: none; }
+
+.leaflet-control-zoom a {
+  background: var(--nj-warm-white) !important;
+  color: var(--nj-navy) !important;
+  border-color: var(--nj-mist) !important;
+  font-family: var(--font-body);
+  transition: background .2s;
+}
+
+.leaflet-control-zoom a:hover {
+  background: #fff !important;
+}
+
 /* Plotly modebar subtle */
 .modebar { opacity: .4; transition: opacity .3s; }
 .modebar:hover { opacity: 1; }
 
+/* Plotly chart transparent backgrounds */
+.js-plotly-plot .plotly .main-svg { background: transparent !important; }
+.js-plotly-plot .plotly .bg { fill: transparent !important; }
+
 /* Download btn icon */
 .btn .bi { margin-right: .3rem; }
 
-/* Picker input */
+/* Picker input (shinyWidgets) */
 .bootstrap-select .dropdown-toggle {
   border-radius: var(--radius-sm) !important;
   border: 1px solid var(--nj-mist) !important;
   font-size: .84rem !important;
+  background: #fff !important;
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.bootstrap-select .dropdown-toggle:focus {
+  border-color: var(--nj-blue) !important;
+  box-shadow: 0 0 0 3px rgba(42,111,151,.1) !important;
+}
+
+.bootstrap-select .dropdown-menu {
+  border: 1px solid var(--nj-mist);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  font-size: .84rem;
+  padding: .25rem 0;
+}
+
+.bootstrap-select .dropdown-menu .dropdown-item {
+  padding: .4rem .8rem;
+  font-size: .84rem;
+  transition: background .15s;
+}
+
+.bootstrap-select .dropdown-menu .dropdown-item.active,
+.bootstrap-select .dropdown-menu .dropdown-item:active {
+  background: var(--nj-ocean);
+}
+
+.bootstrap-select .dropdown-menu .dropdown-item:hover {
+  background: rgba(42,111,151,.06);
 }
 
 /* ---------- Info Dropdown ---------- */
@@ -1362,6 +1440,35 @@ pre, .shiny-text-output {
   color: var(--nj-sky);
 }
 
+/* ---------- Shiny Recalculating ---------- */
+.recalculating {
+  opacity: 0.45;
+  transition: opacity .3s var(--ease-editorial);
+}
+
+/* Shiny error messages */
+.shiny-output-error {
+  font-family: var(--font-body);
+  font-size: .84rem;
+  color: var(--nj-coral);
+}
+
+/* ---------- Global Form Controls ---------- */
+.form-select,
+.form-control {
+  font-family: var(--font-body);
+  font-size: .84rem;
+  border-color: var(--nj-mist);
+  border-radius: var(--radius-sm);
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.form-select:focus,
+.form-control:focus {
+  border-color: var(--nj-blue);
+  box-shadow: 0 0 0 3px rgba(42,111,151,.1);
+}
+
 /* ---------- Dark Mode Refinements ---------- */
 [data-bs-theme="dark"] body::after {
   opacity: 0.015;
@@ -1378,6 +1485,78 @@ pre, .shiny-text-output {
 
 [data-bs-theme="dark"] .justice-card h3 {
   color: var(--nj-charcoal);
+}
+
+/* Dark alerts — desaturated for dark backgrounds */
+[data-bs-theme="dark"] .alert-warning {
+  background: rgba(242,204,143,.06) !important;
+  color: var(--nj-charcoal) !important;
+}
+
+[data-bs-theme="dark"] .alert-success {
+  background: rgba(14,124,123,.06) !important;
+  color: var(--nj-charcoal) !important;
+}
+
+[data-bs-theme="dark"] .alert-danger {
+  background: rgba(224,122,95,.06) !important;
+  color: var(--nj-charcoal) !important;
+}
+
+/* Dark form controls */
+[data-bs-theme="dark"] .form-select,
+[data-bs-theme="dark"] .form-control {
+  background: rgba(255,255,255,.05);
+  border-color: rgba(255,255,255,.1);
+  color: var(--nj-charcoal);
+}
+
+[data-bs-theme="dark"] .form-select:focus,
+[data-bs-theme="dark"] .form-control:focus {
+  border-color: var(--nj-sky);
+  box-shadow: 0 0 0 3px rgba(95,168,211,.15);
+}
+
+[data-bs-theme="dark"] .form-check-input {
+  background-color: rgba(255,255,255,.08);
+  border-color: rgba(255,255,255,.15);
+}
+
+[data-bs-theme="dark"] .form-check-input:checked {
+  background-color: var(--nj-sky);
+  border-color: var(--nj-sky);
+}
+
+/* Dark leaflet controls */
+[data-bs-theme="dark"] .leaflet-control-zoom a {
+  background: var(--nj-warm-white) !important;
+  color: var(--nj-charcoal) !important;
+  border-color: rgba(255,255,255,.1) !important;
+}
+
+/* Dark picker dropdown */
+[data-bs-theme="dark"] .bootstrap-select .dropdown-toggle {
+  background: rgba(255,255,255,.05) !important;
+  border-color: rgba(255,255,255,.1) !important;
+  color: var(--nj-charcoal) !important;
+}
+
+[data-bs-theme="dark"] .bootstrap-select .dropdown-menu {
+  background: var(--nj-warm-white);
+  border-color: rgba(255,255,255,.1);
+}
+
+/* Dark NFF weight readout */
+[data-bs-theme="dark"] .nff-weight-readout {
+  background: rgba(255,255,255,.04);
+}
+
+/* Dark plotly */
+[data-bs-theme="dark"] .js-plotly-plot .plotly .main-svg { background: transparent !important; }
+
+/* Dark recalculating */
+[data-bs-theme="dark"] .recalculating {
+  opacity: 0.35;
 }
 
 /* ── Responsive breakpoints ── */
